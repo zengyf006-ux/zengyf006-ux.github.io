@@ -1,0 +1,29 @@
+(()=>{
+'use strict';
+const $=(s,p=document)=>p.querySelector(s),$$=(s,p=document)=>[...p.querySelectorAll(s)];
+const fmt=(n,d=2)=>Number.isFinite(+n)?Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'--';
+const compact=n=>Number.isFinite(+n)?new Intl.NumberFormat('en-US',{notation:'compact',maximumFractionDigits:2}).format(+n):'--';
+const money=n=>`$${fmt(n,2)}`;const pct=n=>`${n>=0?'+':''}${(+n||0).toFixed(2)}%`;const uid=()=>`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+const TF={"1m":60,"5m":300,"15m":900,"1H":3600,"4H":14400,"1D":86400};
+const PAIRS=[
+ {base:'BTC',name:'Bitcoin',icon:'₿',color:'#f5a623',price:64415.8,decimals:2},{base:'ETH',name:'Ethereum',icon:'E',color:'#6978df',price:3428.42,decimals:2},{base:'SOL',name:'Solana',icon:'S',color:'#1bc9a0',price:148.92,decimals:3},{base:'BNB',name:'BNB',icon:'B',color:'#e6b424',price:582.41,decimals:2},{base:'XRP',name:'XRP',icon:'X',color:'#263340',price:.6214,decimals:4},{base:'DOGE',name:'Dogecoin',icon:'D',color:'#bd9a36',price:.13248,decimals:5},{base:'ADA',name:'Cardano',icon:'A',color:'#3157a6',price:.4516,decimals:4},{base:'AVAX',name:'Avalanche',icon:'V',color:'#e84142',price:32.64,decimals:3}
+];
+const state={pair:PAIRS[0],product:'spot',timeframe:'1H',orderType:'limit',side:'buy',positionView:'positions',marketView:'book',marketFilter:'all',favorite:new Set(JSON.parse(localStorage.getItem('atlas-v12-favs')||'[]')),markets:new Map(),candles:[],book:{asks:[],bids:[]},trades:[],poll:null,chart:null};
+function freshAccount(){return{initial:100000,cash:100000,positions:{},orders:[],trades:[],fees:0,equityHistory:[{t:Date.now(),v:100000}]}}
+function loadAccount(){try{return{...freshAccount(),...JSON.parse(localStorage.getItem('atlas-v12-account')||'null')}}catch{return freshAccount()}}
+state.account=loadAccount();
+function saveAccount(){localStorage.setItem('atlas-v12-account',JSON.stringify(state.account))}
+function toast(text){const e=$('#toast');e.textContent=text;e.classList.add('show');clearTimeout(window.__v12toast);window.__v12toast=setTimeout(()=>e.classList.remove('show'),2200)}
+function timeoutFetch(url,ms=6000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);return fetch(url,{cache:'no-store',signal:c.signal}).finally(()=>clearTimeout(t))}
+function seedMarkets(){PAIRS.forEach((p,i)=>{const change=[2.18,1.42,3.12,-.84,.56,2.73,-1.06,1.89][i],high=p.price*(1+Math.abs(change)/100+.008),low=p.price*(1-Math.abs(change)/100-.012);state.markets.set(p.base,{last:p.price,change,high,low,volumeQuote:(1.82e9)/(1+i*.35),ts:Date.now()})})}
+function seededRandom(seed){let s=seed%2147483647;if(s<=0)s+=2147483646;return()=>((s=s*16807%2147483647)-1)/2147483646}
+function generateCandles(pair,tf,count=220){const step=TF[tf]||3600,now=Math.floor(Date.now()/1000/step)*step,seed=pair.base.split('').reduce((a,c)=>a+c.charCodeAt(0),0)+step,rnd=seededRandom(seed),m=state.markets.get(pair.base)||{last:pair.price},target=m.last;let price=target*(.91+rnd()*.04),out=[];for(let i=count-1;i>=0;i--){const time=now-i*step,drift=(target-price)/(count*.42),vol=(rnd()-.48)*price*(tf==='1m'?.0015:tf==='1D'?.018:.006),open=price,close=Math.max(pair.price*.2,open+drift+vol),high=Math.max(open,close)+rnd()*Math.abs(close-open+price*.004),low=Math.min(open,close)-rnd()*Math.abs(close-open+price*.004),volume=(120+rnd()*900)*(pair.price/Math.max(1,price))*(tf==='1D'?30:tf==='1m'?.25:1);out.push({time,open,high,low,close,volume});price=close}const ratio=target/out.at(-1).close;out=out.map(c=>({...c,open:c.open*ratio,high:c.high*ratio,low:c.low*ratio,close:c.close*ratio}));return out}
+function generateBook(last){const asks=[],bids=[];let cum=0;for(let i=1;i<=18;i++){const q=.02+Math.random()*.8,cumA=(cum+=q);asks.push([last*(1+i*.00008),q,cumA])}cum=0;for(let i=1;i<=18;i++){const q=.02+Math.random()*.8,cumB=(cum+=q);bids.push([last*(1-i*.00008),q,cumB])}return{asks,bids}}
+function generateTrades(last){return Array.from({length:40},(_,i)=>({price:last*(1+(Math.random()-.5)*.0008),qty:.001+Math.random()*.18,side:Math.random()>.48?'buy':'sell',ts:Date.now()-i*3500}))}
+seedMarkets();state.candles=generateCandles(state.pair,state.timeframe);state.book=generateBook(state.markets.get('BTC').last);state.trades=generateTrades(state.markets.get('BTC').last);
+
+function initChart(){state.chart=new AtlasChart($('#chartCanvas'),$('#chartOverlay'),{ma:true,ema:false,boll:false,volume:true});state.chart.onSelect=c=>openCandle(c);state.chart.onHover=c=>updateLegend(c);state.chart.onViewChange=n=>$('#chartVisibleInfo').textContent=`可视区约 ${n} 根K线`;state.chart.setData(state.candles);updateLegend(state.candles.at(-1))}
+function updateLegend(c){if(!c)return;const bs=$$('#chartLiveLegend b');[c.open,c.high,c.low,c.close,compact(c.volume)].forEach((v,i)=>{if(bs[i])bs[i].textContent=i===4?v:fmt(v,state.pair.decimals)})}
+function openCandle(c){const chg=(c.close-c.open)/c.open*100;$('#candleTime').textContent=new Date(c.time*1000).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});$('#candlePair').textContent=`${state.pair.base} / USDT · ${state.timeframe}`;$('#candleOpen').textContent=fmt(c.open,state.pair.decimals);$('#candleHigh').textContent=fmt(c.high,state.pair.decimals);$('#candleLow').textContent=fmt(c.low,state.pair.decimals);$('#candleClose').textContent=fmt(c.close,state.pair.decimals);$('#candleChange').textContent=pct(chg);$('#candleChange').className=chg>=0?'positive':'negative';$('#candleVolume').textContent=compact(c.volume);$('#candleSheet').hidden=false}
+function currentMarket(base=state.pair.base){return state.markets.get(base)||{last:0,change:0,high:0,low:0,volumeQuote:0}}
+function renderQuote(){const p=state.pair,m=currentMarket();$(
