@@ -1,0 +1,46 @@
+name: Materialize premium static site
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout publishing branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Replace compatibility loader with plain HTML
+        shell: python
+        run: |
+          from pathlib import Path
+          import base64, gzip, re
+
+          path = Path("index.html")
+          source = path.read_text(encoding="utf-8")
+          match = re.search(r"const s='([^']+)'", source)
+          if not match:
+              raise SystemExit("Compressed payload was not found in index.html")
+          html = gzip.decompress(base64.b64decode(match.group(1)))
+          path.write_bytes(html)
+          print(f"Materialized {len(html)} bytes of plain HTML")
+
+      - name: Commit plain static page
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "fix: publish browser-compatible premium site"
+          git push origin HEAD:gh-pages
