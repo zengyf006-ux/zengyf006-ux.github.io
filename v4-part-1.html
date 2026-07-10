@@ -1,0 +1,219 @@
+
+<div class="app-shell">
+<header class="topbar">
+<button aria-label="菜单" class="mobile-menu" id="mobileMenuBtn">☰</button>
+<button aria-label="ATLAS X 首页" class="brand" data-page-link="overview">
+<span class="brand-mark">A</span>
+<span class="brand-copy">
+<strong>ATLAS X</strong>
+<small>SIMULATED EXCHANGE</small>
+</span>
+</button>
+<nav aria-label="主导航" class="top-nav">
+<button class="top-nav-item active" data-page-link="overview">总览</button>
+<button class="top-nav-item" data-page-link="markets">行情</button>
+<button class="top-nav-item" data-page-link="trade">交易</button>
+<button class="top-nav-item" data-page-link="bots">策略</button>
+<button class="top-nav-item" data-page-link="assets">资产</button>
+<button class="top-nav-item" data-page-link="insights">洞察</button>
+</nav>
+<label class="global-command" id="globalCommand">
+<span>⌕</span><input autocomplete="off" id="globalSearch" placeholder="搜索币种 / 功能" type="search"/>
+<kbd>⌘ K</kbd>
+</label>
+<div class="top-actions">
+<div class="demo-chip"><i></i> 演示环境</div>
+<div class="live-status" id="liveStatus">
+<i></i><span>正在连接行情</span>
+</div>
+<button aria-label="切换明暗主题" class="icon-btn" id="themeButton">◐</button>
+<button class="ghost-btn" id="resetAccountBtn">重置模拟账户</button>
+<button class="primary-btn" data-page-link="trade">进入交易终端</button>
+</div>
+</header>
+<div aria-label="实时行情滚动条" class="market-ticker">
+<div class="ticker-track" id="tickerTrack">
+<span>正在加载实时行情…</span>
+</div>
+</div>
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-scroll">
+<p class="side-section">工作台</p>
+<button class="side-item active" data-page-link="overview"><span>◫</span>资产总览</button>
+<button class="side-item" data-page-link="markets"><span>⌁</span>市场行情</button>
+<button class="side-item" data-page-link="trade"><span>↗</span>专业交易</button>
+<button class="side-item" data-page-link="bots"><span>✦</span>策略中心</button>
+<p class="side-section">分析</p>
+<button class="side-item" data-page-link="assets"><span>◈</span>资产分析</button>
+<button class="side-item" data-page-link="insights"><span>◎</span>AI 洞察</button>
+<div class="account-card">
+<div class="account-card-top">
+<span>模拟账户</span><b>PRO</b>
+</div>
+<strong id="sideEquity">$100,000.00</strong>
+<small>USDT 估值</small>
+<div class="account-progress"><i style="width:76%"></i></div>
+<button data-page-link="assets">查看账户详情</button>
+</div>
+<div class="risk-mini">
+<div><span>风险评分</span><strong id="sideRisk">76</strong></div>
+<small>基于仓位与交易行为动态计算</small>
+</div>
+</div>
+</aside>
+<main class="main">
+<!-- Overview -->
+<section class="page active" id="page-overview">
+<div class="page-head">
+<div>
+<span class="eyebrow">EXECUTIVE DASHBOARD</span>
+<h1>数字资产交易与风控中枢</h1>
+<p>实时行情、模拟交易、策略执行、账户分析与风险诊断统一在一个工作台。</p>
+</div>
+<div class="page-head-actions">
+<button class="ghost-btn" data-page-link="markets">浏览市场</button>
+<button class="primary-btn" data-page-link="trade">开始模拟交易</button>
+</div>
+</div>
+<div class="overview-hero">
+<article class="card equity-card">
+<div class="card-topline">
+<div>
+<span class="muted">模拟账户总权益</span>
+<div class="hero-number" id="totalEquity">$100,000.00</div>
+<div class="hero-delta positive" id="dailyPnl">+$0.00（今日）</div>
+</div>
+<div class="segmented" id="equityRange">
+<button data-range="1D">1D</button>
+<button class="active" data-range="1W">1W</button>
+<button data-range="1M">1M</button>
+<button data-range="3M">3M</button>
+</div>
+</div>
+<div class="equity-chart-wrap">
+<canvas id="equityCanvas"></canvas>
+</div>
+<div class="equity-footer">
+<div><span>可用余额</span><strong id="availableUsdt">$100,000.00</strong></div>
+<div><span>持仓市值</span><strong id="positionValue">$0.00</strong></div>
+<div><span>未实现盈亏</span><strong id="unrealizedPnl">$0.00</strong></div>
+<div><span>累计收益率</span><strong id="returnRate">0.00%</strong></div>
+</div>
+</article>
+<div class="overview-right">
+<article class="card live-market-card">
+<div class="card-header compact">
+<div>
+<span class="muted">实时市场</span>
+<h3>BTC / USDT</h3>
+</div>
+<span class="source-badge" id="overviewSource">LIVE</span>
+</div>
+<div class="market-price" id="overviewBtcPrice">--</div>
+<div class="market-change" id="overviewBtcChange">等待行情</div>
+<div class="micro-chart"><canvas id="microCanvas"></canvas></div>
+<div class="market-kpis">
+<div><span>24h 高</span><strong id="overviewHigh">--</strong></div>
+<div><span>24h 低</span><strong id="overviewLow">--</strong></div>
+<div><span>24h 量</span><strong id="overviewVol">--</strong></div>
+</div>
+</article>
+<article class="card ai-brief-card">
+<div class="ai-title"><span class="ai-glyph">AI</span><div><b>市场摘要</b><small>自动基于实时数据更新</small></div></div>
+<p id="overviewAiBrief">正在读取市场波动、成交量与账户仓位结构…</p>
+<button data-page-link="insights">查看完整洞察 →</button>
+</article>
+</div>
+</div>
+<div class="metric-row">
+<article class="metric-card card">
+<span>全球市场情绪</span>
+<strong id="fearGreed">中性</strong>
+<em id="fearGreedScore">50 / 100</em>
+</article>
+<article class="metric-card card">
+<span>BTC 市占率</span>
+<strong>52.8%</strong>
+<em class="positive">+0.18%</em>
+</article>
+<article class="metric-card card">
+<span>24h 成交活跃度</span>
+<strong id="marketActivity">--</strong>
+<em id="marketActivityHint">实时计算</em>
+</article>
+<article class="metric-card card">
+<span>账户风险等级</span>
+<strong id="riskLevel">稳健</strong>
+<em id="riskHint">暂无持仓风险</em>
+</article>
+</div>
+<div class="content-grid two-one">
+<article class="card">
+<div class="card-header">
+<div><h3>热门市场</h3><span>实时现货行情</span></div>
+<button class="text-btn" data-page-link="markets">查看全部</button>
+</div>
+<div class="table-scroll">
+<table class="market-table">
+<thead><tr><th>资产</th><th>最新价</th><th>24h</th><th>24h 高</th><th>24h 低</th><th>趋势</th><th></th></tr></thead>
+<tbody id="overviewMarketsBody"></tbody>
+</table>
+</div>
+</article>
+<article class="card allocation-card">
+<div class="card-header"><div><h3>资产配置</h3><span>模拟账户</span></div><button class="text-btn" data-page-link="assets">详情</button></div>
+<div class="allocation-body">
+<div class="donut" id="allocationDonut"><span><b id="assetCount">1</b><small>资产</small></span></div>
+<div class="allocation-list" id="allocationList"></div>
+</div>
+</article>
+</div>
+</section>
+<!-- Markets -->
+<section class="page" id="page-markets">
+<div class="page-head">
+<div>
+<span class="eyebrow">LIVE MARKETS</span>
+<h1>全球数字资产行情</h1>
+<p>实时价格、涨跌幅、成交量与趋势一览。</p>
+</div>
+<label class="search-box">
+<span>⌕</span><input id="marketSearch" placeholder="搜索 BTC、ETH、SOL…" type="search"/>
+</label>
+</div>
+<div class="market-summary-grid">
+<article class="card summary-card">
+<span>BTC / USDT</span><strong id="summaryBtc">--</strong><em id="summaryBtcChange">--</em>
+<canvas id="summaryBtcCanvas"></canvas>
+</article>
+<article class="card summary-card">
+<span>ETH / USDT</span><strong id="summaryEth">--</strong><em id="summaryEthChange">--</em>
+<canvas id="summaryEthCanvas"></canvas>
+</article>
+<article class="card summary-card">
+<span>SOL / USDT</span><strong id="summarySol">--</strong><em id="summarySolChange">--</em>
+<canvas id="summarySolCanvas"></canvas>
+</article>
+<article class="card summary-card">
+<span>市场连接</span><strong id="marketConnection">连接中</strong><em id="lastUpdated">--</em>
+<div class="connection-bars"><i></i><i></i><i></i><i></i></div>
+</article>
+</div>
+<article class="card market-board">
+<div class="card-header">
+<div class="market-tabs" id="marketTabs">
+<button class="active" data-filter="all">全部</button>
+<button data-filter="gainers">涨幅榜</button>
+<button data-filter="losers">跌幅榜</button>
+<button data-filter="volume">成交榜</button>
+</div>
+<div class="live-legend"><i></i> 实时更新</div>
+</div>
+<div class="table-scroll">
+<table class="market-table large">
+<thead><tr><th>排名</th><th>交易对</th><th>最新价</th><th>24h 涨跌</th><th>24h 高</th><th>24h 低</th><th>24h 成交额</th><th>趋势</th><th></th></tr></thead>
+<tbody id="marketsBody"></tbody>
+</table>
+</div>
+</article>
+</section>
