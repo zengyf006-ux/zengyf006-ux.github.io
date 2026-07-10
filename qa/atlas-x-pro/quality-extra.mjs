@@ -12,6 +12,8 @@ const viewport = viewportMap[name];
 if (!viewport) throw new Error(`Unknown viewport: ${name}`);
 
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
+const fontCss400 = 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/400.css';
+const fontCss700 = 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css';
 const browser = await chromium.launch({
   headless: true,
   executablePath: process.env.CHROME_BIN || '/usr/bin/google-chrome',
@@ -33,6 +35,21 @@ let passed = false;
 let checks = {};
 let fatalError = null;
 
+async function injectQaFont() {
+  await page.addStyleTag({ url: fontCss400, timeout: 6000 });
+  await page.addStyleTag({ url: fontCss700, timeout: 6000 });
+  await page.addStyleTag({ content: `html, body, button, input, select { font-family: "Noto Sans SC", sans-serif !important; }` });
+  await page.waitForTimeout(180);
+}
+
+async function shot(suffix) {
+  await page.screenshot({
+    path: `qa-artifacts-pro/screenshots/${viewport.name}-${suffix}.png`,
+    fullPage: false,
+    timeout: 12000,
+  });
+}
+
 async function testChartDrawing() {
   checks.chartToolsReady = await page.evaluate(() => document.documentElement.dataset.chartProTools === 'ready');
   checks.chartToolbarVisible = await page.locator('.chart-drawing-tools').isVisible();
@@ -44,6 +61,31 @@ async function testChartDrawing() {
   checks.horizontalLineCreated = await page.locator('.chart-price-line.user-line').count() === 1;
   await page.locator('[data-chart-tool="clear"]').click();
   checks.horizontalLineCleared = await page.locator('.chart-price-line.user-line').count() === 0;
+}
+
+async function testDepthChart() {
+  if (viewport.mobile) await page.locator('[data-mobile-view="book"]').click();
+  await page.locator('[data-book-view="depth"]').click();
+  await page.waitForFunction(() => document.querySelector('#depthChartCanvas')?.dataset.rendered === 'true', null, { timeout: 6000 });
+  checks.depthTabVisible = await page.locator('[data-book-view="depth"]').isVisible();
+  checks.depthChartRendered = await page.locator('#depthChartCanvas').evaluate(canvas => canvas.dataset.rendered === 'true' && canvas.width > 200 && canvas.height > 120);
+  if (viewport.mobile) await page.locator('[data-mobile-view="chart"]').click();
+  else await page.locator('[data-book-view="book"]').click();
+}
+
+async function testPriceAlert() {
+  const scope = viewport.mobile ? 'mobile' : 'desktop';
+  const button = page.locator(`[data-open-price-alert="${scope}"]`);
+  checks.priceAlertButtonVisible = await button.isVisible();
+  await button.click();
+  checks.priceAlertPanelVisible = await page.locator('#priceAlertPanel').isVisible();
+  const current = Number((await page.locator('#lastPrice').innerText()).replace(/,/g, ''));
+  await page.locator('#alertCondition').selectOption('below');
+  await page.locator('#alertPrice').fill(String(current + Math.max(1, current * 0.001)));
+  await page.locator('#addPriceAlert').click();
+  await page.waitForTimeout(120);
+  checks.priceAlertTriggered = await page.locator('#alertList .alert-row.triggered').count() === 1;
+  await page.locator('[data-close-price-alert]').click();
 }
 
 async function submitMarketOrder(total = '500') {
@@ -66,18 +108,22 @@ async function submitLimitOrder() {
 
 try {
   await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 18000 });
+  await injectQaFont();
   await page.waitForFunction(
-    () => document.documentElement.dataset.terminalQuality === 'ready' && document.documentElement.dataset.chartProTools === 'ready',
+    () => document.documentElement.dataset.terminalQuality === 'ready'
+      && document.documentElement.dataset.chartProTools === 'ready'
+      && document.documentElement.dataset.tradingAdvanced === 'ready',
     null,
     { timeout: 12000 },
   );
   await page.waitForTimeout(700);
 
   checks.qualityLayerReady = await page.evaluate(() => document.documentElement.dataset.terminalQuality === 'ready');
-  checks.noConsoleErrors = consoleErrors.length === 0;
-  checks.noPageErrors = pageErrors.length === 0;
+  checks.advancedLayerReady = await page.evaluate(() => document.documentElement.dataset.tradingAdvanced === 'ready');
 
   await testChartDrawing();
+  await testDepthChart();
+  await testPriceAlert();
 
   if (viewport.mobile) {
     checks.quickStatsVisible = await page.locator('.mobile-quick-stats').isVisible();
@@ -114,25 +160,25 @@ try {
 
     await submitLimitOrder();
     await submitMarketOrder('500');
+    checks.cancelAllEnabled = !(await page.locator('#cancelAllOrders').isDisabled());
+    checks.closeAllEnabled = !(await page.locator('#closeAllPositions').isDisabled());
+    await shot('advanced-markers');
+
+    await page.locator('#cancelAllOrders').click();
+    await page.waitForTimeout(100);
+    checks.cancelAllWorks = await page.locator('[data-cancel-order]').count() === 0;
+    await page.locator('#closeAllPositions').click();
+    await page.waitForTimeout(100);
+    checks.closeAllWorks = await page.locator('[data-close-position]').count() === 0;
   }
 
   checks.noConsoleErrors = consoleErrors.length === 0;
   checks.noPageErrors = pageErrors.length === 0;
   passed = Object.values(checks).every(Boolean);
-  await page.screenshot({
-    path: `qa-artifacts-pro/screenshots/${viewport.name}-quality.png`,
-    fullPage: false,
-    timeout: 12000,
-  });
+  await shot('quality');
 } catch (error) {
   fatalError = String(error);
-  try {
-    await page.screenshot({
-      path: `qa-artifacts-pro/screenshots/${viewport.name}-quality-fatal.png`,
-      fullPage: false,
-      timeout: 12000,
-    });
-  } catch {}
+  try { await shot('quality-fatal'); } catch {}
 }
 
 await fs.writeFile('qa-artifacts-pro/quality-report.json', JSON.stringify({
