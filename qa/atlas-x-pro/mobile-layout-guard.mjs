@@ -40,6 +40,17 @@ try {
   checks.bookFillsWorkspace = Boolean(bookBox && bookBox.height >= terminalBox.height - 3);
   checks.bookRowsVisible = await page.locator('#orderBook .book-row').first().isVisible();
 
+  const visibleAsks = page.locator('#asksRows .book-row:visible');
+  const visibleBids = page.locator('#bidsRows .book-row:visible');
+  const askCount = await visibleAsks.count();
+  const bidCount = await visibleBids.count();
+  const lastAskBox = askCount ? await visibleAsks.nth(askCount - 1).boundingBox() : null;
+  const firstBidBox = bidCount ? await visibleBids.first().boundingBox() : null;
+  const midBox = await page.locator('.mid-price').boundingBox();
+  checks.mobileDepthCountReadable = askCount >= 8 && askCount <= 9 && bidCount >= 8 && bidCount <= 9;
+  checks.askDoesNotOverlapMid = Boolean(lastAskBox && midBox && lastAskBox.y + lastAskBox.height <= midBox.y + 1);
+  checks.bidDoesNotOverlapMid = Boolean(firstBidBox && midBox && firstBidBox.y >= midBox.y + midBox.height - 1);
+
   await page.locator('[data-book-view="trades"]').click();
   await page.waitForTimeout(100);
   const tradesBox = await page.locator('[data-book-content="trades"]').boundingBox();
