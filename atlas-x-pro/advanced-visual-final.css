@@ -1,0 +1,83 @@
+/* Final visual refinement for advanced trading controls */
+.chart-price-line > span {
+  left: auto !important;
+  right: 5px;
+}
+
+.price-alert-button {
+  position: relative;
+}
+
+.account-bulk-actions button {
+  height: 28px;
+  min-width: 66px;
+  padding-inline: 10px;
+  font-size: 8px;
+  font-weight: 650;
+}
+
+.shortcut-hint {
+  gap: 6px;
+  margin-left: 9px;
+  font-size: 8px;
+}
+.shortcut-hint kbd {
+  min-width: 20px;
+  height: 18px;
+  font-size: 7px;
+}
+
+@media (max-width: 820px) {
+  .price-alert-panel {
+    top: auto !important;
+    right: 0 !important;
+    bottom: 0;
+    left: 0 !important;
+    width: auto;
+    max-height: min(72dvh, 560px);
+    padding-top: 9px;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-width: 1px 0 0;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -24px 60px rgba(0, 0, 0, .58);
+  }
+  .price-alert-panel::before {
+    content: "";
+    display: block;
+    width: 34px;
+    height: 4px;
+    margin: 0 auto 5px;
+    border-radius: 999px;
+    background: #344154;
+  }
+  .price-alert-panel header {
+    min-height: 45px;
+    padding-inline: 14px;
+  }
+  .price-alert-panel header strong { font-size: 12px; }
+  .price-alert-panel header small { font-size: 8px; }
+  .alert-form {
+    grid-template-columns: 92px 1fr 60px;
+    padding: 11px 12px;
+  }
+  .alert-form select,
+  .alert-form input,
+  .alert-form button {
+    height: 39px;
+    font-size: 9px;
+  }
+  .alert-list {
+    max-height: 280px;
+    padding: 6px 12px 12px;
+  }
+  .alert-row {
+    min-height: 50px;
+  }
+  .alert-row b,
+  .alert-row > span { font-size: 9px; }
+  .alert-row small { font-size: 8px; }
+
+  .chart-price-line > span {
+    right: 3px;
+  }
+}
