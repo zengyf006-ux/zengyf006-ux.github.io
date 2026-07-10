@@ -32,7 +32,6 @@
 }
 .execution-status b {
   color: var(--green);
-  font-family: var(--mono);
   font-size: 8px;
 }
 .execution-status.warning {
@@ -58,7 +57,7 @@
   z-index: 231;
   top: 50%;
   left: 50%;
-  width: min(390px, calc(100vw - 28px));
+  width: min(410px, calc(100vw - 28px));
   overflow: hidden;
   transform: translate(-50%, -50%);
   border: 1px solid var(--line-strong);
@@ -67,15 +66,15 @@
   box-shadow: 0 30px 80px rgba(0, 0, 0, .62);
 }
 .order-confirm-dialog header {
-  min-height: 49px;
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 0 15px;
   border-bottom: 1px solid var(--line);
 }
 .order-confirm-dialog header div { display: grid; gap: 3px; }
-.order-confirm-dialog header strong { font-size: 12px; }
+.order-confirm-dialog header strong { font-size: 13px; }
 .order-confirm-dialog header small { color: var(--muted); font-size: 8px; }
 .order-confirm-dialog header button {
   width: 30px;
@@ -89,7 +88,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
-  margin: 12px;
+  margin: 13px;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -98,42 +97,47 @@
 .order-confirm-grid > div {
   min-width: 0;
   display: grid;
-  gap: 5px;
-  padding: 10px 11px;
+  gap: 6px;
+  padding: 11px 12px;
   background: #0a1017;
 }
-.order-confirm-grid span { color: var(--muted); font-size: 7px; }
+.order-confirm-grid span { color: var(--muted); font-size: 8px; }
 .order-confirm-grid b {
   overflow: hidden;
   color: var(--text-2);
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.order-confirm-grid > div:first-child b {
+  font-family: "Atlas QA SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-weight: 750;
+  letter-spacing: .01em;
+}
 .order-confirm-warning {
-  margin: 0 12px;
-  padding: 9px 10px;
+  margin: 0 13px;
+  padding: 10px 11px;
   border: 1px solid rgba(231, 185, 88, .27);
   border-radius: 6px;
   background: rgba(231, 185, 88, .05);
   color: #c8b176;
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.55;
 }
 .order-confirm-actions {
   display: grid;
   grid-template-columns: 1fr 1.35fr;
   gap: 8px;
-  padding: 13px 12px;
+  padding: 14px 13px;
 }
 .order-confirm-actions button {
-  height: 39px;
+  height: 41px;
   border: 1px solid var(--line);
   border-radius: 5px;
   background: #111923;
   color: var(--text-2);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 750;
 }
 .order-confirm-actions .confirm-buy {
@@ -176,9 +180,11 @@
     background: #344154;
   }
   .order-confirm-dialog header { min-height: 50px; }
+  .order-confirm-grid { margin: 12px; }
   .order-confirm-grid > div { padding: 11px; }
   .order-confirm-grid span { font-size: 8px; }
   .order-confirm-grid b { font-size: 10px; }
-  .order-confirm-warning { font-size: 9px; }
+  .order-confirm-warning { margin-inline: 12px; font-size: 9px; }
+  .order-confirm-actions { padding-inline: 12px; }
   .order-confirm-actions button { height: 44px; font-size: 10px; }
 }
