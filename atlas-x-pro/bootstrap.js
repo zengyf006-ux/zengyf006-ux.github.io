@@ -37,6 +37,7 @@
     ensureStyle('./chart-pro-tools.css');
     ensureStyle('./trading-advanced.css');
     ensureStyle('./advanced-visual-final.css');
+    ensureStyle('./execution-guard.css');
 
     try {
       if (!document.querySelector('.ticket-context') || !document.querySelector('#controlPopover')) {
@@ -47,6 +48,7 @@
       await loadScript('./chart-pro-tools.js');
       await loadScript('./trading-advanced.js');
       await loadScript('./advanced-stability.js');
+      await loadScript('./execution-guard.js');
       document.documentElement.dataset.atlasQuality = 'ready';
     } catch (error) {
       console.error('ATLAS quality bootstrap failed', error);
