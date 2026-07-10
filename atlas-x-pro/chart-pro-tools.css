@@ -1,0 +1,105 @@
+/* Professional chart drawing and trade marker layer */
+.chart-marker-layer {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.chart-price-line {
+  position: absolute;
+  left: 9px;
+  right: 64px;
+  height: 0;
+  border-top: 1px dashed rgba(124, 140, 255, .8);
+  color: #aeb8ff;
+}
+.chart-price-line.position-line {
+  border-top-color: rgba(33, 201, 151, .85);
+  color: var(--green);
+}
+.chart-price-line.order-line {
+  border-top-color: rgba(231, 185, 88, .85);
+  color: var(--amber);
+}
+.chart-price-line.user-line {
+  border-top-color: rgba(124, 140, 255, .9);
+  color: #aeb8ff;
+}
+.chart-price-line > span {
+  position: absolute;
+  top: -10px;
+  left: 5px;
+  height: 19px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: rgba(8, 13, 19, .92);
+  padding: 0 6px;
+  font-family: var(--mono);
+  font-size: 7px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.chart-drawing-tools {
+  position: absolute;
+  z-index: 9;
+  top: 9px;
+  left: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(41, 55, 71, .9);
+  border-radius: 6px;
+  background: rgba(10, 15, 22, .9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
+  backdrop-filter: blur(7px);
+}
+.chart-drawing-tools button {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  padding: 0;
+}
+.chart-drawing-tools button:hover,
+.chart-drawing-tools button.active {
+  border-color: var(--line-strong);
+  background: #172130;
+  color: var(--text);
+}
+.chart-drawing-tools svg {
+  width: 14px;
+  height: 14px;
+}
+.chart-stage.drawing-horizontal {
+  cursor: crosshair;
+}
+
+@media (max-width: 820px) {
+  .chart-price-line {
+    left: 9px;
+    right: 64px;
+  }
+  .chart-price-line > span {
+    max-width: 118px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .chart-drawing-tools {
+    top: 8px;
+    left: 7px;
+    grid-template-columns: repeat(3, 27px);
+    gap: 2px;
+    padding: 3px;
+  }
+  .chart-drawing-tools button {
+    width: 27px;
+    height: 25px;
+  }
+}
