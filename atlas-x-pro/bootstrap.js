@@ -34,6 +34,7 @@
     ensureStyle('./release-polish.css');
     ensureStyle('./terminal-quality.css');
     ensureStyle('./mobile-final.css');
+    ensureStyle('./chart-pro-tools.css');
 
     try {
       if (!document.querySelector('.ticket-context') || !document.querySelector('#controlPopover')) {
@@ -41,6 +42,7 @@
       }
       await loadScript('./module-upgrades.js');
       await loadScript('./terminal-quality.js');
+      await loadScript('./chart-pro-tools.js');
       document.documentElement.dataset.atlasQuality = 'ready';
     } catch (error) {
       console.error('ATLAS quality bootstrap failed', error);
