@@ -42,6 +42,7 @@
       './performance-analytics.css',
       './performance-layout-polish.css',
       './portfolio-risk.css',
+      './market-intelligence.css',
       './mobile-account-tools.css',
       './data-health.css',
       './semantic-typography.css',
@@ -59,6 +60,7 @@
       await loadScript('./execution-guard.js');
       await loadScript('./performance-analytics.js');
       await loadScript('./portfolio-risk.js');
+      await loadScript('./market-intelligence.js');
       await loadScript('./mobile-account-tools.js');
       await loadScript('./data-health.js');
       document.documentElement.dataset.atlasQuality = 'ready';
