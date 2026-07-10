@@ -9,79 +9,124 @@ const viewports = [
   { name: 'desktop-1920x1080', width: 1920, height: 1080 },
 ];
 
-await fs.mkdir('qa-artifacts/screenshots', { recursive: true });
-const browser = await chromium.launch({ headless: true });
-const report = { target, generatedAt: new Date().toISOString(), results: [] };
-let failed = false;
+const artifactRoot = 'qa-artifacts';
+const screenshotRoot = `${artifactRoot}/screenshots`;
+await fs.mkdir(screenshotRoot, { recursive: true });
 
-for (const viewport of viewports) {
-  const page = await browser.newPage({
-    viewport: { width: viewport.width, height: viewport.height },
-    deviceScaleFactor: 1,
-    isMobile: viewport.width < 600,
-    hasTouch: viewport.width < 600,
-  });
+const report = {
+  target,
+  generatedAt: new Date().toISOString(),
+  completed: false,
+  results: [],
+  runnerErrors: [],
+};
 
-  const consoleErrors = [];
-  const pageErrors = [];
-  page.on('console', message => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', error => pageErrors.push(String(error)));
+async function saveReport() {
+  await fs.writeFile(`${artifactRoot}/report.json`, JSON.stringify(report, null, 2));
+}
 
-  try {
-    const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await page.waitForTimeout(7000);
+await saveReport();
+let browser;
 
-    const enter = page.locator('#enter');
-    if (await enter.count()) {
-      await enter.click({ timeout: 15000 });
-      await page.waitForTimeout(2500);
-    }
+try {
+  browser = await chromium.launch({ headless: true });
 
-    const metrics = await page.evaluate(() => ({
-      title: document.title,
-      bodyWidth: document.body.scrollWidth,
-      viewportWidth: document.documentElement.clientWidth,
-      bodyHeight: document.body.scrollHeight,
-      visibleTextLength: (document.body.innerText || '').trim().length,
-    }));
-
-    const overflow = metrics.bodyWidth > metrics.viewportWidth + 1;
-    const blank = metrics.visibleTextLength < 20;
-    const badStatus = !response || response.status() >= 400;
-    const resultFailed = overflow || blank || badStatus || pageErrors.length > 0;
-    failed ||= resultFailed;
-
-    await page.screenshot({
-      path: `qa-artifacts/screenshots/${viewport.name}.png`,
-      fullPage: true,
-    });
-
-    report.results.push({
+  for (const viewport of viewports) {
+    const result = {
       viewport,
-      httpStatus: response?.status() ?? null,
-      overflow,
-      blank,
-      metrics,
-      consoleErrors,
-      pageErrors,
-      passed: !resultFailed,
-    });
-  } catch (error) {
-    failed = true;
-    report.results.push({ viewport, passed: false, fatalError: String(error), consoleErrors, pageErrors });
-  } finally {
-    await page.close();
+      passed: false,
+      consoleErrors: [],
+      pageErrors: [],
+    };
+    report.results.push(result);
+    await saveReport();
+
+    let page;
+    try {
+      page = await browser.newPage({
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+        hasTouch: viewport.width < 600,
+      });
+
+      page.on('console', message => {
+        if (message.type() === 'error') result.consoleErrors.push(message.text());
+      });
+      page.on('pageerror', error => result.pageErrors.push(String(error)));
+
+      const response = await page.goto(target, {
+        waitUntil: 'domcontentloaded',
+        timeout: 60000,
+      });
+      result.httpStatus = response?.status() ?? null;
+      await page.waitForTimeout(5000);
+
+      await page.screenshot({
+        path: `${screenshotRoot}/${viewport.name}-launcher.png`,
+        fullPage: false,
+      });
+
+      const enter = page.locator('#enter');
+      result.enterButtonFound = (await enter.count()) > 0;
+      if (result.enterButtonFound) {
+        await enter.click({ timeout: 15000 });
+        await page.waitForTimeout(2500);
+      }
+
+      await page.screenshot({
+        path: `${screenshotRoot}/${viewport.name}-terminal.png`,
+        fullPage: false,
+      });
+
+      result.metrics = await page.evaluate(() => ({
+        title: document.title,
+        bodyWidth: document.body.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+        bodyHeight: document.body.scrollHeight,
+        viewportHeight: document.documentElement.clientHeight,
+        visibleTextLength: (document.body.innerText || '').trim().length,
+      }));
+
+      result.overflow = result.metrics.bodyWidth > result.metrics.viewportWidth + 1;
+      result.blank = result.metrics.visibleTextLength < 20;
+      result.badStatus = result.httpStatus === null || result.httpStatus >= 400;
+      result.passed = !result.overflow && !result.blank && !result.badStatus && result.pageErrors.length === 0;
+    } catch (error) {
+      result.fatalError = String(error?.stack || error);
+      if (page) {
+        try {
+          await page.screenshot({
+            path: `${screenshotRoot}/${viewport.name}-failure.png`,
+            fullPage: false,
+          });
+        } catch (screenshotError) {
+          result.screenshotError = String(screenshotError?.stack || screenshotError);
+        }
+      }
+    } finally {
+      if (page) {
+        try {
+          await page.close();
+        } catch (closeError) {
+          result.closeError = String(closeError?.stack || closeError);
+        }
+      }
+      await saveReport();
+    }
   }
+} catch (error) {
+  report.runnerErrors.push(String(error?.stack || error));
+} finally {
+  if (browser) {
+    try {
+      await browser.close();
+    } catch (error) {
+      report.runnerErrors.push(String(error?.stack || error));
+    }
+  }
+  report.completed = true;
+  report.passed = report.runnerErrors.length === 0 && report.results.length === viewports.length && report.results.every(item => item.passed);
+  await saveReport();
 }
 
-await browser.close();
-await fs.writeFile('qa-artifacts/report.json', JSON.stringify(report, null, 2));
-
-if (failed) {
-  console.error('Visual QA proof completed with failures. See report.json.');
-  process.exit(1);
-}
-
-console.log('Visual QA proof completed successfully.');
+console.log(JSON.stringify({ completed: report.completed, passed: report.passed, results: report.results.length }));
