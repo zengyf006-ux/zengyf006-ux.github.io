@@ -29,7 +29,8 @@
   const core=['core.js','market.js','account.js','ui-market.js','ui-account.js','pro.js'];
   for(let i=0;i<core.length;i++){status.textContent=`装载核心模块 ${i+1} / ${core.length+3}…`;await load(`../v7/${core[i]}?v=901`)}
   status.textContent='装载 V8 专业执行兼容层…';await load('../v8/v8.js?v=901');
-  status.textContent='装载 V9 风险、生命周期与工作区…';await load('./v9.js?v=901');
+  const v9=['v9-base.js','v9-risk.js','v9-market.js','v9-execution.js','v9-chart.js','v9-boot.js'];
+  for(let i=0;i<v9.length;i++){status.textContent=`装载 V9 专业模块 ${i+1} / ${v9.length}…`;await load(`./${v9[i]}?v=902`)}
   if(typeof MarketEngine==='undefined'||typeof AccountEngine==='undefined'||typeof bindV7!=='function')throw new Error('核心模块完整性校验失败');
   status.textContent='启动交易终端…';await load('../v7/boot.js?v=901');
  }catch(e){console.error(e);document.body.innerHTML=`<main class="v9-fatal"><div><span>ATLAS X V9</span><h2>终端启动失败</h2><p>${String(e.message||e)}</p><button onclick="location.reload()">重新加载</button><small>建议使用 Safari 或 Chrome，并确认网络可访问公开行情接口。</small></div></main>`}
