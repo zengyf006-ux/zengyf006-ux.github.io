@@ -6,7 +6,7 @@
   style.href = './refinements.css';
   document.head.append(style);
 
-  for (const source of ['./pro-polish.js', './module-upgrades.js']) {
+  for (const source of ['./pro-polish.js', './module-upgrades.js', './bootstrap.js']) {
     const script = document.createElement('script');
     script.src = source;
     script.async = false;
