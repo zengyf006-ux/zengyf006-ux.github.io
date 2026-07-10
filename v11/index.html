@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f4f6f8">
+<meta name="description" content="ATLAS X V11 — Pearl Glass 专业模拟交易终端">
+<title>ATLAS X V11｜Pearl Glass 交易终端</title>
+<link rel="stylesheet" href="../v7/base.css?v=11">
+<link rel="stylesheet" href="../v7/pages.css?v=11">
+<link rel="stylesheet" href="../v7/pro.css?v=11">
+<link rel="stylesheet" href="../v8/v8.css?v=11">
+<link rel="stylesheet" href="https://raw.githack.com/zengyf006-ux/zengyf006-ux.github.io/76c22cef670d05605d4bbda30cfdae7678227b3c/v9/v9.css">
+<link rel="stylesheet" href="../v10/v10.css?v=11">
+<link rel="stylesheet" href="./v11.css?v=1101">
+<style>
+#v11boot{position:fixed;inset:0;z-index:15000;display:grid;place-items:center;background:radial-gradient(circle at 52% 18%,rgba(120,145,255,.18),transparent 36%),linear-gradient(180deg,#f8fafc,#eef2f6);color:#111722;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.v11boot-box{text-align:center;width:min(88vw,460px)}.v11boot-mark{width:66px;height:66px;margin:auto;display:grid;place-items:center;border:1px solid rgba(255,255,255,.9);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(223,235,255,.78));box-shadow:0 22px 60px rgba(59,79,115,.16),inset 0 1px 0 #fff;font-size:20px;font-weight:950;color:#111722;animation:v11pulse 1.1s infinite alternate}.v11boot-title{margin-top:20px;font-size:16px;font-weight:850;letter-spacing:.08em}.v11boot-sub{margin-top:8px;color:#6c7685;font-size:11px;line-height:1.7}.v11boot-track{height:4px;margin:22px auto 0;overflow:hidden;border-radius:99px;background:rgba(24,35,52,.08)}.v11boot-track i{display:block;width:26%;height:100%;border-radius:99px;background:linear-gradient(90deg,#6f8fff,#50d9b4);animation:v11load .95s infinite}.v11boot-meta{margin-top:13px;color:#8b95a3;font-size:8px;letter-spacing:.08em}@keyframes v11pulse{to{transform:translateY(-2px) scale(.96);filter:brightness(1.03)}}@keyframes v11load{from{transform:translateX(-145%)}to{transform:translateX(500%)}}
+</style>
+</head>
+<body>
+<div id="v11boot"><div class="v11boot-box"><div class="v11boot-mark">A</div><div class="v11boot-title">正在启动 ATLAS X V11</div><div class="v11boot-sub" id="v11bootStatus">装载 Pearl Glass 界面、精确K线触控与自动质量检查…</div><div class="v11boot-track"><i></i></div><div class="v11boot-meta">PEARL GLASS · PRECISE CANDLE TAP · SELF AUDIT</div></div></div>
+<script>
+(async()=>{
+ const status=document.getElementById('v11bootStatus'),V9='https://raw.githack.com/zengyf006-ux/zengyf006-ux.github.io/76c22cef670d05605d4bbda30cfdae7678227b3c/v9/';
+ const load=(src,timeout=18000)=>new Promise((resolve,reject)=>{const s=document.createElement('script'),t=setTimeout(()=>{s.remove();reject(new Error('加载超时 '+src))},timeout);s.src=src;s.onload=()=>{clearTimeout(t);resolve()};s.onerror=()=>{clearTimeout(t);reject(new Error('加载失败 '+src))};document.body.appendChild(s)});
+ try{
+  status.textContent='装载终端界面…';
+  const r=await fetch('../v7/index.html?v=1101',{cache:'no-store'});if(!r.ok)throw new Error('基础终端 HTTP '+r.status);
+  const text=await r.text(),doc=new DOMParser().parseFromString(text,'text/html'),boot=document.getElementById('v11boot');doc.querySelectorAll('script').forEach(x=>x.remove());
+  document.body.innerHTML=doc.body.innerHTML;document.body.appendChild(boot);
+  const core=['core.js','market.js','account.js','ui-market.js','ui-account.js','pro.js'];
+  for(let i=0;i<core.length;i++){status.textContent=`装载核心模块 ${i+1} / ${core.length+14}…`;await load(`../v7/${core[i]}?v=1101`)}
+  status.textContent='装载专业执行层…';await load('../v8/v8.js?v=1101');
+  const v9=['v9-base.js','v9-risk.js','v9-market.js','v9-execution.js','v9-chart.js','v9-boot.js'];
+  for(let i=0;i<v9.length;i++){status.textContent=`装载风险与工作区 ${i+1} / ${v9.length}…`;await load(V9+v9[i])}
+  const v10=['v10-performance.js','v10-chart.js','v10-ui.js','v10-boot.js'];
+  for(let i=0;i<v10.length;i++){status.textContent=`装载流畅度与图表核心 ${i+1} / ${v10.length}…`;await load(`../v10/${v10[i]}?v=1101`)}
+  const v11=['v11-chart.js','v11-ui.js','v11-audit.js','v11-boot.js'];
+  for(let i=0;i<v11.length;i++){status.textContent=`装载 V11 精修模块 ${i+1} / ${v11.length}…`;await load(`./${v11[i]}?v=1101`)}
+  if(typeof MarketEngine==='undefined'||typeof ChartController==='undefined'||typeof AccountEngine==='undefined'||typeof bindV7!=='function')throw new Error('核心模块完整性校验失败');
+  status.textContent='启动交易终端…';await load('../v7/boot.js?v=1101');
+ }catch(e){console.error(e);document.body.innerHTML=`<main class="v11-fatal"><div><span>ATLAS X V11</span><h2>终端启动失败</h2><p>${String(e.message||e)}</p><button onclick="location.reload()">重新加载</button><small>建议使用 Safari 或 Chrome，并确认网络可以访问公开行情接口。</small></div></main>`}
+})();
+</script>
+</body>
+</html>
