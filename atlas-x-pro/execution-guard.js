@@ -7,9 +7,10 @@
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const STORAGE_KEY = 'atlasX.pro.v1';
   const MIN_NOTIONAL = 5;
+  const DUPLICATE_WINDOW_MS = 850;
   let bypassOnce = false;
-  let submitLockedUntil = 0;
   let pendingContext = null;
+  let lastSubmission = { fingerprint: '', at: 0 };
 
   function numberFrom(value) {
     return Number(String(value ?? '').replace(/[^0-9.-]/g, '')) || 0;
@@ -87,8 +88,31 @@
     };
   }
 
+  function orderFingerprint(context) {
+    return [
+      context.symbol,
+      context.side,
+      context.orderType,
+      Number(context.price || 0).toPrecision(12),
+      Number(context.triggerPrice || 0).toPrecision(12),
+      Number(context.quantity || 0).toPrecision(12),
+      Number(context.total || 0).toPrecision(12),
+      context.postOnly ? 'P' : '-',
+      context.reduceOnly ? 'R' : '-',
+    ].join('|');
+  }
+
+  function isIdenticalDuplicate(context) {
+    const fingerprint = orderFingerprint(context);
+    return fingerprint === lastSubmission.fingerprint && Date.now() - lastSubmission.at < DUPLICATE_WINDOW_MS;
+  }
+
+  function rememberSubmission(context) {
+    lastSubmission = { fingerprint: orderFingerprint(context), at: Date.now() };
+  }
+
   function validate(context) {
-    if (Date.now() < submitLockedUntil) return { ok: false, level: 'warning', message: '订单正在处理，请勿重复提交' };
+    if (isIdenticalDuplicate(context)) return { ok: false, level: 'warning', message: '检测到相同订单重复提交，已自动阻止' };
     if (!(context.quantity > 0) || !(context.total > 0)) return { ok: false, level: 'danger', message: '请输入有效的数量和总额' };
     if (context.total < MIN_NOTIONAL) return { ok: false, level: 'danger', message: `最小模拟成交额为 ${MIN_NOTIONAL.toFixed(2)} USDT` };
     if (!(context.price > 0)) return { ok: false, level: 'danger', message: '委托价格无效' };
@@ -206,7 +230,6 @@
   }
 
   function closeConfirmation() {
-    pendingContext = null;
     const backdrop = $('#orderConfirmBackdrop');
     const dialog = $('#orderConfirmDialog');
     if (backdrop) backdrop.hidden = true;
@@ -214,8 +237,10 @@
   }
 
   function allowOriginalSubmit() {
+    const context = pendingContext || buildContext();
+    rememberSubmission(context);
     bypassOnce = true;
-    submitLockedUntil = Date.now() + 850;
+    pendingContext = null;
     closeConfirmation();
     $('#submitOrder')?.click();
     setTimeout(updateExecutionStatus, 80);
@@ -226,7 +251,6 @@
     if (!submit) return;
     if (bypassOnce) {
       bypassOnce = false;
-      submitLockedUntil = Date.now() + 850;
       return;
     }
     const context = buildContext();
@@ -244,13 +268,16 @@
       openConfirmation(context, validation);
       return;
     }
-    submitLockedUntil = Date.now() + 850;
+    rememberSubmission(context);
   }
 
   function bind() {
     document.addEventListener('click', interceptSubmit, true);
     document.addEventListener('click', event => {
-      if (event.target.closest('[data-cancel-order-confirm]') || event.target === $('#orderConfirmBackdrop')) closeConfirmation();
+      if (event.target.closest('[data-cancel-order-confirm]') || event.target === $('#orderConfirmBackdrop')) {
+        pendingContext = null;
+        closeConfirmation();
+      }
     });
     $('#confirmOrderSubmit')?.addEventListener('click', allowOriginalSubmit);
     ['#orderQuantity', '#orderTotal', '#orderPrice', '#triggerPrice', '#postOnly', '#reduceOnly']
@@ -266,9 +293,13 @@
       }
     });
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && !$('#orderConfirmDialog')?.hidden) closeConfirmation();
+      if (event.key === 'Escape' && !$('#orderConfirmDialog')?.hidden) {
+        pendingContext = null;
+        closeConfirmation();
+      }
     });
-    new MutationObserver(updateExecutionStatus).observe($('#ticketAvailable'), { childList: true, characterData: true, subtree: true });
+    const available = $('#ticketAvailable');
+    if (available) new MutationObserver(updateExecutionStatus).observe(available, { childList: true, characterData: true, subtree: true });
   }
 
   function init() {
