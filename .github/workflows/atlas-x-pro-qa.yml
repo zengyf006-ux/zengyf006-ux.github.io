@@ -16,7 +16,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 9
     strategy:
       fail-fast: false
       matrix:
@@ -85,6 +85,13 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/mobile-layout-guard.mjs
 
+      - name: Verify mobile account tools
+        if: startsWith(matrix.viewport, 'iphone-')
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/mobile-account-tools.mjs
+
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -98,6 +105,7 @@ jobs:
             qa-artifacts-pro/performance-analytics-report.json
             qa-artifacts-pro/advanced-visual-report.json
             qa-artifacts-pro/mobile-layout-report.json
+            qa-artifacts-pro/mobile-account-tools-report.json
             /tmp/atlas-pro-http.log
           retention-days: 1
           if-no-files-found: error
