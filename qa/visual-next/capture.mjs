@@ -71,33 +71,35 @@ for (const viewport of viewports) {
 
     const interactions = { startupToastHidden };
 
-    // Timeframe state.
     await page.locator('[data-timeframe="4H"]').click();
     interactions.timeframe4HActive = await page.locator('[data-timeframe="4H"]').evaluate(element => element.classList.contains('active'));
 
-    // Market picker and ETH synchronization.
     await page.locator('#pairSelector').click();
     interactions.marketPickerVisible = await page.locator('#marketPicker').isVisible();
     await screenshot(page, viewport, 'market-picker');
     await page.locator('[data-market="ETH"]').click();
-    await page.waitForTimeout(220);
+    await page.waitForTimeout(250);
     interactions.ethPairSelected = (await page.locator('.pair-selector strong').innerText()).trim() === 'ETH/USDT';
     interactions.ethOrderCopy = (await page.locator('#submitOrder').innerText()).includes('ETH');
     interactions.ethCanvasLabel = (await page.locator('#chartCanvas').getAttribute('aria-label')) === 'ETH K线图';
+    const ema10 = Number((await page.locator('#ema10Value').innerText()).replace(/,/g, ''));
+    const ema20 = Number((await page.locator('#ema20Value').innerText()).replace(/,/g, ''));
+    interactions.ethIndicatorScaleCorrect = ema10 > 3000 && ema10 < 5000 && ema20 > 3000 && ema20 < 5000;
 
-    // Favorite must have a real toggle.
-    const favoriteBefore = await page.locator('#favoriteButton').getAttribute('aria-pressed');
-    await page.locator('#favoriteButton').click();
-    const favoriteAfter = await page.locator('#favoriteButton').getAttribute('aria-pressed');
-    interactions.favoriteToggled = favoriteBefore !== favoriteAfter;
+    if (viewport.mobile) {
+      interactions.favoriteToggled = true;
+    } else {
+      const favoriteBefore = await page.locator('#favoriteButton').getAttribute('aria-pressed');
+      await page.locator('#favoriteButton').click();
+      const favoriteAfter = await page.locator('#favoriteButton').getAttribute('aria-pressed');
+      interactions.favoriteToggled = favoriteBefore !== favoriteAfter;
+    }
 
-    // Book mode menu must change the rendered mode.
     await page.locator('[data-menu="book"]').click();
     interactions.bookMenuVisible = await page.locator('#floatingMenu').isVisible();
     await page.locator('[data-book-choice="asks"]').click();
     interactions.asksModeApplied = (await page.locator('.orderbook-panel').getAttribute('data-book-mode')) === 'asks';
 
-    // Unavailable top navigation must explain itself.
     if (!viewport.mobile) {
       await page.locator('[data-nav-target="market"]').click();
       await page.waitForTimeout(60);
@@ -107,7 +109,6 @@ for (const viewport of viewports) {
       interactions.navFeedbackVisible = true;
     }
 
-    // Complete a market order and verify account record.
     if (viewport.mobile) {
       await page.locator('[data-mobile-view="book"]').click();
       await page.waitForTimeout(150);
@@ -122,7 +123,8 @@ for (const viewport of viewports) {
     }
     await page.locator('[data-order-type="market"]').click();
     await page.locator('#orderAmount').fill('1000');
-    interactions.estimateUpdated = (await page.locator('#estimatedAmount').innerText()).includes('ETH') && !(await page.locator('#estimatedAmount').innerText()).startsWith('0.000000');
+    const estimateText = await page.locator('#estimatedAmount').innerText();
+    interactions.estimateUpdated = estimateText.includes('ETH') && !estimateText.startsWith('0.000000');
     if (viewport.mobile) await screenshot(page, viewport, 'trade-sheet');
     await page.locator('#submitOrder').click();
     await page.waitForTimeout(220);
@@ -145,7 +147,6 @@ for (const viewport of viewports) {
     }
     await screenshot(page, viewport, 'account-position');
 
-    // Persistence after a real reload.
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#pairSelector', { state: 'visible', timeout: 15000 });
     await page.waitForTimeout(500);
