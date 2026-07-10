@@ -3,16 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1118" />
+  <meta name="theme-color" content="#070b10" />
   <meta name="description" content="ATLAS X 专业数字资产模拟交易终端" />
   <title>ATLAS X｜模拟交易终端</title>
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="ATLAS X 首页">
-        <span class="brand-mark" aria-hidden="true"><i></i></span>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 19 11.1 5.7a1 1 0 0 1 1.8 0L19 19"/><path class="brand-accent" d="M8.7 15h6.6"/></svg>
+        </span>
         <span class="brand-copy"><strong>ATLAS X</strong><small>DIGITAL ASSET TERMINAL</small></span>
       </a>
       <nav class="primary-nav" aria-label="主导航">
@@ -24,7 +27,9 @@
       <div class="topbar-actions">
         <span class="status-pill"><i></i>行情在线</span>
         <span class="mode-pill">模拟环境</span>
-        <button class="round-action" type="button" aria-label="通知">⌁</button>
+        <button class="round-action" type="button" aria-label="通知">
+          <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        </button>
         <button class="avatar" type="button" aria-label="账户">AX</button>
       </div>
     </header>
@@ -46,9 +51,14 @@
         <div><span>24h 成交量</span><b>28.64K BTC</b></div>
         <div><span>24h 成交额</span><b>1.84B USDT</b></div>
       </div>
+      <div class="market-range" aria-label="24小时价格区间">
+        <span>24h 价格区间</span>
+        <div class="market-range-track"><i></i></div>
+        <div class="market-range-values"><small>62,906</small><small>65,182</small></div>
+      </div>
       <div class="summary-actions">
-        <button type="button" aria-label="加入自选">☆</button>
-        <button type="button" aria-label="更多">•••</button>
+        <button type="button" aria-label="加入自选"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.2l-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg></button>
+        <button type="button" aria-label="更多"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
       </div>
     </section>
 
@@ -72,8 +82,8 @@
           <div class="chart-tools">
             <button class="active" type="button">EMA</button>
             <button type="button">BOLL</button>
-            <button class="icon-only" type="button" aria-label="图表设置">⌁</button>
-            <button class="icon-only" type="button" aria-label="全屏">⛶</button>
+            <button class="icon-only" type="button" aria-label="图表设置"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+            <button class="icon-only" type="button" aria-label="全屏"><svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
           </div>
         </header>
         <div class="chart-info-bar">
@@ -107,7 +117,7 @@
             <button class="active" data-book-tab="book" type="button">订单簿</button>
             <button data-book-tab="trades" type="button">最近成交</button>
           </div>
-          <button class="panel-menu" type="button" aria-label="盘口显示设置">☷</button>
+          <button class="panel-menu" type="button" aria-label="盘口显示设置"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M8 6v0M14 12v0M10 18v0"/></svg></button>
         </header>
         <div class="book-view active" data-book-view="book">
           <div class="book-columns"><span>价格(USDT)</span><span>数量(BTC)</span><span>累计</span></div>
@@ -129,7 +139,7 @@
         <header class="order-side-tabs" id="sideTabs">
           <button class="active buy" data-side="buy" type="button">买入</button>
           <button class="sell" data-side="sell" type="button">卖出</button>
-          <button class="sheet-close" id="sheetClose" type="button" aria-label="关闭">×</button>
+          <button class="sheet-close" id="sheetClose" type="button" aria-label="关闭"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
         </header>
         <div class="order-content">
           <div class="order-type-tabs" id="orderTypeTabs">
@@ -174,7 +184,7 @@
           <table class="account-table">
             <thead><tr><th>交易对</th><th>方向</th><th>持仓数量</th><th>开仓均价</th><th>标记价格</th><th>未实现盈亏</th><th>操作</th></tr></thead>
             <tbody id="accountBody">
-              <tr class="empty-row"><td colspan="7"><div class="empty-state"><span class="empty-icon">◎</span><b>暂无持仓</b><small>完成一笔模拟下单后，持仓与实时盈亏会显示在这里。</small></div></td></tr>
+              <tr class="empty-row"><td colspan="7"><div class="empty-state"><span class="empty-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></span><b>暂无持仓</b><small>完成一笔模拟下单后，持仓与实时盈亏会显示在这里。</small></div></td></tr>
             </tbody>
           </table>
         </div>
