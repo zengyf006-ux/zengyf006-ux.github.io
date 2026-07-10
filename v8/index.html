@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06080c">
+<meta name="description" content="ATLAS X V8 — 实时行情驱动的专业模拟交易终端">
+<title>ATLAS X V8｜专业模拟交易终端</title>
+<link rel="stylesheet" href="../v7/base.css?v=8">
+<link rel="stylesheet" href="../v7/pages.css?v=8">
+<link rel="stylesheet" href="../v7/pro.css?v=8">
+<link rel="stylesheet" href="./v8.css?v=801">
+<style>
+#v8boot{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:radial-gradient(circle at 50% 24%,#17233d 0,transparent 38%),#06080c;color:#f5f7fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.v8boot-box{text-align:center;width:min(86vw,420px)}.v8boot-mark{width:58px;height:58px;margin:auto;border-radius:17px;background:linear-gradient(145deg,#7a91ff,#5fe0bf);box-shadow:0 0 56px rgba(109,140,255,.32);animation:v8pulse 1s infinite alternate}.v8boot-title{margin-top:18px;font-size:15px;font-weight:800;letter-spacing:.06em}.v8boot-sub{margin-top:8px;color:#7d899b;font-size:11px;line-height:1.7}.v8boot-track{height:4px;margin:20px auto 0;overflow:hidden;border-radius:99px;background:#161d29}.v8boot-track i{display:block;width:30%;height:100%;border-radius:99px;background:linear-gradient(90deg,#7a91ff,#5fe0bf);animation:v8load 1.05s infinite}@keyframes v8pulse{to{transform:scale(.86);filter:brightness(1.18)}}@keyframes v8load{from{transform:translateX(-130%)}to{transform:translateX(430%)}}
+</style>
+</head>
+<body>
+<div id="v8boot"><div class="v8boot-box"><div class="v8boot-mark"></div><div class="v8boot-title">正在启动 ATLAS X V8</div><div class="v8boot-sub" id="v8bootStatus">装载实时行情、专业执行引擎与图表工具…</div><div class="v8boot-track"><i></i></div></div></div>
+<script>
+(async()=>{
+ const status=document.getElementById('v8bootStatus');
+ const load=src=>new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error(src));document.body.appendChild(s)});
+ try{
+  const r=await fetch('../v7/index.html?v=801',{cache:'no-store'});if(!r.ok)throw new Error('基础终端 HTTP '+r.status);
+  const text=await r.text(),doc=new DOMParser().parseFromString(text,'text/html');doc.querySelectorAll('script').forEach(x=>x.remove());
+  document.body.innerHTML=doc.body.innerHTML;
+  const scripts=['core.js','market.js','account.js','ui-market.js','ui-account.js','pro.js'];
+  for(let i=0;i<scripts.length;i++){status.textContent=`装载核心模块 ${i+1} / ${scripts.length+2}…`;await load(`../v7/${scripts[i]}?v=801`)}
+  status.textContent='装载 V8 专业执行层…';await load('./v8.js?v=801');
+  status.textContent='启动交易终端…';await load('../v7/boot.js?v=801');
+ }catch(e){console.error(e);document.body.innerHTML=`<main class="v8-fatal"><div><h2>ATLAS X V8 启动失败</h2><p>${String(e.message||e)}</p><button onclick="location.reload()">重新加载</button></div></main>`}
+})();
+</script>
+</body>
+</html>
