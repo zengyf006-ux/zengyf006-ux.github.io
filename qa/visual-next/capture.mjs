@@ -16,10 +16,11 @@ const browser = await chromium.launch({ headless: true, executablePath, args: ['
 const report = { target, executablePath, generatedAt: new Date().toISOString(), results: [] };
 let failed = false;
 
-const screenshot = (page, viewport, suffix) => page.screenshot({
+const shot = (page, viewport, suffix) => page.screenshot({
   path: `qa-artifacts-next/screenshots/${viewport.name}-${suffix}.png`,
   fullPage: false,
 });
+const allTrue = object => Object.values(object).every(value => value === true);
 
 for (const viewport of viewports) {
   const context = await browser.newContext({
@@ -36,7 +37,6 @@ for (const viewport of viewports) {
 
   try {
     const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await page.waitForSelector('.app-shell', { state: 'visible', timeout: 15000 });
     await page.waitForSelector('#pairSelector', { state: 'visible', timeout: 15000 });
     await page.waitForTimeout(1500);
 
@@ -45,38 +45,38 @@ for (const viewport of viewports) {
       : ['.topbar', '.market-summary', '#chartCanvas', '.orderbook-panel', '.order-panel', '.account-panel'];
     const visibility = {};
     for (const selector of required) visibility[selector] = await page.locator(selector).isVisible();
-
-    const metrics = await page.evaluate(() => ({
-      title: document.title,
-      bodyWidth: document.body.scrollWidth,
-      viewportWidth: document.documentElement.clientWidth,
-      bodyHeight: document.body.scrollHeight,
-      viewportHeight: document.documentElement.clientHeight,
-      visibleTextLength: (document.body.innerText || '').trim().length,
-      forbiddenCopy: ['邓总', 'CLIENT SHOWCASE', 'Release Candidate', '项目展示'].filter(term => document.body.innerText.includes(term)),
-      canvas: (() => {
-        const canvas = document.querySelector('#chartCanvas');
-        const rect = canvas?.getBoundingClientRect();
-        return rect ? { width: rect.width, height: rect.height } : null;
-      })(),
-    }));
-    const overflow = metrics.bodyWidth > metrics.viewportWidth + 1;
-    const blank = metrics.visibleTextLength < 120;
-    const badStatus = !response || response.status() >= 400;
-    const missing = Object.entries(visibility).filter(([, visible]) => !visible).map(([selector]) => selector);
-    const badCanvas = !metrics.canvas || metrics.canvas.width < 280 || metrics.canvas.height < 200;
-    const startupToastHidden = !(await page.locator('#toast').evaluate(element => element.classList.contains('show')));
-
-    await screenshot(page, viewport, 'main');
-
-    const interactions = { startupToastHidden };
+    const metrics = await page.evaluate(() => {
+      const canvas = document.querySelector('#chartCanvas')?.getBoundingClientRect();
+      return {
+        title: document.title,
+        bodyWidth: document.body.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+        visibleTextLength: (document.body.innerText || '').trim().length,
+        forbiddenCopy: ['邓总', 'CLIENT SHOWCASE', 'Release Candidate', '项目展示'].filter(term => document.body.innerText.includes(term)),
+        canvas: canvas ? { width: canvas.width, height: canvas.height } : null,
+      };
+    });
+    const structural = {
+      httpOk: Boolean(response && response.status() < 400),
+      noOverflow: metrics.bodyWidth <= metrics.viewportWidth + 1,
+      notBlank: metrics.visibleTextLength >= 120,
+      noForbiddenCopy: metrics.forbiddenCopy.length === 0,
+      canvasUsable: Boolean(metrics.canvas && metrics.canvas.width >= 280 && metrics.canvas.height >= 200),
+      requiredVisible: Object.values(visibility).every(Boolean),
+      noConsoleErrors: consoleErrors.length === 0,
+      noPageErrors: pageErrors.length === 0,
+    };
+    const interactions = {
+      startupToastHidden: !(await page.locator('#toast').evaluate(element => element.classList.contains('show'))),
+    };
+    await shot(page, viewport, 'main');
 
     await page.locator('[data-timeframe="4H"]').click();
     interactions.timeframe4HActive = await page.locator('[data-timeframe="4H"]').evaluate(element => element.classList.contains('active'));
 
     await page.locator('#pairSelector').click();
     interactions.marketPickerVisible = await page.locator('#marketPicker').isVisible();
-    await screenshot(page, viewport, 'market-picker');
+    await shot(page, viewport, 'market-picker');
     await page.locator('[data-market="ETH"]').click();
     await page.waitForTimeout(250);
     interactions.ethPairSelected = (await page.locator('.pair-selector strong').innerText()).trim() === 'ETH/USDT';
@@ -88,44 +88,43 @@ for (const viewport of viewports) {
 
     if (viewport.mobile) {
       interactions.favoriteToggled = true;
+      await page.locator('[data-mobile-view="book"]').click();
+      await page.waitForTimeout(150);
+      interactions.orderbookViewVisible = await page.locator('.orderbook-panel').isVisible();
     } else {
-      const favoriteBefore = await page.locator('#favoriteButton').getAttribute('aria-pressed');
+      const before = await page.locator('#favoriteButton').getAttribute('aria-pressed');
       await page.locator('#favoriteButton').click();
-      const favoriteAfter = await page.locator('#favoriteButton').getAttribute('aria-pressed');
-      interactions.favoriteToggled = favoriteBefore !== favoriteAfter;
+      const after = await page.locator('#favoriteButton').getAttribute('aria-pressed');
+      interactions.favoriteToggled = before !== after;
+      interactions.orderbookViewVisible = true;
     }
 
     await page.locator('[data-menu="book"]').click();
     interactions.bookMenuVisible = await page.locator('#floatingMenu').isVisible();
     await page.locator('[data-book-choice="asks"]').click();
     interactions.asksModeApplied = (await page.locator('.orderbook-panel').getAttribute('data-book-mode')) === 'asks';
-
-    if (!viewport.mobile) {
-      await page.locator('[data-nav-target="market"]').click();
-      await page.waitForTimeout(60);
-      interactions.navFeedbackVisible = await page.locator('#toast').evaluate(element => element.classList.contains('show'));
-      await page.waitForTimeout(2250);
-    } else {
-      interactions.navFeedbackVisible = true;
-    }
+    if (viewport.mobile) await shot(page, viewport, 'book');
 
     if (viewport.mobile) {
-      await page.locator('[data-mobile-view="book"]').click();
-      await page.waitForTimeout(150);
-      interactions.orderbookViewVisible = await page.locator('.orderbook-panel').isVisible();
-      await screenshot(page, viewport, 'book');
+      interactions.navFeedbackVisible = true;
       await page.locator('[data-mobile-view="chart"]').click();
       await page.locator('[data-mobile-side="buy"]').click();
       await page.waitForTimeout(250);
       interactions.tradeSheetOpen = await page.locator('body').evaluate(element => element.classList.contains('trade-sheet-open'));
     } else {
+      await page.locator('[data-nav-target="market"]').click();
+      await page.waitForTimeout(60);
+      interactions.navFeedbackVisible = await page.locator('#toast').evaluate(element => element.classList.contains('show'));
+      await page.waitForTimeout(2250);
       await page.locator('[data-side="buy"]').click();
+      interactions.tradeSheetOpen = true;
     }
+
     await page.locator('[data-order-type="market"]').click();
     await page.locator('#orderAmount').fill('1000');
-    const estimateText = await page.locator('#estimatedAmount').innerText();
-    interactions.estimateUpdated = estimateText.includes('ETH') && !estimateText.startsWith('0.000000');
-    if (viewport.mobile) await screenshot(page, viewport, 'trade-sheet');
+    const estimate = await page.locator('#estimatedAmount').innerText();
+    interactions.estimateUpdated = estimate.includes('ETH') && !estimate.startsWith('0.000000');
+    if (viewport.mobile) await shot(page, viewport, 'trade-sheet');
     await page.locator('#submitOrder').click();
     await page.waitForTimeout(220);
 
@@ -137,15 +136,15 @@ for (const viewport of viewports) {
     interactions.positionCreated = (await page.locator('#accountBody').innerText()).includes('ETH/USDT');
     interactions.accountCountUpdated = (await page.locator('[data-account-view="positions"] span').innerText()).trim() === '1';
     if (viewport.mobile) {
-      const positionRow = page.locator('#accountBody tr:not(.empty-row)').first();
-      interactions.mobilePositionCardVisible = await positionRow.isVisible();
-      const box = await positionRow.boundingBox();
+      const row = page.locator('#accountBody tr:not(.empty-row)').first();
+      const box = await row.boundingBox();
+      interactions.mobilePositionCardVisible = await row.isVisible();
       interactions.mobilePositionCardFits = Boolean(box && box.x >= 0 && box.x + box.width <= viewport.width + 1);
     } else {
       interactions.mobilePositionCardVisible = true;
       interactions.mobilePositionCardFits = true;
     }
-    await screenshot(page, viewport, 'account-position');
+    await shot(page, viewport, 'account-position');
 
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#pairSelector', { state: 'visible', timeout: 15000 });
@@ -154,25 +153,12 @@ for (const viewport of viewports) {
     interactions.timeframePersisted = await page.locator('[data-timeframe="4H"]').evaluate(element => element.classList.contains('active'));
     interactions.positionPersisted = (await page.locator('#accountBody').innerText()).includes('ETH/USDT');
 
-    const resultFailed = overflow || blank || badStatus || pageErrors.length > 0 || consoleErrors.length > 0 || missing.length > 0 || badCanvas || metrics.forbiddenCopy.length > 0;
-    const interactionFailed = Object.values(interactions).some(value => value !== true);
-    failed ||= resultFailed || interactionFailed;
-    report.results.push({
-      viewport,
-      httpStatus: response?.status() ?? null,
-      overflow,
-      blank,
-      missing,
-      badCanvas,
-      metrics,
-      interactions,
-      consoleErrors,
-      pageErrors,
-      passed: !resultFailed && !interactionFailed,
-    });
+    const passed = allTrue(structural) && allTrue(interactions);
+    failed ||= !passed;
+    report.results.push({ viewport, structural, metrics, interactions, consoleErrors, pageErrors, passed });
   } catch (error) {
     failed = true;
-    try { await screenshot(page, viewport, 'fatal'); } catch {}
+    try { await shot(page, viewport, 'fatal'); } catch {}
     report.results.push({ viewport, passed: false, fatalError: String(error), consoleErrors, pageErrors });
   } finally {
     await context.close();
