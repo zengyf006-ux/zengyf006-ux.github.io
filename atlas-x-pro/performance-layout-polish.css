@@ -1,0 +1,21 @@
+/* Desktop performance dashboard balance */
+@media (min-width: 821px) {
+  .performance-main-grid > .performance-panel:last-child {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .performance-main-grid > .performance-panel:last-child > header {
+    flex: 0 0 42px;
+  }
+
+  .performance-main-grid > .performance-panel:last-child .performance-metrics {
+    min-height: 0;
+    flex: 1 1 auto;
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+  }
+
+  .performance-main-grid > .performance-panel:last-child .performance-metric {
+    min-height: 0;
+  }
+}
