@@ -1,7 +1,7 @@
 import { chromium } from 'playwright-core';
 import fs from 'node:fs/promises';
 
-const target = 'http://127.0.0.1:4173/atlas-x-pro/';
+const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
 const viewports = [
   { name: 'iphone-390x844', width: 390, height: 844, mobile: true },
   { name: 'iphone-430x932', width: 430, height: 932, mobile: true },
@@ -39,6 +39,19 @@ for (const viewport of viewports) {
 
   try {
     const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.addStyleTag({ content: `
+      @font-face {
+        font-family: "Atlas QA SC";
+        src: url("/atlas-x-pro/vendor-font/qa-font.woff2") format("woff2");
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: block;
+      }
+      html, body, button, input, select {
+        font-family: "Atlas QA SC", "Noto Sans SC", sans-serif !important;
+      }
+    ` });
+    await page.evaluate(async () => { await document.fonts.ready; });
     await page.waitForSelector('.pro-shell', { state: 'visible', timeout: 20000 });
     await page.waitForTimeout(1800);
 
@@ -91,7 +104,7 @@ for (const viewport of viewports) {
       interactions.orderSheetOpen = await page.locator('body').evaluate(body => body.classList.contains('order-sheet-open'));
       await page.locator('[data-order-type="market"]').click();
       await page.locator('#orderTotal').fill('1200');
-      interactions.estimateUpdated = !(await page.locator('#orderQuantity').inputValue()).startsWith('0');
+      interactions.estimateUpdated = Number(await page.locator('#orderQuantity').inputValue()) > 0;
       await shot('order-sheet');
       await page.locator('#submitOrder').click();
       await page.waitForTimeout(250);
@@ -129,6 +142,11 @@ for (const viewport of viewports) {
     }
 
     await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.addStyleTag({ content: `
+      @font-face { font-family: "Atlas QA SC"; src: url("/atlas-x-pro/vendor-font/qa-font.woff2") format("woff2"); font-weight: 100 900; }
+      html, body, button, input, select { font-family: "Atlas QA SC", "Noto Sans SC", sans-serif !important; }
+    ` });
+    await page.evaluate(async () => { await document.fonts.ready; });
     await page.waitForSelector('.pro-shell', { state: 'visible', timeout: 20000 });
     await page.waitForTimeout(600);
     interactions.marketPersisted = (await page.locator('#activePair').innerText()).includes('ETH/USDT');
