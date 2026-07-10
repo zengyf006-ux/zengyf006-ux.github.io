@@ -13,7 +13,7 @@
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       userLines = Array.isArray(stored)
-        ? stored.filter(line => Number.isFinite(line?.price)).slice(-8)
+        ? stored.filter(line => Number.isFinite(line?.price)).slice(-24)
         : [];
     } catch {
       userLines = [];
@@ -102,9 +102,12 @@
     if (!layer || !metrics) return;
     layer.innerHTML = '';
 
+    const pair = activePair();
     const markers = [
       ...collectTradeMarkers(),
-      ...userLines.map(line => ({ type: 'user', price: line.price, label: `水平线 ${line.price.toLocaleString('en-US', { maximumFractionDigits: 6 })}` })),
+      ...userLines
+        .filter(line => !line.pair || line.pair === pair)
+        .map(line => ({ type: 'user', price: line.price, label: `水平线 ${line.price.toLocaleString('en-US', { maximumFractionDigits: 6 })}` })),
     ];
 
     markers.forEach(marker => {
@@ -135,7 +138,8 @@
       event.preventDefault();
       event.stopPropagation();
       if (tool === 'clear') {
-        userLines = [];
+        const pair = activePair();
+        userLines = userLines.filter(line => line.pair && line.pair !== pair);
         saveLines();
         renderLines();
         setMode('crosshair');
@@ -150,7 +154,7 @@
       if (!metrics) return;
       const price = priceForY(event.clientY, metrics);
       userLines.push({ price, pair: activePair(), createdAt: Date.now() });
-      userLines = userLines.filter(line => !line.pair || line.pair === activePair()).slice(-8);
+      userLines = userLines.slice(-24);
       saveLines();
       renderLines();
       setMode('crosshair');
