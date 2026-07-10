@@ -46,11 +46,18 @@
   }
   .book-side {
     min-height: 0;
+    flex: 1 1 0;
+    justify-content: stretch;
     overflow: hidden;
   }
   #asksRows .book-row:first-child,
   #bidsRows .book-row:last-child {
     display: none;
+  }
+  .book-side .book-row {
+    min-height: 0;
+    height: auto;
+    flex: 1 1 0;
   }
   .mid-price {
     position: relative;
