@@ -40,6 +40,7 @@
     ensureStyle('./execution-guard.css');
     ensureStyle('./performance-analytics.css');
     ensureStyle('./performance-layout-polish.css');
+    ensureStyle('./portfolio-risk.css');
     ensureStyle('./mobile-account-tools.css');
     ensureStyle('./semantic-typography.css');
 
@@ -54,6 +55,8 @@
       await loadScript('./advanced-stability.js');
       await loadScript('./execution-guard.js');
       await loadScript('./performance-analytics.js');
+      await loadScript('./performance-accounting.js');
+      await loadScript('./portfolio-risk.js');
       await loadScript('./mobile-account-tools.js');
       document.documentElement.dataset.atlasQuality = 'ready';
     } catch (error) {
