@@ -1,0 +1,148 @@
+<!-- Trade -->
+<section class="page trade-page" id="page-trade">
+<div class="trade-pairbar">
+<button class="pair-select" id="pairSelectorBtn">
+<span class="coin-icon btc">₿</span>
+<span><b id="pairName">BTC / USDT</b><small>现货 · 模拟交易</small></span>
+<em>⌄</em>
+</button>
+<div class="pair-live-price">
+<strong id="tradePrice">--</strong>
+<span id="tradeChange">--</span>
+</div>
+<div class="pair-stat"><span>24h 高</span><strong id="tradeHigh">--</strong></div>
+<div class="pair-stat"><span>24h 低</span><strong id="tradeLow">--</strong></div>
+<div class="pair-stat"><span>24h 量</span><strong id="tradeVolume">--</strong></div>
+<div class="pair-stat"><span>指数价</span><strong id="indexPrice">--</strong></div>
+<div class="pair-stat premium-stat"><span>资金费率</span><strong id="fundingRate">0.0100%</strong></div>
+<div class="pair-stat premium-stat"><span>未平仓量</span><strong id="openInterest">--</strong></div>
+<div class="trade-balance"><span>模拟权益</span><b id="tradeEquity">$100,000.00</b><small id="tradeAccountPnl">今日 +$0.00</small></div>
+</div>
+<div class="pair-menu" id="pairMenu"></div>
+<div class="terminal-layout pro-terminal-layout">
+<aside class="trade-market-dock terminal-card">
+<div class="dock-head"><div><b>市场</b><small id="dockMarketCount">0 交易对</small></div><button aria-label="收起市场" id="collapseMarketDock">‹</button></div>
+<label class="dock-search"><span>⌕</span><input id="tradeMarketSearch" placeholder="搜索币种" type="search"/></label>
+<div class="dock-tabs" id="tradeMarketTabs"><button class="active" data-dock-filter="all">全部</button><button data-dock-filter="favorites">自选</button><button data-dock-filter="gainers">涨幅</button></div>
+<div class="dock-columns"><span>交易对</span><span>最新价</span><span>24h</span></div>
+<div class="trade-market-list" id="tradeMarketList"></div>
+</aside>
+<section class="terminal-main">
+<article class="terminal-card chart-panel">
+<div class="chart-toolbar pro-chart-toolbar">
+<div class="chart-view-tabs" id="chartViewTabs"><button class="active" data-chart-view="kline">K线</button><button data-chart-view="depth">深度</button></div>
+<div class="timeframes" id="timeframeButtons">
+<button class="active" data-bar="1m">1m</button>
+<button data-bar="5m">5m</button>
+<button data-bar="15m">15m</button>
+<button data-bar="1H">1H</button>
+<button data-bar="4H">4H</button>
+<button data-bar="1D">1D</button>
+</div>
+<div class="chart-tools">
+<button class="active" id="toggleMaBtn">MA</button>
+<button class="active" id="toggleVolumeBtn">VOL</button>
+<button id="indicatorBtn">指标⌄</button>
+<button id="fitChartBtn">适配</button>
+<button id="realtimeBtn">回到实时</button>
+<button id="fullscreenChartBtn">全屏</button>
+</div>
+</div>
+<div class="ohlc-line" id="ohlcLine">
+<span>O --</span><span>H --</span><span>L --</span><span>C --</span>
+</div>
+<div class="chart-stage">
+<div class="interactive-chart" id="tradeChart"></div>
+<canvas class="depth-chart" hidden="" id="depthChart"></canvas>
+<div class="chart-help" id="chartHelp"><span>拖动平移</span><span>滚轮 / 双指缩放</span><span>十字光标查看 OHLC</span></div>
+</div>
+<div class="chart-statusbar"><span id="chartSource">实时 K 线</span><span id="chartBars">-- 根</span><span id="chartLatency">延迟 --</span><span class="chart-attribution">Interactive chart engine</span></div>
+</article>
+<article class="terminal-card positions-panel">
+<div class="panel-tabs" id="positionTabs">
+<button class="active" data-position-tab="positions">当前持仓 <span id="positionCount">0</span></button>
+<button data-position-tab="orders">当前委托 <span id="openOrderCount">0</span></button>
+<button data-position-tab="history">成交记录</button>
+</div>
+<div class="table-scroll">
+<table class="positions-table">
+<thead id="positionsHead"></thead>
+<tbody id="positionsBody"></tbody>
+</table>
+</div>
+</article>
+</section>
+<aside class="terminal-side">
+<article class="terminal-card orderbook-card">
+<div class="panel-title"><h3>订单簿</h3><div><button class="book-mode active">▥</button><button class="book-mode">▤</button><button class="book-mode">▦</button></div></div>
+<div class="book-header"><span>价格(USDT)</span><span>数量</span><span>累计</span></div>
+<div class="book-side asks" id="asksBook"></div>
+<div class="book-mid"><strong id="bookMidPrice">--</strong><span id="bookSpread">价差 --</span></div>
+<div class="book-side bids" id="bidsBook"></div>
+</article>
+<article class="terminal-card recent-trades-card">
+<div class="panel-title"><h3>最新成交</h3><span>实时</span></div>
+<div class="book-header"><span>价格</span><span>数量</span><span>时间</span></div>
+<div class="recent-trades" id="recentTrades"></div>
+</article>
+</aside>
+<aside class="terminal-order">
+<article class="terminal-card order-card">
+<div class="order-account-line"><div><span>可用权益</span><strong id="orderAccountEquity">$100,000.00</strong></div><span class="order-mode-badge">SIMULATION</span></div>
+<div class="product-tabs" id="productTabs">
+<button class="active" data-product="spot">现货</button>
+<button data-product="perp">永续</button>
+</div>
+<div class="margin-mode-row" id="marginModeRow"><button class="active" data-margin-mode="cross">全仓</button><button data-margin-mode="isolated">逐仓</button><button id="leverageQuickBtn">5x ▾</button></div>
+<div class="order-type-tabs" id="orderTypeTabs">
+<button class="active" data-order-type="market">市价</button>
+<button data-order-type="limit">限价</button>
+<button data-order-type="trigger">止盈止损</button>
+</div>
+<div class="buy-sell-tabs" id="buySellTabs">
+<button class="buy active" data-side="buy">买入</button>
+<button class="sell" data-side="sell">卖出</button>
+</div>
+<div class="leverage-row hidden" id="leverageRow">
+<span>杠杆倍数</span>
+<select id="leverageSelect"><option>1x</option><option>2x</option><option selected="">5x</option><option>10x</option><option>20x</option></select>
+</div>
+<label class="order-field" id="priceField">
+<span>委托价格</span>
+<div><input id="orderPrice" inputmode="decimal"/><b>USDT</b></div>
+</label>
+<label class="order-field">
+<span>数量</span>
+<div><input id="orderAmount" inputmode="decimal" placeholder="0.00"/><b id="baseAssetLabel">BTC</b></div>
+</label>
+<input class="order-range" id="orderRange" max="100" min="0" step="1" type="range" value="0"/>
+<div class="quick-percent" id="quickPercent"><button data-percent="25">25%</button><button data-percent="50">50%</button><button data-percent="75">75%</button><button data-percent="100">100%</button></div>
+<label class="order-field">
+<span>预计金额</span>
+<div><input id="orderTotal" readonly="" value="0.00"/><b>USDT</b></div>
+</label>
+<label class="tp-sl-switch"><input id="tpSlToggle" type="checkbox"/><span></span><b>设置止盈 / 止损</b></label>
+<div class="tp-sl-grid" hidden="" id="tpSlGrid">
+<label class="order-field compact-field"><span>止盈触发价</span><div><input id="takeProfitPrice" inputmode="decimal" placeholder="可选"/><b>USDT</b></div></label>
+<label class="order-field compact-field"><span>止损触发价</span><div><input id="stopLossPrice" inputmode="decimal" placeholder="可选"/><b>USDT</b></div></label>
+</div>
+<div class="order-flags"><label><input id="postOnlyFlag" type="checkbox"/> 只做 Maker</label><label><input id="reduceOnlyFlag" type="checkbox"/> 只减仓</label></div>
+<div class="order-summary pro-summary">
+<div><span>可用余额</span><strong id="orderAvailable">$100,000.00</strong></div>
+<div><span>预计手续费</span><strong id="orderFee">0.00 USDT</strong></div>
+<div><span>预计成交均价</span><strong id="estimatedFill">--</strong></div>
+<div><span>预计占用</span><strong id="estimatedMargin">$0.00</strong></div>
+</div>
+<button class="submit-order buy" id="submitOrderBtn">模拟买入 BTC</button>
+<p class="simulation-note">所有资金和订单均为本地模拟，不会发生真实交易。</p>
+</article>
+<article class="terminal-card account-mini-card">
+<div class="panel-title"><h3>账户风险</h3><span class="good" id="tradeRiskBadge">稳健</span></div>
+<div class="risk-bars">
+<div><span>保证金占用</span><i><b id="marginBar" style="width:0%"></b></i><strong id="marginRate">0%</strong></div>
+<div><span>仓位集中度</span><i><b id="concentrationBar" style="width:0%"></b></i><strong id="concentrationRate">0%</strong></div>
+</div>
+</article>
+</aside>
+</div>
+</section>
