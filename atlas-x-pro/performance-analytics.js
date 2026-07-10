@@ -53,18 +53,20 @@
     let realizedGross = 0;
     let totalFees = 0;
     let turnover = 0;
+    let accountingEquity = STARTING_EQUITY;
     const closedTrades = [];
 
     history.forEach((fill, index) => {
       const symbol = String(fill.symbol || 'UNKNOWN');
       const side = fill.side === 'sell' ? 'sell' : 'buy';
       const price = numberFrom(fill.price);
-      const quantity = numberFrom(fill.qty);
-      const fee = numberFrom(fill.fee);
-      const book = books.get(symbol) || { quantity: 0, average: 0 };
+      const quantity = Math.max(0, numberFrom(fill.qty));
+      const fee = Math.max(0, numberFrom(fill.fee));
+      const book = books.get(symbol) || { quantity: 0, average: 0, unallocatedBuyFees: 0 };
       const notional = price * quantity;
       totalFees += fee;
       turnover += notional;
+      accountingEquity -= fee;
 
       if (side === 'buy') {
         const nextQuantity = book.quantity + quantity;
@@ -72,27 +74,54 @@
           ? (book.average * book.quantity + price * quantity) / nextQuantity
           : 0;
         book.quantity = nextQuantity;
-        tradeResults.set(fill.id || `fill-${index}`, { realized: null, net: -fee });
+        book.unallocatedBuyFees += fee;
+        tradeResults.set(fill.id || `fill-${index}`, {
+          realized: null,
+          net: null,
+          entryFee: fee,
+        });
       } else {
-        const closeQuantity = Math.min(quantity, book.quantity);
+        const quantityBeforeClose = book.quantity;
+        const closeQuantity = Math.min(quantity, quantityBeforeClose);
+        const closeRatio = quantityBeforeClose > 0 ? closeQuantity / quantityBeforeClose : 0;
+        const sellFillRatio = quantity > 0 ? closeQuantity / quantity : 0;
+        const allocatedBuyFee = book.unallocatedBuyFees * closeRatio;
+        const allocatedSellFee = fee * sellFillRatio;
         const gross = closeQuantity > 0 ? (price - book.average) * closeQuantity : 0;
-        const net = gross - fee;
+        const net = gross - allocatedBuyFee - allocatedSellFee;
+
         realizedGross += gross;
-        book.quantity = Math.max(0, book.quantity - closeQuantity);
-        if (book.quantity <= 1e-10) book.average = 0;
+        accountingEquity += gross;
+        book.quantity = Math.max(0, quantityBeforeClose - closeQuantity);
+        book.unallocatedBuyFees = Math.max(0, book.unallocatedBuyFees - allocatedBuyFee);
+        if (book.quantity <= 1e-10) {
+          book.quantity = 0;
+          book.average = 0;
+          book.unallocatedBuyFees = 0;
+        }
+
         contributions.set(symbol, (contributions.get(symbol) || 0) + net);
-        tradeResults.set(fill.id || `fill-${index}`, { realized: gross, net });
-        closedTrades.push(net);
+        tradeResults.set(fill.id || `fill-${index}`, {
+          realized: gross,
+          net,
+          allocatedBuyFee,
+          sellFee: allocatedSellFee,
+          closedQuantity: closeQuantity,
+        });
+        if (closeQuantity > 0) closedTrades.push(net);
       }
+
       books.set(symbol, book);
       curve.push({
         time: Number(fill.createdAt) || Date.now(),
-        equity: STARTING_EQUITY + realizedGross - totalFees,
+        equity: accountingEquity,
       });
     });
 
+    const realizedNet = closedTrades.reduce((sum, value) => sum + value, 0);
     const unrealized = numberFrom($('#unrealizedPnl')?.textContent);
-    const displayedEquity = numberFrom($('#accountEquity')?.textContent) || STARTING_EQUITY + realizedGross - totalFees + unrealized;
+    const displayedEquity = numberFrom($('#accountEquity')?.textContent)
+      || STARTING_EQUITY + realizedNet + unrealized;
     if (curve.length === 1 || Math.abs(curve.at(-1).equity - displayedEquity) > 0.005) {
       curve.push({ time: Date.now(), equity: displayedEquity });
     }
@@ -120,7 +149,7 @@
       tradeResults,
       contributions: [...contributions.entries()].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])),
       realizedGross,
-      realizedNet: realizedGross - totalFees,
+      realizedNet,
       unrealized,
       totalFees,
       turnover,
@@ -156,10 +185,10 @@
 
   function recentTradeMarkup(data) {
     if (!data.historyNewest.length) return '<div class="performance-empty">暂无成交数据。模拟订单成交后，费用、成交额和表现将自动进入分析账本。</div>';
-    return data.historyNewest.slice(0, 14).map((fill, index) => {
+    return data.historyNewest.slice(0, 14).map(fill => {
       const symbol = String(fill.symbol || '--');
       const pair = symbol.endsWith('USDT') ? `${symbol.slice(0, -4)}/USDT` : symbol;
-      const result = data.tradeResults.get(fill.id || `fill-${data.historyNewest.length - 1 - index}`);
+      const result = data.tradeResults.get(fill.id);
       const net = result?.realized == null ? null : result.net;
       const cls = net == null ? '' : net >= 0 ? 'positive' : 'negative';
       return `<div class="performance-trade-row"><span class="pair">${escapeHtml(pair)}</span><span class="${fill.side === 'sell' ? 'negative' : 'positive'}">${fill.side === 'sell' ? '卖出' : '买入'}</span><span>${fmt(fill.price, Number(fill.price) >= 1000 ? 1 : 4)}</span><span>${fmt(fill.fee, 2)}</span><span class="${cls}">${net == null ? '--' : signed(net)}</span></div>`;
@@ -175,16 +204,16 @@
         <header class="module-header"><div><h1>账户分析</h1><p>根据本地模拟成交账本计算，不预测未来收益，不构成投资建议。</p></div><button class="module-close" type="button">返回交易终端</button></header>
         <section class="performance-summary-grid">
           ${stat('模拟账户权益', fmt(data.displayedEquity, 2), 'USDT', data.displayedEquity >= STARTING_EQUITY ? 'positive' : 'negative')}
-          ${stat('已实现净盈亏', signed(data.realizedNet), '已扣全部手续费', data.realizedNet >= 0 ? 'positive' : 'negative')}
+          ${stat('已实现净盈亏', signed(data.realizedNet), '仅计已平仓数量及对应费用', data.realizedNet >= 0 ? 'positive' : 'negative')}
           ${stat('未实现盈亏', signed(data.unrealized), '当前持仓标记价格', data.unrealized >= 0 ? 'positive' : 'negative')}
-          ${stat('交易胜率', data.winRate == null ? '--' : `${data.winRate.toFixed(1)}%`, `${data.closedCount} 笔已平仓交易`)}
-          ${stat('累计手续费', fmt(data.totalFees, 2), 'USDT')}
+          ${stat('交易胜率', data.winRate == null ? '--' : `${data.winRate.toFixed(1)}%`, `${data.closedCount} 笔平仓成交样本`)}
+          ${stat('累计手续费', fmt(data.totalFees, 2), '包含未平仓持仓费用')}
           ${stat('累计成交额', compact(data.turnover), 'USDT')}
         </section>
         <section class="performance-main-grid">
           <article class="performance-panel"><header><strong>模拟权益曲线</strong><span>起始权益 ${fmt(STARTING_EQUITY, 0)} USDT</span></header><div class="performance-chart-wrap"><div class="performance-chart-legend"><span><i></i>账户权益</span><span><i class="benchmark"></i>起始基准</span></div><canvas id="performanceChart" aria-label="模拟账户权益曲线"></canvas></div></article>
           <article class="performance-panel"><header><strong>执行质量</strong><span>基于成交账本</span></header><div class="performance-metrics">
-            <div class="performance-metric"><span>盈亏比</span><b>${data.profitFactor == null ? '--' : data.profitFactor === Infinity ? '∞' : data.profitFactor.toFixed(2)}</b><small>盈利总额 / 亏损总额</small></div>
+            <div class="performance-metric"><span>盈亏比</span><b>${data.profitFactor == null ? '--' : data.profitFactor === Infinity ? '∞' : data.profitFactor.toFixed(2)}</b><small>平仓净盈利 / 平仓净亏损</small></div>
             <div class="performance-metric"><span>最大回撤</span><b>${data.maxDrawdown.toFixed(2)}%</b><small>权益曲线峰谷回撤</small></div>
             <div class="performance-metric"><span>平均盈利</span><b class="positive">${signed(data.averageWin)}</b><small>每笔盈利平仓</small></div>
             <div class="performance-metric"><span>平均亏损</span><b class="negative">${data.averageLoss ? `-${fmt(data.averageLoss, 2)}` : '+0.00'}</b><small>每笔亏损平仓</small></div>
@@ -196,7 +225,7 @@
           <article class="performance-panel"><header><strong>币种贡献</strong><span>已实现净盈亏</span></header><div class="contribution-list">${contributionMarkup(data)}</div></article>
           <article class="performance-panel"><header><strong>最近成交</strong><span>成交价 · 手续费 · 平仓净结果</span></header><div class="performance-trade-head"><span>交易对</span><span>方向</span><span>成交价</span><span>手续费</span><span>净结果</span></div><div class="performance-trade-list">${recentTradeMarkup(data)}</div></article>
         </section>
-        <p class="performance-disclaimer">统计仅基于当前浏览器中的模拟成交记录。清除浏览器数据会同时清除账户和分析账本；真实行情不可用时，系统会明确使用演示行情。</p>
+        <p class="performance-disclaimer">统计仅基于当前浏览器中的模拟成交记录。部分平仓会按实际平仓数量分摊买入手续费；未平仓部分的费用保留在剩余持仓成本中。清除浏览器数据会同时清除账户和分析账本。</p>
       </div>`;
     overlay.dataset.tradeCount = String(data.tradeCount);
     overlay.dataset.realizedNet = String(data.realizedNet);
