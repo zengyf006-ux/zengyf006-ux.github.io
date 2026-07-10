@@ -1,0 +1,151 @@
+<!-- Bots -->
+<section class="page" id="page-bots">
+<div class="page-head">
+<div>
+<span class="eyebrow">STRATEGY AUTOMATION</span>
+<h1>量化策略中心</h1>
+<p>展示级策略编排、回测表现和模拟运行状态。</p>
+</div>
+<button class="primary-btn" id="createBotBtn">创建新策略</button>
+</div>
+<div class="strategy-hero card">
+<div>
+<span class="eyebrow">ATLAS STRATEGY ENGINE</span>
+<h2>把交易纪律固化成系统</h2>
+<p>策略不会连接真实资金，仅基于模拟账户运行，用于向决策者展示产品完整能力。</p>
+</div>
+<div class="strategy-stats">
+<div><span>运行策略</span><strong id="runningBots">2</strong></div>
+<div><span>模拟收益</span><strong class="positive">+12.64%</strong></div>
+<div><span>平均回撤</span><strong>-4.21%</strong></div>
+</div>
+</div>
+<div class="bot-grid" id="botGrid"></div>
+<div class="content-grid two-one">
+<article class="card">
+<div class="card-header"><div><h3>策略表现排行</h3><span>最近 30 天模拟结果</span></div></div>
+<div class="table-scroll">
+<table>
+<thead><tr><th>策略</th><th>运行市场</th><th>收益率</th><th>最大回撤</th><th>胜率</th><th>状态</th></tr></thead>
+<tbody id="strategyRankBody"></tbody>
+</table>
+</div>
+</article>
+<article class="card strategy-risk">
+<div class="card-header"><div><h3>策略风险分布</h3><span>组合级监控</span></div></div>
+<div class="risk-radar">
+<div class="radar-ring r1"></div><div class="radar-ring r2"></div><div class="radar-ring r3"></div>
+<div class="radar-shape"></div>
+<span class="radar-l1">波动</span><span class="radar-l2">回撤</span><span class="radar-l3">集中度</span><span class="radar-l4">流动性</span><span class="radar-l5">频率</span>
+</div>
+</article>
+</div>
+</section>
+<!-- Assets -->
+<section class="page" id="page-assets">
+<div class="page-head">
+<div>
+<span class="eyebrow">PORTFOLIO INTELLIGENCE</span>
+<h1>资产与收益分析</h1>
+<p>持仓结构、成本、收益、回撤和交易行为统一复盘。</p>
+</div>
+<div class="page-head-actions">
+<button class="ghost-btn" id="exportAccountBtn">导出报告</button>
+<button class="primary-btn" data-page-link="trade">调整仓位</button>
+</div>
+</div>
+<div class="asset-kpi-grid">
+<article class="card"><span>总资产</span><strong id="assetTotal">$100,000.00</strong><em id="assetTotalPnl">0.00%</em></article>
+<article class="card"><span>累计盈亏</span><strong id="assetPnl">$0.00</strong><em>模拟账户</em></article>
+<article class="card"><span>胜率</span><strong id="winRate">--</strong><em id="tradeCount">0 笔交易</em></article>
+<article class="card"><span>最大回撤</span><strong id="maxDrawdown">0.00%</strong><em>历史估算</em></article>
+</div>
+<div class="content-grid one-one">
+<article class="card">
+<div class="card-header"><div><h3>资产配置</h3><span>按当前市值计算</span></div></div>
+<div class="asset-allocation-large">
+<div class="donut large" id="assetDonut"><span><b id="assetDonutCount">1</b><small>资产</small></span></div>
+<div class="allocation-list" id="assetAllocationList"></div>
+</div>
+</article>
+<article class="card">
+<div class="card-header"><div><h3>收益曲线</h3><span>本地模拟历史</span></div></div>
+<div class="asset-performance-chart"><canvas id="assetCanvas"></canvas></div>
+</article>
+</div>
+<article class="card asset-detail-card">
+<div class="card-header">
+<div><h3>持仓明细</h3><span>实时估值</span></div>
+<div class="live-legend"><i></i> 价格实时更新</div>
+</div>
+<div class="table-scroll">
+<table>
+<thead><tr><th>资产</th><th>数量</th><th>平均成本</th><th>最新价</th><th>市值</th><th>未实现盈亏</th><th>占比</th><th></th></tr></thead>
+<tbody id="assetPositionsBody"></tbody>
+</table>
+</div>
+</article>
+</section>
+<!-- Insights -->
+<section class="page" id="page-insights">
+<div class="page-head">
+<div>
+<span class="eyebrow">AI MARKET INTELLIGENCE</span>
+<h1>市场洞察与风险诊断</h1>
+<p>将实时行情、账户持仓和交易行为转换为管理层可读结论。</p>
+</div>
+<button class="primary-btn" id="refreshInsightBtn">重新生成分析</button>
+</div>
+<div class="insight-hero">
+<article class="card risk-score-card">
+<span>综合风险评分</span>
+<div class="score-ring-large" id="riskRing"><b id="riskScore">76</b><small>/100</small></div>
+<strong id="riskScoreLabel">稳健</strong>
+<p id="riskScoreDesc">当前模拟账户未形成高风险集中仓位。</p>
+</article>
+<article class="card executive-brief">
+<div class="ai-title"><span class="ai-glyph large">AI</span><div><b>管理层摘要</b><small id="insightTime">实时生成</small></div></div>
+<h2 id="insightHeadline">市场保持活跃，账户风险总体可控</h2>
+<p id="insightSummary">正在整合实时行情和模拟账户数据…</p>
+<div class="insight-tags" id="insightTags"></div>
+</article>
+</div>
+<div class="insight-grid">
+<article class="card diagnosis-card">
+<div class="card-header"><div><h3>重点诊断</h3><span>按优先级排序</span></div></div>
+<div class="diagnosis-list" id="diagnosisList"></div>
+</article>
+<article class="card">
+<div class="card-header"><div><h3>风险结构</h3><span>动态指标</span></div></div>
+<div class="risk-indicators" id="riskIndicators"></div>
+</article>
+<article class="card">
+<div class="card-header"><div><h3>行为画像</h3><span>基于模拟交易记录</span></div></div>
+<div class="behavior-matrix" id="behaviorMatrix"></div>
+</article>
+</div>
+<article class="card disclaimer-card">
+<strong>演示边界</strong>
+<p>本系统当前为老板演示和产品验证版本。实时行情来自公开市场数据源；账户、订单、策略、AI结论和收益均为本地模拟，不构成投资建议，也不会连接真实资金。</p>
+</article>
+</section>
+</main>
+<div class="mobile-trade-bar" hidden="" id="mobileTradeBar"><button class="buy" data-mobile-side="buy">买入</button><button class="sell" data-mobile-side="sell">卖出</button></div>
+<nav aria-label="移动端导航" class="mobile-bottom-nav">
+<button class="active" data-page-link="overview"><span>◫</span>总览</button>
+<button data-page-link="markets"><span>⌁</span>行情</button>
+<button data-page-link="trade"><span>↗</span>交易</button>
+<button data-page-link="assets"><span>◈</span>资产</button>
+<button data-page-link="insights"><span>◎</span>洞察</button>
+</nav>
+</div>
+<div class="modal-backdrop" hidden="" id="resetModal">
+<div class="modal-card">
+<span class="modal-icon">↻</span>
+<h3>重置模拟账户？</h3>
+<p>将恢复 100,000 USDT 初始余额，并清空全部持仓、委托和成交记录。</p>
+<div><button class="ghost-btn" data-close-modal="">取消</button><button class="danger-btn" id="confirmResetBtn">确认重置</button></div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
