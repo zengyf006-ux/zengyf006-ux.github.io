@@ -6,14 +6,27 @@
   function bind() {
     const add = document.querySelector('#addPriceAlert');
     const panel = document.querySelector('#priceAlertPanel');
-    if (!add || !panel) return false;
+    if (!add || !panel || panel.dataset.stabilityBound === 'true') return Boolean(add && panel);
+    panel.dataset.stabilityBound = 'true';
+    let holdOpenUntil = 0;
+
+    const keepOpen = () => {
+      if (Date.now() > holdOpenUntil) return;
+      if (panel.hidden) panel.hidden = false;
+      document.querySelectorAll('[data-open-price-alert]').forEach(button => button.classList.add('active'));
+    };
+
+    const observer = new MutationObserver(keepOpen);
+    observer.observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+
     add.addEventListener('click', event => {
       event.stopPropagation();
-      requestAnimationFrame(() => {
-        panel.hidden = false;
-        document.querySelectorAll('[data-open-price-alert]').forEach(button => button.classList.add('active'));
-      });
+      holdOpenUntil = Date.now() + 900;
+      requestAnimationFrame(keepOpen);
+      setTimeout(keepOpen, 30);
+      setTimeout(keepOpen, 120);
     });
+
     document.documentElement.dataset.advancedStability = 'ready';
     return true;
   }
