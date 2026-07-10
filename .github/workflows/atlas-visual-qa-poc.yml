@@ -38,7 +38,9 @@ jobs:
           sleep 2
 
       - name: Capture and validate
-        run: node qa/visual/capture.mjs
+        run: |
+          mkdir -p qa-artifacts
+          node qa/visual/capture.mjs > qa-artifacts/runner.log 2>&1
 
       - name: Upload screenshots and report
         if: always()
@@ -46,8 +48,7 @@ jobs:
         with:
           name: atlas-visual-proof
           path: |
-            qa-artifacts/screenshots
-            qa-artifacts/report.json
+            qa-artifacts
             /tmp/atlas-http.log
           retention-days: 1
           if-no-files-found: warn
