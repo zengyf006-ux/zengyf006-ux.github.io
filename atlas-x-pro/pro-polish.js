@@ -4,6 +4,7 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const shell = () => $('.pro-shell');
+  let aggregatingBookPrices = false;
 
   function showToast(message) {
     const toast = $('#toast');
@@ -149,19 +150,26 @@
   }
 
   function aggregateBookPrices() {
+    if (aggregatingBookPrices) return;
     const select = $('#pricePrecision');
     if (!select) return;
-    const step = Number(select.value) || 0.1;
-    $$('#orderBook .book-row [class="ask"], #orderBook .book-row [class="bid"]').forEach(price => {
-      const raw = Number(String(price.textContent).replace(/,/g, ''));
-      if (!Number.isFinite(raw)) return;
-      const rounded = Math.round(raw / step) * step;
-      const digits = step < 1 ? Math.max(1, String(step).split('.')[1]?.length || 1) : 0;
-      price.textContent = rounded.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
-    });
-    select.classList.add('price-precision-active');
-    clearTimeout(aggregateBookPrices.timer);
-    aggregateBookPrices.timer = setTimeout(() => select.classList.remove('price-precision-active'), 500);
+    aggregatingBookPrices = true;
+    try {
+      const step = Number(select.value) || 0.1;
+      $$('#orderBook .book-row [class="ask"], #orderBook .book-row [class="bid"]').forEach(price => {
+        const raw = Number(String(price.textContent).replace(/,/g, ''));
+        if (!Number.isFinite(raw)) return;
+        const rounded = Math.round(raw / step) * step;
+        const digits = step < 1 ? Math.max(1, String(step).split('.')[1]?.length || 1) : 0;
+        const next = rounded.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        if (price.textContent !== next) price.textContent = next;
+      });
+      select.classList.add('price-precision-active');
+      clearTimeout(aggregateBookPrices.timer);
+      aggregateBookPrices.timer = setTimeout(() => select.classList.remove('price-precision-active'), 500);
+    } finally {
+      queueMicrotask(() => { aggregatingBookPrices = false; });
+    }
   }
 
   function activateAccount() {
@@ -192,7 +200,8 @@
     $('.account-avatar')?.addEventListener('click', activateAccount);
     $('.sidebar-head .icon-button')?.addEventListener('click', event => { event.stopPropagation(); openPopover('market'); });
     $('#pricePrecision')?.addEventListener('change', aggregateBookPrices);
-    new MutationObserver(aggregateBookPrices).observe($('#orderBook'), { childList: true, subtree: true });
+    const orderBook = $('#orderBook');
+    if (orderBook) new MutationObserver(aggregateBookPrices).observe(orderBook, { childList: true, subtree: true });
 
     document.addEventListener('click', event => {
       if (event.target.closest('[data-close-popover]')) closePopover();
