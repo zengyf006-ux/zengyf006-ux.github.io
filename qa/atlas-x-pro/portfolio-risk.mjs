@@ -76,10 +76,12 @@ try {
   checks.largestWeightValid = largestWeight > 15 && largestWeight < 60;
   const reserved = Number(await overlay.getAttribute('data-reserved-cash'));
   checks.reservedCashCalculated = Math.abs(reserved - 5004) < 0.1;
-  const stress5 = Number(await overlay.getAttribute('data-stress-minus-5'));
-  const stress10 = Number(await overlay.getAttribute('data-stress-minus-10'));
-  const stressUp = Number(await overlay.getAttribute('data-stress-plus-5'));
-  checks.stressScenariosCalculated = stress5 < 0 && stress10 < stress5 && stressUp > 0 && Math.abs(stress10 - stress5 * 2) < 0.2;
+  const stress = await overlay.evaluate(element => ({
+    minus5: Number(element.dataset.stressMinus5),
+    minus10: Number(element.dataset.stressMinus10),
+    plus5: Number(element.dataset.stressPlus5),
+  }));
+  checks.stressScenariosCalculated = stress.minus5 < 0 && stress.minus10 < stress.minus5 && stress.plus5 > 0 && Math.abs(stress.minus10 - stress.minus5 * 2) < 0.2;
   checks.riskLevelNotPlaceholder = !['', '--'].includes((await page.locator('#portfolioRiskLevel').innerText()).trim());
   checks.noStaticSafetyCopy = !(await overlay.innerText()).includes('真实充值 / 提现');
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
