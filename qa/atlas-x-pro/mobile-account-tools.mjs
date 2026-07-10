@@ -63,7 +63,10 @@ try {
   await page.locator('[data-mobile-view="account"]').click();
   await page.locator('[data-mobile-account-tool="assets"]').click();
   await page.waitForSelector('.module-overlay[data-module="assets"]', { state: 'visible' });
-  checks.assetsAccessible = (await page.locator('.module-overlay[data-module="assets"]').innerText()).includes('模拟资产');
+  await page.waitForSelector('.portfolio-risk-dashboard', { state: 'visible' });
+  await page.waitForFunction(() => document.querySelector('#portfolioAllocationCanvas')?.dataset.rendered === 'true', null, { timeout: 7000 });
+  checks.assetsAccessible = await page.locator('.portfolio-risk-dashboard').isVisible();
+  checks.assetAllocationRendered = await page.locator('#portfolioAllocationCanvas').evaluate(canvas => canvas.dataset.rendered === 'true');
   await page.locator('.module-close').click();
 
   await page.locator('[data-mobile-view="account"]').click();
