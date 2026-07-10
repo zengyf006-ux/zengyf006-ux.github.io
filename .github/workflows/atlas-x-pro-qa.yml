@@ -60,6 +60,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/quality-extra.mjs
 
+      - name: Capture advanced visual states
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/advanced-visual.mjs
+
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -69,6 +75,7 @@ jobs:
             qa-artifacts-pro/screenshots
             qa-artifacts-pro/report.json
             qa-artifacts-pro/quality-report.json
+            qa-artifacts-pro/advanced-visual-report.json
             /tmp/atlas-pro-http.log
           retention-days: 1
           if-no-files-found: error
