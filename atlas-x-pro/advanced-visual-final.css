@@ -28,6 +28,19 @@
 }
 
 @media (max-width: 820px) {
+  .terminal-grid > .main-workspace {
+    display: none;
+    height: 100%;
+  }
+  .terminal-grid > .main-workspace:has(> .chart-panel.mobile-active),
+  .terminal-grid > .main-workspace:has(> .account-workspace.mobile-active) {
+    display: block;
+  }
+  .terminal-grid > .orderbook-panel.mobile-active {
+    display: flex;
+    height: 100%;
+  }
+
   .price-alert-panel {
     top: auto !important;
     right: 0 !important;
