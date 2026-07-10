@@ -33,6 +33,7 @@
     ensureStyle('./refinements.css');
     ensureStyle('./release-polish.css');
     ensureStyle('./terminal-quality.css');
+    ensureStyle('./mobile-final.css');
 
     try {
       if (!document.querySelector('.ticket-context') || !document.querySelector('#controlPopover')) {
