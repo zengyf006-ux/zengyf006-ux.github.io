@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 
-const target = 'http://127.0.0.1:4173/atlas-x-next/';
+const target = 'http://127.0.0.1:4173/atlas-x-next/index-v3.html';
 const viewports = [
   { name: 'iphone-390x844', width: 390, height: 844, mobile: true },
   { name: 'iphone-430x932', width: 430, height: 932, mobile: true },
@@ -24,8 +24,10 @@ for (const viewport of viewports) {
   try {
     const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForSelector('.app-shell', { state: 'visible', timeout: 15000 });
-    await page.waitForTimeout(1200);
-    const required = viewport.mobile ? ['.topbar', '.market-bar', '#chartCanvas', '.orderbook-panel', '.mobile-dock'] : ['.topbar', '.market-bar', '#chartCanvas', '.orderbook-panel', '.order-panel', '.account-panel'];
+    await page.waitForTimeout(1400);
+    const required = viewport.mobile
+      ? ['.topbar', '.market-summary', '#chartCanvas', '.mobile-view-tabs', '.mobile-action-bar']
+      : ['.topbar', '.market-summary', '#chartCanvas', '.orderbook-panel', '.order-panel', '.account-panel'];
     const visibility = {};
     for (const selector of required) visibility[selector] = await page.locator(selector).isVisible();
     const metrics = await page.evaluate(() => ({
@@ -45,11 +47,19 @@ for (const viewport of viewports) {
     const badCanvas = !metrics.canvas || metrics.canvas.width < 280 || metrics.canvas.height < 200;
     const resultFailed = overflow || blank || badStatus || pageErrors.length > 0 || consoleErrors.length > 0 || missing.length > 0 || badCanvas || metrics.forbiddenCopy.length > 0;
     failed ||= resultFailed;
+
     await page.screenshot({ path: `qa-artifacts-next/screenshots/${viewport.name}-main.png`, fullPage: false });
     const interactions = {};
     await page.locator('[data-timeframe="4H"]').click();
     interactions.timeframe4HActive = await page.locator('[data-timeframe="4H"]').evaluate(element => element.classList.contains('active'));
+
     if (viewport.mobile) {
+      interactions.orderbookHiddenInitially = !(await page.locator('.orderbook-panel').isVisible());
+      await page.locator('[data-mobile-view="book"]').click();
+      await page.waitForTimeout(180);
+      interactions.orderbookViewVisible = await page.locator('.orderbook-panel').isVisible();
+      await page.screenshot({ path: `qa-artifacts-next/screenshots/${viewport.name}-book.png`, fullPage: false });
+      await page.locator('[data-mobile-view="chart"]').click();
       await page.locator('[data-mobile-side="buy"]').click();
       await page.waitForTimeout(350);
       interactions.tradeSheetOpen = await page.locator('body').evaluate(element => element.classList.contains('trade-sheet-open'));
@@ -61,6 +71,7 @@ for (const viewport of viewports) {
       await page.locator('#orderAmount').fill('1000');
       interactions.estimateUpdated = (await page.locator('#estimatedAmount').innerText()) !== '0.000000 BTC';
     }
+
     const interactionFailed = Object.values(interactions).some(value => value !== true);
     failed ||= interactionFailed;
     report.results.push({ viewport, httpStatus: response?.status() ?? null, overflow, blank, missing, badCanvas, metrics, interactions, consoleErrors, pageErrors, passed: !resultFailed && !interactionFailed });
@@ -73,5 +84,5 @@ for (const viewport of viewports) {
 
 await browser.close();
 await fs.writeFile('qa-artifacts-next/report.json', JSON.stringify(report, null, 2));
-if (failed) { console.error('ATLAS X Next visual QA failed. Inspect screenshots and report.json.'); process.exit(1); }
-console.log('ATLAS X Next visual QA completed successfully.');
+if (failed) { console.error('ATLAS X Next v3 visual QA failed. Inspect screenshots and report.json.'); process.exit(1); }
+console.log('ATLAS X Next v3 visual QA completed successfully.');
