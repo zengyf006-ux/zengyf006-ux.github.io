@@ -25,11 +25,25 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Playwright
+      - name: Prepare browser and deterministic Chinese font
         run: |
           npm init -y
-          npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
+          npm install --no-save playwright-core@1.55.0 @fontsource-variable/noto-sans-sc
+          test -x /usr/bin/google-chrome
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('atlas-x-next/index.html')
+          text = path.read_text(encoding='utf-8')
+          qa_font = '''
+          <link rel="stylesheet" href="/node_modules/@fontsource-variable/noto-sans-sc/wght.css" />
+          <style>
+            html, body, button, input { font-family: "Noto Sans SC Variable", "PingFang SC", "Microsoft YaHei", sans-serif !important; }
+          </style>
+          '''
+          if '@fontsource-variable/noto-sans-sc' not in text:
+              text = text.replace('</head>', qa_font + '\n</head>')
+              path.write_text(text, encoding='utf-8')
+          PY
 
       - name: Start static server
         run: |
@@ -38,6 +52,8 @@ jobs:
           sleep 2
 
       - name: Capture and validate
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
         run: node qa/visual-next/capture.mjs
 
       - name: Upload screenshots and report

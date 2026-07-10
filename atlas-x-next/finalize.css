@@ -1,0 +1,112 @@
+/* Final mobile launch-quality refinements */
+.mobile-account-overview,
+.mobile-account-insight { display: none; }
+
+@media (max-width: 760px) {
+  .topbar-actions .toast {
+    position: static;
+    inset: auto;
+    display: none;
+    min-width: 0;
+    max-width: 168px;
+    height: 30px;
+    padding: 0 10px;
+    overflow: hidden;
+    align-items: center;
+    border-radius: 8px;
+    opacity: 0;
+    transform: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .topbar-actions .toast.show {
+    display: flex;
+    opacity: 1;
+    transform: none;
+  }
+  .topbar-actions:has(.toast.show) .mode-pill { display: none; }
+
+  .account-panel.mobile-active {
+    overflow: auto;
+    align-content: start;
+  }
+  .mobile-account-overview {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    margin: 10px 10px 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--line);
+  }
+  .mobile-account-overview > div {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+    padding: 12px 10px;
+    background: rgba(16, 25, 37, 0.96);
+  }
+  .mobile-account-overview span {
+    color: var(--muted);
+    font-size: 8px;
+    white-space: nowrap;
+  }
+  .mobile-account-overview b {
+    overflow: hidden;
+    color: var(--text-2);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .account-panel .account-table-wrap {
+    min-height: 0;
+    flex: 0 0 auto;
+  }
+  .mobile-account-insight {
+    display: grid;
+    gap: 10px;
+    margin: 0 10px 12px;
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(13, 20, 29, 0.72);
+  }
+  .mobile-account-insight > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 9px;
+  }
+  .mobile-account-insight b { color: var(--green); font-size: 10px; }
+  .risk-track {
+    height: 4px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #1c2939;
+  }
+  .risk-track i {
+    display: block;
+    width: var(--risk, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--green), var(--accent));
+  }
+  .mobile-account-insight small {
+    color: var(--muted-2);
+    font-size: 8px;
+    line-height: 1.55;
+  }
+  .account-panel .empty-row td {
+    height: 280px;
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar-actions .toast { max-width: 148px; font-size: 9px; }
+  .mobile-account-overview > div { padding: 11px 8px; }
+  .mobile-account-overview b { font-size: 9px; }
+}
