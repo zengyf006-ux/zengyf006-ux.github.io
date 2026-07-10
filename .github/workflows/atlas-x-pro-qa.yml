@@ -16,7 +16,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -72,6 +72,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/performance-analytics.mjs
 
+      - name: Verify semantic Chinese typography
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/semantic-typography.mjs
+
       - name: Capture advanced visual states
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -103,6 +109,7 @@ jobs:
             qa-artifacts-pro/quality-report.json
             qa-artifacts-pro/execution-guard-report.json
             qa-artifacts-pro/performance-analytics-report.json
+            qa-artifacts-pro/semantic-typography-report.json
             qa-artifacts-pro/advanced-visual-report.json
             qa-artifacts-pro/mobile-layout-report.json
             qa-artifacts-pro/mobile-account-tools-report.json
