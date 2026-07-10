@@ -43,6 +43,7 @@
       './performance-layout-polish.css',
       './portfolio-risk.css',
       './market-intelligence.css',
+      './market-intelligence-polish.css',
       './mobile-account-tools.css',
       './data-health.css',
       './semantic-typography.css',
