@@ -13,8 +13,8 @@
   }
 
   function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"]/g, character => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+    return String(value ?? '').replace(/[&<>\"]/g, character => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;',
     })[character]);
   }
 
@@ -55,9 +55,13 @@
     const dispersion = changes.length
       ? Math.sqrt(changes.reduce((sum, value) => sum + (value - mean) ** 2, 0) / changes.length)
       : 0;
-    const ranked = [...markets].sort((a, b) => b.change - a.change || a.symbol.localeCompare(b.symbol));
-    const topGainer = ranked[0] || { symbol: '', pair: '--', change: 0 };
-    const topLoser = ranked.at(-1) || { symbol: '', pair: '--', change: 0 };
+    const ranked = markets
+      .map((item, sourceIndex) => ({ ...item, sourceIndex }))
+      .sort((a, b) => b.change - a.change || a.sourceIndex - b.sourceIndex);
+    const topGainer = markets.reduce((best, item) => !best || item.change > best.change ? item : best, null)
+      || { symbol: '', pair: '--', change: 0 };
+    const topLoser = markets.reduce((worst, item) => !worst || item.change < worst.change ? item : worst, null)
+      || { symbol: '', pair: '--', change: 0 };
     const breadth = markets.length ? advancers / markets.length * 100 : 0;
     let regime = '震荡';
     let regimeClass = 'warning';
