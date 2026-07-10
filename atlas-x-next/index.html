@@ -1,90 +1,201 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b0e13">
-  <meta name="description" content="ATLAS X 数字资产模拟交易终端">
-  <title>ATLAS X · 模拟交易终端</title>
-  <link rel="stylesheet" href="./styles.css">
-  <script src="./app.js" defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1118" />
+  <meta name="description" content="ATLAS X 专业数字资产模拟交易终端" />
+  <link rel="icon" href="data:," />
+  <title>ATLAS X｜模拟交易终端</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <div class="app-shell" id="appShell">
+  <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="ATLAS X 首页">
         <span class="brand-mark" aria-hidden="true"><i></i></span>
-        <span class="brand-copy"><strong>ATLAS X</strong><small>TRADING TERMINAL</small></span>
+        <span class="brand-copy"><strong>ATLAS X</strong><small>DIGITAL ASSET TERMINAL</small></span>
       </a>
-      <nav class="product-nav" aria-label="交易产品">
-        <button class="product-tab active" type="button" data-product="spot">现货</button>
-        <button class="product-tab" type="button" data-product="perp">永续</button>
+      <nav class="primary-nav" aria-label="主导航">
+        <button class="active" type="button">交易</button>
+        <button type="button">行情</button>
+        <button type="button">资产</button>
+        <button type="button">分析</button>
       </nav>
       <div class="topbar-actions">
-        <span class="connection"><i></i><span>行情在线</span></span>
-        <span class="simulation-badge">模拟环境</span>
-        <button class="icon-button" type="button" aria-label="通知"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button>
-        <button class="account-button" type="button" aria-label="模拟账户">AX</button>
+        <span class="status-pill"><i></i>行情在线</span>
+        <span class="mode-pill">模拟环境</span>
+        <button class="round-action" type="button" aria-label="通知"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M10 19h4"/></svg></button>
+        <button class="avatar" type="button" aria-label="账户">AX</button>
       </div>
     </header>
 
-    <section class="market-bar" aria-label="当前交易对信息">
-      <button class="market-selector" type="button" id="marketSelector">
-        <span class="coin-mark">₿</span>
-        <span><strong id="pairName">BTC/USDT</strong><small id="marketTypeLabel">现货市场</small></span>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 6 5-6"/></svg>
+    <section class="market-summary" aria-label="BTC 市场摘要">
+      <button class="pair-selector" type="button">
+        <span class="coin-icon">₿</span>
+        <span><strong>BTC/USDT</strong><small>现货 · USDT</small></span>
+        <svg viewBox="0 0 24 24"><path d="m7 9 5 6 5-6"/></svg>
       </button>
-      <div class="price-block"><strong id="lastPrice">64,407.6</strong><span class="positive" id="priceChange">+2.18%</span><small id="priceUsd">≈ $64,407.60</small></div>
-      <div class="market-stats" role="list">
-        <div role="listitem"><span>24h最高</span><strong id="high24">65,182.3</strong></div>
-        <div role="listitem"><span>24h最低</span><strong id="low24">62,906.1</strong></div>
-        <div role="listitem"><span>24h成交量(BTC)</span><strong>28.64K</strong></div>
-        <div role="listitem"><span>24h成交额(USDT)</span><strong>1.84B</strong></div>
+      <div class="last-price">
+        <strong id="lastPrice">64,407.6</strong>
+        <span id="priceChange" class="positive">+2.18%</span>
+        <small id="priceUsd">≈ $64,407.60</small>
       </div>
-      <div class="market-tools"><button class="text-button active" type="button">自选</button><button class="icon-button" type="button" aria-label="更多市场设置"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg></button></div>
+      <div class="market-metrics">
+        <div><span>24h 高</span><b>65,182.3</b></div>
+        <div><span>24h 低</span><b>62,906.1</b></div>
+        <div><span>24h 成交量</span><b>28.64K BTC</b></div>
+        <div><span>24h 成交额</span><b>1.84B USDT</b></div>
+      </div>
+      <div class="market-range"><span>24h 区间</span><div><i></i></div><small>62,906.1 — 65,182.3</small></div>
+      <div class="summary-actions">
+        <button type="button" aria-label="加入自选"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.1-5.6-2.9-5.6 2.9 1.1-6.1L3 9.6l6.2-.9z"/></svg></button>
+        <button type="button" aria-label="更多"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></button>
+      </div>
     </section>
 
-    <main class="trading-layout">
-      <section class="panel chart-panel" aria-label="价格图表">
-        <header class="panel-header chart-header">
-          <div class="timeframes" id="timeframes" aria-label="K线周期">
-            <button type="button" data-timeframe="1m">1分</button><button type="button" data-timeframe="15m">15分</button><button class="active" type="button" data-timeframe="1H">1时</button><button type="button" data-timeframe="4H">4时</button><button type="button" data-timeframe="1D">1日</button>
+    <nav class="mobile-view-tabs" aria-label="手机交易视图">
+      <button class="active" data-mobile-view="chart" type="button">K线</button>
+      <button data-mobile-view="book" type="button">盘口</button>
+      <button data-mobile-view="trades" type="button">成交</button>
+      <button data-mobile-view="account" type="button">持仓</button>
+    </nav>
+
+    <main class="workspace">
+      <section class="panel chart-panel" data-mobile-panel="chart">
+        <header class="panel-head chart-head">
+          <div class="timeframes" id="timeframes">
+            <button data-timeframe="1m" type="button">1分</button>
+            <button data-timeframe="15m" type="button">15分</button>
+            <button class="active" data-timeframe="1H" type="button">1时</button>
+            <button data-timeframe="4H" type="button">4时</button>
+            <button data-timeframe="1D" type="button">1日</button>
           </div>
-          <div class="chart-actions"><button class="chart-tool active" type="button" data-indicator="ema">EMA</button><button class="chart-tool" type="button" data-indicator="boll">BOLL</button><button class="icon-button compact" type="button" aria-label="图表设置"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V10M10 18V5M16 18v-7M22 18V7"/></svg></button><button class="icon-button compact" type="button" aria-label="全屏图表"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button></div>
+          <div class="chart-tools">
+            <button class="active" type="button">EMA</button>
+            <button type="button">BOLL</button>
+            <button class="icon-only" type="button" aria-label="图表设置"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+            <button class="icon-only" type="button" aria-label="全屏"><svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
+          </div>
         </header>
-        <div class="chart-meta" aria-live="polite"><span>EMA(10) <b id="ema10">64,312.8</b></span><span>EMA(20) <b id="ema20">64,088.4</b></span><span class="chart-live"><i></i> 实时</span></div>
-        <div class="chart-stage" id="chartStage"><canvas id="chartCanvas" aria-label="BTC USDT K线图"></canvas><div class="chart-tooltip" id="chartTooltip" hidden><span id="tooltipTime">--</span><b id="tooltipPrice">--</b><small id="tooltipChange">--</small></div></div>
-        <footer class="chart-footer"><span><i class="legend-line ema-fast"></i>EMA 10</span><span><i class="legend-line ema-slow"></i>EMA 20</span><span class="chart-source">公共行情 · 本地模拟</span></footer>
+        <div class="chart-info-bar">
+          <span>EMA(10) <b id="ema10Value">64,312.8</b></span>
+          <span>EMA(20) <b id="ema20Value">64,088.4</b></span>
+          <span class="live-dot"><i></i>实时</span>
+        </div>
+        <div class="chart-stage" id="chartStage">
+          <canvas id="chartCanvas" aria-label="BTC K线图"></canvas>
+          <div class="chart-tooltip" id="chartTooltip" hidden>
+            <small id="tooltipTime">--</small>
+            <strong id="tooltipPrice">--</strong>
+            <span id="tooltipChange">--</span>
+          </div>
+        </div>
+        <footer class="chart-foot">
+          <span><i class="legend ema10"></i>EMA 10</span>
+          <span><i class="legend ema20"></i>EMA 20</span>
+          <span class="data-source">公开行情 · 本地模拟撮合</span>
+        </footer>
+        <div class="mobile-market-pulse">
+          <div><span>24h 振幅</span><b>3.51%</b></div>
+          <div><span>买卖比</span><b class="positive">1.18</b></div>
+          <div><span>资金费率</span><b>0.0100%</b></div>
+        </div>
       </section>
 
-      <aside class="panel orderbook-panel" aria-label="盘口与成交">
-        <header class="panel-header tab-header"><div class="panel-tabs" id="bookTabs"><button class="active" type="button" data-book-tab="book">订单簿</button><button type="button" data-book-tab="trades">最近成交</button></div><button class="icon-button compact" type="button" aria-label="盘口显示设置"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h16"/></svg></button></header>
-        <div class="book-view active" data-book-view="book"><div class="book-columns"><span>价格(USDT)</span><span>数量(BTC)</span><span>累计</span></div><div class="book-rows asks" id="askRows"></div><div class="spread-row"><strong class="positive" id="spreadPrice">64,407.6</strong><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 14 5-5 5 5"/></svg><small id="spreadValue">价差 0.10</small></span></div><div class="book-rows bids" id="bidRows"></div></div>
-        <div class="trades-view" data-book-view="trades"><div class="book-columns"><span>价格(USDT)</span><span>数量(BTC)</span><span>时间</span></div><div class="trade-rows" id="tradeRows"></div></div>
-      </aside>
-
-      <aside class="panel order-panel" id="orderPanel" aria-label="模拟下单">
-        <header class="panel-header order-panel-head"><div class="side-tabs" id="sideTabs"><button class="active buy" type="button" data-side="buy">买入</button><button class="sell" type="button" data-side="sell">卖出</button></div><button class="sheet-close" id="sheetClose" type="button" aria-label="关闭下单面板">×</button></header>
-        <div class="order-content">
-          <div class="order-type-tabs" id="orderTypeTabs"><button class="active" type="button" data-order-type="market">市价</button><button type="button" data-order-type="limit">限价</button><button type="button" data-order-type="trigger">止盈止损</button></div>
-          <div class="balance-line"><span>可用</span><strong id="availableBalance">100,000.00 USDT</strong></div>
-          <label class="field-row limit-field" hidden><span>委托价</span><input id="limitPrice" inputmode="decimal" value="64,407.6" aria-label="委托价格"><b>USDT</b></label>
-          <label class="field-row"><span id="amountLabel">金额</span><input id="orderAmount" inputmode="decimal" placeholder="0.00" aria-label="下单金额"><b id="amountUnit">USDT</b></label>
-          <div class="percentage-control" aria-label="资金比例"><input id="amountRange" type="range" min="0" max="100" value="0"><div class="range-labels"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div></div>
-          <div class="order-summary"><div><span>预计成交</span><strong id="estimatedAmount">0.000000 BTC</strong></div><div><span>预计手续费</span><strong id="estimatedFee">0.00 USDT</strong></div></div>
-          <label class="check-row"><input type="checkbox" id="tpSlToggle"><i></i><span>设置止盈止损</span></label>
-          <button class="submit-order buy" id="submitOrder" type="button">买入 BTC</button><p class="order-note">模拟撮合，不涉及真实资产或交易所密钥。</p>
+      <section class="panel orderbook-panel" data-mobile-panel="book">
+        <header class="panel-head compact-head">
+          <div class="tabs" id="bookTabs">
+            <button class="active" data-book-tab="book" type="button">订单簿</button>
+            <button data-book-tab="trades" type="button">最近成交</button>
+          </div>
+          <button class="panel-menu" type="button" aria-label="盘口显示设置"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h14"/></svg></button>
+        </header>
+        <div class="book-view active" data-book-view="book">
+          <div class="book-columns"><span>价格(USDT)</span><span>数量(BTC)</span><span>累计</span></div>
+          <div class="book-rows asks" id="askRows"></div>
+          <div class="spread-row">
+            <div><strong id="spreadPrice">64,407.6</strong><small>≈ $64,407.60</small></div>
+            <span class="positive">↑ <small>价差 0.10</small></span>
+          </div>
+          <div class="book-rows bids" id="bidRows"></div>
         </div>
-      </aside>
+        <div class="book-view" data-book-view="trades">
+          <div class="book-columns"><span>价格(USDT)</span><span>数量(BTC)</span><span>时间</span></div>
+          <div class="trade-list" id="tradeRows"></div>
+        </div>
+      </section>
 
-      <section class="panel account-panel" aria-label="订单和持仓">
-        <header class="panel-header account-header"><div class="panel-tabs" id="accountTabs"><button class="active" type="button" data-account-tab="positions">持仓 <span>0</span></button><button type="button" data-account-tab="orders">当前委托 <span>0</span></button><button type="button" data-account-tab="history">历史成交</button></div><div class="account-actions"><span>总权益 <b id="equityValue">100,000.00 USDT</b></span><button class="text-button" type="button">账户分析</button></div></header>
-        <div class="account-table-wrap"><table class="account-table"><thead><tr><th>交易对</th><th>方向</th><th>持仓数量</th><th>开仓均价</th><th>标记价格</th><th>未实现盈亏</th><th>操作</th></tr></thead><tbody id="accountBody"><tr class="empty-row"><td colspan="7"><div class="empty-state"><span>暂无持仓</span><small>完成模拟下单后，持仓和盈亏会显示在这里。</small></div></td></tr></tbody></table></div>
+      <section class="panel order-panel" id="orderPanel">
+        <div class="sheet-grabber"></div>
+        <header class="order-side-tabs" id="sideTabs">
+          <button class="active buy" data-side="buy" type="button">买入</button>
+          <button class="sell" data-side="sell" type="button">卖出</button>
+          <button class="sheet-close" id="sheetClose" type="button" aria-label="关闭">×</button>
+        </header>
+        <div class="order-content">
+          <div class="order-type-tabs" id="orderTypeTabs">
+            <button class="active" data-order-type="market" type="button">市价</button>
+            <button data-order-type="limit" type="button">限价</button>
+            <button data-order-type="trigger" type="button">止盈止损</button>
+          </div>
+          <div class="balance-row"><span>可用余额</span><strong>100,000.00 USDT</strong></div>
+          <label class="order-field limit-field" hidden>
+            <span>委托价</span><input id="limitPrice" inputmode="decimal" value="64407.6" /><b>USDT</b>
+          </label>
+          <label class="order-field">
+            <span>金额</span><input id="orderAmount" inputmode="decimal" placeholder="0.00" /><b>USDT</b>
+          </label>
+          <div class="range-wrap">
+            <input id="amountRange" type="range" min="0" max="100" value="0" />
+            <div><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+          </div>
+          <div class="order-estimate">
+            <div><span>预计成交</span><b id="estimatedAmount">0.000000 BTC</b></div>
+            <div><span>预计手续费</span><b id="estimatedFee">0.00 USDT</b></div>
+          </div>
+          <label class="check-row"><input type="checkbox"/><i></i><span>设置止盈止损</span></label>
+          <button class="submit-order buy" id="submitOrder" type="button">买入 BTC</button>
+          <p class="order-note">模拟撮合，不涉及真实资产、充值或提现。</p>
+        </div>
+      </section>
+
+      <section class="panel account-panel" data-mobile-panel="account">
+        <header class="panel-head account-head">
+          <div class="tabs account-tabs">
+            <button class="active" type="button">持仓 <span>0</span></button>
+            <button type="button">当前委托 <span>0</span></button>
+            <button type="button">历史成交</button>
+          </div>
+          <div class="account-summary">
+            <span>账户权益 <b>100,000.00 USDT</b></span>
+            <span>今日盈亏 <b class="positive">+0.00</b></span>
+          </div>
+        </header>
+        <div class="account-table-wrap">
+          <table class="account-table">
+            <thead><tr><th>交易对</th><th>方向</th><th>持仓数量</th><th>开仓均价</th><th>标记价格</th><th>未实现盈亏</th><th>操作</th></tr></thead>
+            <tbody id="accountBody">
+              <tr class="empty-row"><td colspan="7"><div class="empty-state"><span class="empty-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M12 4v16"/></svg></span><b>暂无持仓</b><small>完成一笔模拟下单后，持仓与实时盈亏会显示在这里。</small></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel mobile-account-summary" data-mobile-panel="trades">
+        <header class="panel-head"><strong>最近成交</strong><span class="positive">实时</span></header>
+        <div class="mobile-trades" id="mobileTradeRows"></div>
       </section>
     </main>
 
-    <div class="mobile-dock" aria-label="移动端交易操作"><button class="mobile-trade buy" type="button" data-mobile-side="buy">买入</button><button class="mobile-trade sell" type="button" data-mobile-side="sell">卖出</button><nav class="mobile-nav" aria-label="移动端导航"><button class="active" type="button"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V4M16 19v-7M22 19V6"/></svg><span>交易</span></button><button type="button"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM4 10h16M8 4v6"/></svg><span>行情</span></button><button type="button"><svg viewBox="0 0 24 24"><path d="M4 8h16v11H4zM7 8V5h10v3M8 13h8"/></svg><span>资产</span></button><button type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg><span>账户</span></button></nav></div>
-    <div class="sheet-backdrop" id="sheetBackdrop" hidden></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="mobile-action-bar">
+      <div class="mobile-quote"><span>BTC/USDT</span><strong id="mobilePrice">64,407.6</strong></div>
+      <button class="buy" data-mobile-side="buy" type="button">买入</button>
+      <button class="sell" data-mobile-side="sell" type="button">卖出</button>
+    </div>
+    <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+    <div class="toast" id="toast" role="status"></div>
   </div>
+  <script src="./app.js"></script>
 </body>
 </html>
