@@ -83,6 +83,22 @@ try {
   }));
   checks.stressScenariosCalculated = stress.minus5 < 0 && stress.minus10 < stress.minus5 && stress.plus5 > 0 && Math.abs(stress.minus10 - stress.minus5 * 2) < 0.2;
   checks.riskLevelNotPlaceholder = !['', '--'].includes((await page.locator('#portfolioRiskLevel').innerText()).trim());
+  const riskTypography = await page.evaluate(() => {
+    const summary = document.querySelector('.portfolio-risk-stat:last-child b');
+    const level = document.querySelector('#portfolioRiskLevel');
+    const signal = document.querySelector('.portfolio-risk-signal > span');
+    return {
+      summaryText: summary?.textContent?.trim() || '',
+      levelText: level?.textContent?.trim() || '',
+      signalText: signal?.textContent?.trim() || '',
+      summaryFont: summary ? getComputedStyle(summary).fontFamily : '',
+      levelFont: level ? getComputedStyle(level).fontFamily : '',
+      signalFont: signal ? getComputedStyle(signal).fontFamily : '',
+    };
+  });
+  const isUiFont = value => /Atlas QA SC|Noto Sans SC|PingFang SC|Microsoft YaHei|system-ui|sans-serif/i.test(value) && !/SFMono|Consolas|monospace/i.test(value);
+  checks.riskStatusTextCorrect = riskTypography.summaryText === '中等' && riskTypography.levelText === '中等风险' && /关注|分散|偏高/.test(riskTypography.signalText);
+  checks.riskStatusUsesUiFont = isUiFont(riskTypography.summaryFont) && isUiFont(riskTypography.levelFont) && isUiFont(riskTypography.signalFont);
   checks.noStaticSafetyCopy = !(await overlay.innerText()).includes('真实充值 / 提现');
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
   checks.noConsoleErrors = consoleErrors.length === 0;
