@@ -1,4 +1,5 @@
 (()=>{'use strict';
+const desktopLayout=document.createElement('style');desktopLayout.textContent='@media(min-width:761px){.orderbook-panel{grid-row:1!important}.order-panel{grid-row:1!important}.account-panel{grid-column:1/4!important;grid-row:2!important}.book-rows{flex:1!important}.book-row{height:auto!important;min-height:22px!important;flex:1 1 0!important}}';document.head.append(desktopLayout);
 const state={price:64407.6,previousPrice:64407.6,timeframe:'1H',side:'buy',orderType:'market',candles:[],pointer:null,position:null};
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const fmt=(n,d=1)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
