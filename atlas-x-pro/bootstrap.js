@@ -54,7 +54,6 @@
       await loadScript('./advanced-stability.js');
       await loadScript('./execution-guard.js');
       await loadScript('./performance-analytics.js');
-      await loadScript('./performance-accounting.js');
       await loadScript('./mobile-account-tools.js');
       document.documentElement.dataset.atlasQuality = 'ready';
     } catch (error) {
