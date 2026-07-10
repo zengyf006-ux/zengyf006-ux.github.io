@@ -93,6 +93,15 @@ try {
   checks.staticDemoChartRemoved = !(await overlay.innerText()).includes('演示可视化');
   checks.disclaimerPresent = (await overlay.innerText()).includes('不构成投资建议');
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
+  if (viewport.mobile) {
+    checks.executionMetricsFillPanel = true;
+  } else {
+    const [panelBox, metricsBox] = await Promise.all([
+      page.locator('.performance-main-grid > .performance-panel').nth(1).boundingBox(),
+      page.locator('.performance-metrics').boundingBox(),
+    ]);
+    checks.executionMetricsFillPanel = Boolean(panelBox && metricsBox && Math.abs((metricsBox.y + metricsBox.height) - (panelBox.y + panelBox.height)) <= 3);
+  }
   checks.noConsoleErrors = consoleErrors.length === 0;
   checks.noPageErrors = pageErrors.length === 0;
 
