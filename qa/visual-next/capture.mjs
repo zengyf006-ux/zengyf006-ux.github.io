@@ -52,7 +52,8 @@ for (const viewport of viewports) {
         bodyWidth: document.body.scrollWidth,
         viewportWidth: document.documentElement.clientWidth,
         visibleTextLength: (document.body.innerText || '').trim().length,
-        forbiddenCopy: ['邓总', 'CLIENT SHOWCASE', 'Release Candidate', '项目展示'].filter(term => document.body.innerText.includes(term)),
+        forbiddenCopy: ['邓总', 'CLIENT SHOWCASE', 'Release Candidate', '项目展示', '公开行情', '行情在线']
+          .filter(term => document.body.innerText.includes(term)),
         canvas: canvas ? { width: canvas.width, height: canvas.height } : null,
       };
     });
