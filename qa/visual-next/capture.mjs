@@ -1,7 +1,7 @@
 import { chromium } from 'playwright-core';
 import fs from 'node:fs/promises';
 
-const target = 'http://127.0.0.1:4173/atlas-x-next/index-v3.html';
+const target = 'http://127.0.0.1:4173/atlas-x-next/';
 const viewports = [
   { name: 'iphone-390x844', width: 390, height: 844, mobile: true },
   { name: 'iphone-430x932', width: 430, height: 932, mobile: true },
@@ -85,5 +85,5 @@ for (const viewport of viewports) {
 
 await browser.close();
 await fs.writeFile('qa-artifacts-next/report.json', JSON.stringify(report, null, 2));
-if (failed) { console.error('ATLAS X Next v3 visual QA failed. Inspect screenshots and report.json.'); process.exit(1); }
-console.log('ATLAS X Next v3 visual QA completed successfully.');
+if (failed) { console.error('ATLAS X Next visual QA failed. Inspect screenshots and report.json.'); process.exit(1); }
+console.log('ATLAS X Next visual QA completed successfully.');
