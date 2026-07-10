@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const files=['./bundle/01.txt?v=rc1','./bundle/02.txt?v=rc1','./bundle/03.txt?v=rc1','./bundle/04.txt?v=rc1','./bundle/05.txt?v=rc1','./bundle/06.txt?v=rc1','./bundle/07.txt?v=rc1','./bundle/08.txt?v=rc1'];
+const files=['./bundle/01.txt?v=rc1','./bundle/02.txt?v=rc1','./bundle/03.txt?v=rc1','./bundle/04.txt?v=rc1','./bundle/05.txt?v=rc1','./bundle/06.txt?v=rc1','./bundle/07a.txt?v=rc1','./bundle/07b.txt?v=rc1','./bundle/08a.txt?v=rc1','./bundle/08b.txt?v=rc1'];
 const enter=document.getElementById('enterDemo');let queued=false;
 const hold=e=>{if(window.__ATLAS_BOOT_READY)return;e.preventDefault();e.stopImmediatePropagation();queued=true;if(enter)enter.textContent='正在进入终端…'};
 enter?.addEventListener('click',hold,true);
