@@ -31,12 +31,6 @@ jobs:
           npm install --no-save playwright-core@1.55.0
           test -x /usr/bin/google-chrome
 
-      - name: Build ATLAS X v3 preview
-        run: python3 qa/visual-next/build_v3.py
-
-      - name: Apply deterministic v3 fixes
-        run: python3 qa/visual-next/patch_v3.py
-
       - name: Start static server
         run: |
           python3 -m http.server 4173 > /tmp/atlas-next-http.log 2>&1 &
@@ -48,13 +42,12 @@ jobs:
           CHROME_BIN: /usr/bin/google-chrome
         run: node qa/visual-next/capture.mjs
 
-      - name: Upload screenshots, report and built preview
+      - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: atlas-x-next-visual
           path: |
-            atlas-x-next/index-v3.html
             qa-artifacts-next/screenshots
             qa-artifacts-next/report.json
             /tmp/atlas-next-http.log
