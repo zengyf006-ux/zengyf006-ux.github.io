@@ -45,6 +45,7 @@
       await loadScript('./terminal-quality.js');
       await loadScript('./chart-pro-tools.js');
       await loadScript('./trading-advanced.js');
+      await loadScript('./advanced-stability.js');
       document.documentElement.dataset.atlasQuality = 'ready';
     } catch (error) {
       console.error('ATLAS quality bootstrap failed', error);
