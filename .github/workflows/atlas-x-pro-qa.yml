@@ -14,8 +14,17 @@ permissions:
 
 jobs:
   acceptance:
+    name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport:
+          - iphone-390x844
+          - iphone-430x932
+          - desktop-1440x900
+          - desktop-1920x1080
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,13 +51,14 @@ jobs:
       - name: Capture and validate
         env:
           CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/capture.mjs
 
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: atlas-x-pro-acceptance
+          name: atlas-x-pro-${{ matrix.viewport }}
           path: |
             qa-artifacts-pro/screenshots
             qa-artifacts-pro/report.json
