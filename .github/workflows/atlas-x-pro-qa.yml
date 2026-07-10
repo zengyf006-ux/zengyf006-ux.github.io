@@ -54,6 +54,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/capture.mjs
 
+      - name: Verify professional workspace quality
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/quality-extra.mjs
+
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,6 +68,7 @@ jobs:
           path: |
             qa-artifacts-pro/screenshots
             qa-artifacts-pro/report.json
+            qa-artifacts-pro/quality-report.json
             /tmp/atlas-pro-http.log
           retention-days: 1
           if-no-files-found: error
