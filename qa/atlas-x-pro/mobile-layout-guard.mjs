@@ -38,7 +38,7 @@ try {
   const bookBox = await page.locator('.orderbook-panel').boundingBox();
   checks.bookStartsAtWorkspaceTop = Boolean(bookBox && Math.abs(bookBox.y - terminalBox.y) <= 3);
   checks.bookFillsWorkspace = Boolean(bookBox && bookBox.height >= terminalBox.height - 3);
-  checks.bookRowsVisible = await page.locator('#orderBook .book-row').first().isVisible();
+  checks.bookRowsVisible = await page.locator('#orderBook .book-row:visible').first().isVisible();
 
   const visibleAsks = page.locator('#asksRows .book-row:visible');
   const visibleBids = page.locator('#bidsRows .book-row:visible');
@@ -50,6 +50,7 @@ try {
   checks.mobileDepthCountReadable = askCount >= 8 && askCount <= 9 && bidCount >= 8 && bidCount <= 9;
   checks.askDoesNotOverlapMid = Boolean(lastAskBox && midBox && lastAskBox.y + lastAskBox.height <= midBox.y + 1);
   checks.bidDoesNotOverlapMid = Boolean(firstBidBox && midBox && firstBidBox.y >= midBox.y + midBox.height - 1);
+  checks.orderBookRowsHaveReadableHeight = Boolean(lastAskBox && firstBidBox && lastAskBox.height >= 17 && firstBidBox.height >= 17);
 
   await page.locator('[data-book-view="trades"]').click();
   await page.waitForTimeout(100);
