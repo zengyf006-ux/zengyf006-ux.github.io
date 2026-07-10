@@ -41,6 +41,7 @@
     ensureStyle('./performance-analytics.css');
     ensureStyle('./performance-layout-polish.css');
     ensureStyle('./mobile-account-tools.css');
+    ensureStyle('./semantic-typography.css');
 
     try {
       if (!document.querySelector('.ticket-context') || !document.querySelector('#controlPopover')) {
