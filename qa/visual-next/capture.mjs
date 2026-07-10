@@ -68,6 +68,9 @@ for (const viewport of viewports) {
     };
     const interactions = {
       startupToastHidden: !(await page.locator('#toast').evaluate(element => element.classList.contains('show'))),
+      toastMountedInTopbar: viewport.mobile
+        ? await page.locator('.topbar-actions').evaluate(actions => actions.contains(document.querySelector('#toast')))
+        : true,
     };
     await shot(page, viewport, 'main');
 
