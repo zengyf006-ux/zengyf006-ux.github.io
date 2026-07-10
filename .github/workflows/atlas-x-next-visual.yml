@@ -1,0 +1,53 @@
+name: ATLAS X Next visual QA
+
+on:
+  pull_request:
+    branches: ['atlas-x-rebuild-base']
+    paths:
+      - 'atlas-x-next/**'
+      - 'qa/visual-next/**'
+      - '.github/workflows/atlas-x-next-visual.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start static server
+        run: |
+          python3 -m http.server 4173 > /tmp/atlas-next-http.log 2>&1 &
+          echo $! > /tmp/atlas-next-http.pid
+          sleep 2
+
+      - name: Capture and validate
+        run: node qa/visual-next/capture.mjs
+
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-x-next-visual
+          path: |
+            qa-artifacts-next/screenshots
+            qa-artifacts-next/report.json
+            /tmp/atlas-next-http.log
+          retention-days: 1
+          if-no-files-found: error
