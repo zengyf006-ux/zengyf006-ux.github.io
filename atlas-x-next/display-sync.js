@@ -25,6 +25,16 @@
     }
   }
 
+  function syncSimulationDisclosure() {
+    const status = $('.status-pill');
+    if (status) {
+      const textNode = [...status.childNodes].find(node => node.nodeType === Node.TEXT_NODE);
+      if (textNode) textNode.textContent = '模拟行情';
+    }
+    const source = $('.data-source');
+    if (source) source.textContent = '演示行情 · 本地模拟撮合';
+  }
+
   function currentPrice() {
     return numberFrom($('#lastPrice')?.textContent);
   }
@@ -127,6 +137,7 @@
   function init() {
     loadFinalStyles();
     mountToastInHeader();
+    syncSimulationDisclosure();
     createAccountOverview();
     requestAnimationFrame(() => {
       suppressInitializationToast();
