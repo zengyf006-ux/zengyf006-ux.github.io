@@ -23,15 +23,21 @@ const seedState = {
   marketFilter: 'all',
   bookMode: 'all',
   favorites: ['BTCUSDT'],
-  cash: 99984.16,
-  positions: [],
+  cash: 97898.5264,
+  positions: [
+    { id: 'p-btc', symbol: 'BTCUSDT', qty: 0.006, entry: 60000, fees: 0.288, createdAt: now - 900000 },
+    { id: 'p-eth', symbol: 'ETHUSDT', qty: 0.3, entry: 3000, fees: 0.72, createdAt: now - 700000 },
+    { id: 'p-sol', symbol: 'SOLUSDT', qty: 5, entry: 150, fees: 0.6, createdAt: now - 500000 },
+  ],
   orders: [],
-  nextId: 20,
+  nextId: 30,
   history: [
-    { id: 'h4', symbol: 'ETHUSDT', side: 'sell', price: 3400, qty: 1, fee: 2.72, status: '已成交', createdAt: now - 1000 },
-    { id: 'h3', symbol: 'ETHUSDT', side: 'buy', price: 3500, qty: 1, fee: 2.8, status: '已成交', createdAt: now - 2000 },
-    { id: 'h2', symbol: 'BTCUSDT', side: 'sell', price: 65000, qty: 0.1, fee: 5.2, status: '已成交', createdAt: now - 3000 },
-    { id: 'h1', symbol: 'BTCUSDT', side: 'buy', price: 64000, qty: 0.1, fee: 5.12, status: '已成交', createdAt: now - 4000 },
+    { id: 'h6', symbol: 'SOLUSDT', side: 'sell', price: 140, qty: 5, fee: 0.56, status: '已成交', createdAt: now - 100000 },
+    { id: 'h5', symbol: 'SOLUSDT', side: 'buy', price: 150, qty: 10, fee: 1.2, status: '已成交', createdAt: now - 600000 },
+    { id: 'h4', symbol: 'ETHUSDT', side: 'sell', price: 3200, qty: 0.2, fee: 0.512, status: '已成交', createdAt: now - 200000 },
+    { id: 'h3', symbol: 'ETHUSDT', side: 'buy', price: 3000, qty: 0.5, fee: 1.2, status: '已成交', createdAt: now - 800000 },
+    { id: 'h2', symbol: 'BTCUSDT', side: 'sell', price: 63000, qty: 0.004, fee: 0.2016, status: '已成交', createdAt: now - 300000 },
+    { id: 'h1', symbol: 'BTCUSDT', side: 'buy', price: 60000, qty: 0.01, fee: 0.48, status: '已成交', createdAt: now - 1000000 },
   ],
 };
 
@@ -74,14 +80,16 @@ try {
 
   const overlay = page.locator('.module-overlay[data-module="analytics"]');
   checks.dynamicDashboardVisible = await page.locator('.performance-dashboard').isVisible();
-  checks.tradeCountCorrect = await overlay.getAttribute('data-trade-count') === '4';
+  checks.tradeCountCorrect = await overlay.getAttribute('data-trade-count') === '6';
   const realized = Number(await overlay.getAttribute('data-realized-net'));
-  checks.realizedNetCorrect = Math.abs(realized - (-15.84)) < 0.001;
+  checks.partialCloseFeesAllocated = Math.abs(realized - (-0.5456)) < 0.001;
   const winRate = Number(await overlay.getAttribute('data-win-rate'));
-  checks.winRateCorrect = Math.abs(winRate - 50) < 0.001;
-  checks.equityCurveRendered = await page.locator('#performanceChart').evaluate(canvas => canvas.dataset.rendered === 'true' && Number(canvas.dataset.points) >= 5 && canvas.width > 250);
-  checks.twoContributionsVisible = await page.locator('.contribution-row').count() === 2;
-  checks.fourRecentTradesVisible = await page.locator('.performance-trade-row').count() === 4;
+  checks.winRateCorrect = Math.abs(winRate - (200 / 3)) < 0.01;
+  checks.equityCurveRendered = await page.locator('#performanceChart').evaluate(canvas => canvas.dataset.rendered === 'true' && Number(canvas.dataset.points) >= 7 && canvas.width > 250);
+  checks.threeContributionsVisible = await page.locator('.contribution-row').count() === 3;
+  checks.sixRecentTradesVisible = await page.locator('.performance-trade-row').count() === 6;
+  const contributionNet = await page.locator('.contribution-row > strong').evaluateAll(nodes => nodes.reduce((sum, node) => sum + Number(node.textContent.replace(/[^0-9.-]/g, '')), 0));
+  checks.contributionSumMatchesRealized = Math.abs(contributionNet - realized) < 0.03;
   checks.staticDemoChartRemoved = !(await overlay.innerText()).includes('演示可视化');
   checks.disclaimerPresent = (await overlay.innerText()).includes('不构成投资建议');
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
