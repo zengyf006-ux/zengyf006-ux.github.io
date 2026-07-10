@@ -95,6 +95,15 @@ try {
   checks.moversMatchSource = metrics.topGainer === topGainer.symbol && metrics.topLoser === topLoser.symbol;
   const firstRanked = await page.locator('.market-intelligence-row').first().getAttribute('data-symbol');
   checks.defaultRankingByChange = firstRanked === topGainer.symbol;
+  if (viewport.mobile) {
+    checks.rankingRowsFillPanel = true;
+  } else {
+    const [listBox, rowBox] = await Promise.all([
+      page.locator('.market-intelligence-list').boundingBox(),
+      page.locator('.market-intelligence-row').first().boundingBox(),
+    ]);
+    checks.rankingRowsFillPanel = Boolean(listBox && rowBox && rowBox.width >= listBox.width - 2);
+  }
 
   await page.locator('[data-market-intelligence-filter="decliners"]').click();
   await page.waitForTimeout(100);
