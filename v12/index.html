@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f3f5f7">
+<meta name="description" content="ATLAS X V12 — 面向客户展示的专业数字资产模拟交易终端">
+<title>ATLAS X V12｜客户展示版</title>
+<link rel="stylesheet" href="./styles.css?v=1201">
+</head>
+<body>
+<svg class="svg-sprite" aria-hidden="true">
+ <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+ <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+ <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 1 1 8.5 4 7 7 0 0 0 20 15.5Z"/></symbol>
+ <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></symbol>
+ <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.67 6.2.9-4.5 4.38 1.06 6.18L12 17.2l-5.56 2.93 1.06-6.18L3 9.57l6.2-.9L12 3Z"/></symbol>
+ <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></symbol>
+ <symbol id="i-trade" viewBox="0 0 24 24"><path d="M5 17 17 5M9 5h8v8M19 19H7v-8"/></symbol>
+ <symbol id="i-market" viewBox="0 0 24 24"><path d="M4 18V9M10 18V5M16 18v-7M22 18V3"/></symbol>
+ <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M4 6.5h14a2 2 0 0 1 2 2v10H6a2 2 0 0 1-2-2v-10Z"/><path d="M4 8V6a2 2 0 0 1 2-2h11M15 12h5"/></symbol>
+ <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-5 3 2 5-6"/></symbol>
+ <symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 3 14 8l5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/><path d="m18 15 .9 2.1L21 18l-2.1.9L18 21l-.9-2.1L15 18l2.1-.9L18 15Z"/></symbol>
+ <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+ <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></symbol>
+ <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+ <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></symbol>
+ <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+</svg>
+
+<section class="presentation" id="presentation" aria-label="客户展示封面">
+ <div class="presentation-orb orb-a"></div><div class="presentation-orb orb-b"></div>
+ <div class="presentation-card glass">
+  <div class="presentation-brand"><span class="brand-mark">A</span><span><b>ATLAS X</b><small>V12 CLIENT SHOWCASE</small></span></div>
+  <div class="presentation-kicker">CLIENT DEMONSTRATION · 2026</div>
+  <h1>邓总，这是我用一个下午完成的<br><em>专业交易终端原型</em></h1>
+  <p>参考头部数字资产交易所的信息架构，从行情、K线、模拟下单到资产分析，完整展示产品设计、交互与前端实现能力。</p>
+  <div class="presentation-points">
+   <span><svg><use href="#i-check"/></svg> 实时公开行情</span>
+   <span><svg><use href="#i-check"/></svg> 精确K线交互</span>
+   <span><svg><use href="#i-check"/></svg> 本地模拟交易</span>
+  </div>
+  <button class="enter-btn" id="enterTerminal">进入交易终端 <span>→</span></button>
+  <div class="presentation-note"><svg><use href="#i-info"/></svg> 展示原型，不涉及真实资金，不构成投资建议。</div>
+ </div>
+</section>
+
+<div class="app" id="app" aria-hidden="true">
+ <header class="topbar glass">
+  <div class="topbar-left">
+   <button class="icon-button mobile-only" id="menuButton" aria-label="打开菜单"><svg><use href="#i-menu"/></svg></button>
+   <button class="brand-button" data-page="trade"><span class="brand-mark">A</span><span><b>ATLAS X</b><small>PRO TERMINAL</small></span></button>
+   <nav class="desktop-nav" aria-label="主导航">
+    <button class="active" data-page="trade">交易</button><button data-page="markets">行情</button><button data-page="assets">资产</button><button data-page="analytics">分析</button><button data-page="insights">智能洞察</button>
+   </nav>
+  </div>
+  <div class="topbar-right">
+   <div class="connection-pill" id="connectionPill"><i></i><span>本地行情</span></div>
+   <button class="icon-button" id="themeButton" aria-label="切换主题"><svg class="theme-light"><use href="#i-moon"/></svg><svg class="theme-dark"><use href="#i-sun"/></svg></button>
+  </div>
+ </header>
+
+ <aside class="sidebar glass" id="sidebar">
+  <div class="side-nav">
+   <button class="active" data-page="trade"><svg><use href="#i-trade"/></svg><span>专业交易</span></button>
+   <button data-page="markets"><svg><use href="#i-market"/></svg><span>市场行情</span></button>
+   <button data-page="assets"><svg><use href="#i-wallet"/></svg><span>资产账户</span></button>
+   <button data-page="analytics"><svg><use href="#i-chart"/></svg><span>交易分析</span></button>
+   <button data-page="insights"><svg><use href="#i-ai"/></svg><span>智能洞察</span></button>
+  </div>
+  <div class="side-account"><span>模拟账户权益</span><strong id="sideEquity">$100,000.00</strong><small>数据保存在当前浏览器</small></div>
+ </aside>
+
+ <main class="main">
+  <section class="page active" id="page-trade">
+   <div class="instrument-bar glass">
+    <button class="instrument-button" id="instrumentButton"><span class="coin-logo btc">₿</span><span><b id="instrumentName">BTC / USDT</b><small id="instrumentProduct">Bitcoin · 现货</small></span><svg><use href="#i-chevron"/></svg></button>
+    <div class="quote-main"><span>最新价格</span><strong id="lastPrice">64,415.80</strong><small id="lastPriceUsd">≈ $64,415.80</small></div>
+    <div class="quote-stat primary"><span>24h 涨跌</span><b id="change24">+2.18%</b></div>
+    <div class="quote-stat desktop-stat"><span>24h 最高</span><b id="high24">64,892.10</b></div>
+    <div class="quote-stat desktop-stat"><span>24h 最低</span><b id="low24">61,824.30</b></div>
+    <div class="quote-stat desktop-stat"><span>24h 成交额</span><b id="volume24">1.82B</b></div>
+    <button class="favorite-button" id="favoriteButton" aria-label="加入自选"><svg><use href="#i-star"/></svg><span>自选</span></button>
+   </div>
+
+   <div class="mobile-metrics glass">
+    <div><span>最高</span><b id="mobileHigh">64,892.10</b></div><div><span>最低</span><b id="mobileLow">61,824.30</b></div><div><span>成交额</span><b id="mobileVolume">1.82B</b></div><div><span>连接</span><b id="mobileLatency">本地</b></div>
+   </div>
+
+   <div class="terminal-layout">
+    <section class="chart-card glass">
+     <div class="chart-title-row"><div><span>MARKET CHART</span><b id="chartPairTitle">BTC / USDT</b></div><div class="chart-status"><i></i><span id="chartStatusText">行情就绪</span></div></div>
+     <div class="chart-controls">
+      <div class="control-scroll timeframe-controls" id="timeframeControls"><button data-timeframe="1m">1分</button><button data-timeframe="5m">5分</button><button data-timeframe="15m">15分</button><button class="active" data-timeframe="1H">1时</button><button data-timeframe="4H">4时</button><button data-timeframe="1D">日线</button></div>
+      <div class="control-scroll indicator-controls" id="indicatorControls"><button class="active" data-indicator="ma">MA</button><button data-indicator="ema">EMA</button><button data-indicator="boll">BOLL</button><button class="active" data-indicator="volume">VOL</button><button class="icon-control" id="fitChart" aria-label="适配图表">适配</button><button class="icon-control" id="expandChart" aria-label="全屏图表"><svg><use href="#i-expand"/></svg></button></div>
+     </div>
+     <div class="chart-live-legend" id="chartLiveLegend"><span>O <b>--</b></span><span>H <b>--</b></span><span>L <b>--</b></span><span>C <b>--</b></span><span>Vol <b>--</b></span></div>
+     <div class="chart-wrap" id="chartWrap"><canvas id="chartCanvas"></canvas><canvas id="chartOverlay"></canvas><div class="chart-watermark"><b id="chartWatermark">BTCUSDT</b><span id="chartWatermarkSub">1H · SPOT</span></div></div>
+     <div class="chart-footer"><span><i></i> 实时更新</span><span id="chartVisibleInfo">120 根K线</span><span>轻点单根K线查看详情</span></div>
+    </section>
+
+    <section class="market-card glass">
+     <div class="panel-tabs" id="marketTabs"><button class="active" data-market-view="book">订单簿</button><button data-market-view="trades">最新成交</button></div>
+     <div class="market-view active" id="view-book"><div class="table-head three"><span>价格(USDT)</span><span>数量</span><span>累计</span></div><div class="book-list" id="askList"></div><div class="book-mid"><b id="bookMid">64,415.80</b><span id="bookSpread">价差 0.10</span></div><div class="book-list" id="bidList"></div></div>
+     <div class="market-view" id="view-trades"><div class="table-head three"><span>价格</span><span>数量</span><span>时间</span></div><div class="trade-list" id="tradeList"></div></div>
+    </section>
+
+    <section class="order-card glass" id="orderCard">
+     <div class="order-card-head"><div><span>ORDER ENTRY</span><b>模拟下单</b></div><button class="icon-button order-close mobile-only" id="orderClose" aria-label="关闭下单"><svg><use href="#i-close"/></svg></button></div>
+     <div class="segmented" id="productTabs"><button class="active" data-product="spot">现货</button><button data-product="perp">永续</button></div>
+     <div class="order-type-tabs" id="orderTypeTabs"><button class="active" data-order-type="limit">限价</button><button data-order-type="market">市价</button><button data-order-type="trigger">条件</button></div>
+     <div class="side-switch" id="sideSwitch"><button class="active buy" data-side="buy">买入 / 做多</button><button class="sell" data-side="sell">卖出 / 做空</button></div>
+     <label class="form-field" id="priceField"><span>委托价格</span><div><input id="orderPrice" inputmode="decimal" value="64415.80"><b>USDT</b></div></label>
+     <label class="form-field hidden" id="triggerField"><span>触发价格</span><div><input id="triggerPrice" inputmode="decimal" placeholder="输入触发价格"><b>USDT</b></div></label>
+     <label class="form-field"><span>数量</span><div><input id="orderAmount" inputmode="decimal" placeholder="0.000000"><b id="amountUnit">BTC</b></div></label>
+     <div class="percent-buttons" id="percentButtons"><button data-percent="25">25%</button><button data-percent="50">50%</button><button data-percent="75">75%</button><button data-percent="100">100%</button></div>
+     <label class="form-field hidden" id="leverageField"><span>杠杆</span><div><select id="leverage"><option>2x</option><option>5x</option><option selected>10x</option><option>20x</option></select></div></label>
+     <div class="order-summary"><div><span>可用</span><b id="availableBalance">100,000.00 USDT</b></div><div><span>委托价值</span><b id="orderValue">0.00 USDT</b></div><div><span>预计手续费</span><b id="orderFee">0.00 USDT</b></div></div>
+     <button class="submit-order buy" id="submitOrder">模拟买入 BTC</button>
+     <p>仅在当前浏览器进行模拟，不产生真实资产。</p>
+    </section>
+
+    <section class="positions-card glass">
+     <div class="positions-head"><div class="panel-tabs" id="positionTabs"><button class="active" data-position-view="positions">持仓 <span id="positionCount">0</span></button><button data-position-view="orders">当前委托 <span id="orderCount">0</span></button><button data-position-view="history">成交记录</button></div><button class="text-button" id="exportButton"><svg><use href="#i-download"/></svg> 导出</button></div>
+     <div class="responsive-table"><table><thead id="positionHead"></thead><tbody id="positionBody"></tbody></table></div>
+    </section>
+   </div>
+  </section>
+
+  <section class="page content-page" id="page-markets"><header class="page-header"><div><span>MARKET OVERVIEW</span><h1>市场行情</h1><p>主流数字资产的实时价格、涨跌与成交数据。</p></div><label class="search-field"><svg><use href="#i-search"/></svg><input id="marketSearch" placeholder="搜索币种"></label></header><div class="summary-grid" id="marketSummary"></div><section class="content-card glass"><div class="content-card-head"><b>USDT 市场</b><div class="filter-tabs" id="marketFilters"><button class="active" data-filter="all">全部</button><button data-filter="gainers">涨幅</button><button data-filter="volume">成交额</button></div></div><div class="responsive-table"><table><thead><tr><th>资产</th><th>最新价</th><th>24h涨跌</th><th>最高</th><th>最低</th><th>成交额</th><th></th></tr></thead><tbody id="marketTableBody"></tbody></table></div></section></section>
+
+  <section class="page content-page" id="page-assets"><header class="page-header"><div><span>PORTFOLIO</span><h1>资产账户</h1><p>模拟资金、持仓估值与资产分布。</p></div><button class="secondary-button" id="addFundsButton">增加模拟资金</button></header><div class="asset-hero-grid"><section class="content-card glass equity-card"><span>总权益</span><strong id="assetEquity">$100,000.00</strong><em id="assetReturn">+0.00%</em><canvas id="equityCanvas"></canvas><div class="equity-mini"><div><span>可用余额</span><b id="assetCash">$100,000.00</b></div><div><span>持仓价值</span><b id="assetPositionValue">$0.00</b></div><div><span>未实现盈亏</span><b id="assetUnrealized">$0.00</b></div></div></section><section class="content-card glass allocation-card"><div class="content-card-head"><b>资产分布</b></div><canvas id="allocationCanvas"></canvas><div id="allocationLegend"></div></section></div><section class="content-card glass"><div class="content-card-head"><b>当前资产</b></div><div class="responsive-table"><table><thead><tr><th>资产</th><th>类型</th><th>数量</th><th>均价</th><th>现价</th><th>价值</th><th>盈亏</th></tr></thead><tbody id="assetTableBody"></tbody></table></div></section></section>
+
+  <section class="page content-page" id="page-analytics"><header class="page-header"><div><span>PERFORMANCE</span><h1>交易分析</h1><p>基于本地模拟记录生成的账户表现与风险诊断。</p></div></header><div class="analytics-grid"><section class="content-card glass risk-card"><div class="risk-gauge" id="riskGauge"><strong id="riskScore">0</strong><span>风险评分</span></div><b id="riskLabel">低风险</b><p id="riskDescription">当前账户以现金为主，整体风险较低。</p></section><section class="metric-cards" id="performanceMetrics"></section></div><div class="analysis-lists"><section class="content-card glass"><div class="content-card-head"><b>风险检查</b></div><div class="analysis-list" id="riskList"></div></section><section class="content-card glass"><div class="content-card-head"><b>交易纪律</b></div><div class="analysis-list" id="disciplineList"></div></section></div></section>
+
+  <section class="page content-page" id="page-insights"><header class="page-header"><div><span>SMART INSIGHTS</span><h1>智能洞察</h1><p>结合价格区间、盘口与账户风险生成规则化市场摘要。</p></div><button class="secondary-button" id="refreshInsight">刷新洞察</button></header><div class="insight-hero"><section class="content-card glass signal-card"><span>综合信号</span><div class="signal-score"><strong id="signalScore">58</strong><small>/100</small></div><b id="signalLabel">中性偏多</b><p id="signalSummary">正在基于最新行情生成摘要。</p></section><section class="content-card glass levels-card"><div><span>压力位 2</span><b id="resistance2">--</b></div><div><span>压力位 1</span><b id="resistance1">--</b></div><div><span>支撑位 1</span><b id="support1">--</b></div><div><span>支撑位 2</span><b id="support2">--</b></div></section></div><div class="insight-grid" id="insightGrid"></div><div class="insight-disclaimer"><svg><use href="#i-info"/></svg> 规则化信息摘要仅用于产品演示，不构成投资建议。</div></section>
+ </main>
+
+ <nav class="mobile-nav glass" aria-label="移动端导航"><button class="active" data-page="trade"><svg><use href="#i-trade"/></svg><span>交易</span></button><button data-page="markets"><svg><use href="#i-market"/></svg><span>行情</span></button><button data-page="assets"><svg><use href="#i-wallet"/></svg><span>资产</span></button><button data-page="analytics"><svg><use href="#i-chart"/></svg><span>分析</span></button><button data-page="insights"><svg><use href="#i-ai"/></svg><span>洞察</span></button></nav>
+ <div class="mobile-trade-actions glass"><button class="buy" data-mobile-order="buy">买入 / 做多</button><button class="sell" data-mobile-order="sell">卖出 / 做空</button></div>
+</div>
+
+<div class="instrument-sheet" id="instrumentSheet" hidden><div class="sheet-backdrop" data-close-sheet></div><section class="sheet-card glass"><div class="sheet-head"><div><span>选择交易对</span><b>USDT 市场</b></div><button class="icon-button" data-close-sheet aria-label="关闭交易对选择"><svg><use href="#i-close"/></svg></button></div><label class="search-field"><svg><use href="#i-search"/></svg><input id="instrumentSearch" placeholder="搜索 BTC、ETH、SOL"></label><div class="instrument-list" id="instrumentList"></div></section></div>
+
+<div class="candle-sheet" id="candleSheet" hidden><div class="sheet-backdrop" data-close-candle></div><section class="candle-card glass"><div class="candle-sheet-head"><div><span id="candleTime">K线详情</span><b id="candlePair">BTC / USDT · 1H</b></div><button class="icon-button" data-close-candle aria-label="关闭K线详情"><svg><use href="#i-close"/></svg></button></div><div class="candle-grid"><div><span>开盘</span><b id="candleOpen">--</b></div><div><span>最高</span><b id="candleHigh">--</b></div><div><span>最低</span><b id="candleLow">--</b></div><div><span>收盘</span><b id="candleClose">--</b></div><div><span>涨跌</span><b id="candleChange">--</b></div><div><span>成交量</span><b id="candleVolume">--</b></div></div></section></div>
+
+<div class="toast" id="toast" role="status"></div>
+<script src="./chart.js?v=1201"></script>
+<script src="./app.js?v=1201"></script>
+</body>
+</html>
