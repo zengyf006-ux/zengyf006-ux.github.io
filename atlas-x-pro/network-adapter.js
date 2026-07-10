@@ -6,10 +6,12 @@
   style.href = './refinements.css';
   document.head.append(style);
 
-  const polish = document.createElement('script');
-  polish.src = './pro-polish.js';
-  polish.async = false;
-  document.head.append(polish);
+  for (const source of ['./pro-polish.js', './module-upgrades.js']) {
+    const script = document.createElement('script');
+    script.src = source;
+    script.async = false;
+    document.head.append(script);
+  }
 
   const params = new URLSearchParams(location.search);
   const qaMode = params.has('qa');
