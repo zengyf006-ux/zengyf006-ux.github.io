@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07090d">
+<meta name="description" content="ATLAS X V6 — 实时行情与专业模拟交易终端">
+<title>ATLAS X V6｜专业模拟交易终端</title>
+<link rel="stylesheet" href="./styles.css?v=6">
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn menu-btn" id="menuBtn" aria-label="菜单">☰</button>
+  <button class="brand" data-route="trade"><span class="brand-mark">A</span><span><strong>ATLAS X</strong><small>V6 TERMINAL</small></span></button>
+  <nav class="top-nav">
+    <button class="active" data-route="trade">交易</button><button data-route="markets">行情</button><button data-route="strategies">策略</button><button data-route="assets">资产</button><button data-route="analytics">分析</button><button data-route="copilot">AI Copilot</button>
+  </nav>
+  <div class="top-spacer"></div>
+  <button class="top-search" id="commandOpen"><span>⌕</span><input tabindex="-1" placeholder="搜索交易对、功能或页面" readonly><kbd>⌘ K</kbd></button>
+  <div class="top-actions">
+    <div class="live-pill" id="livePill"><i></i><span>正在连接</span></div>
+    <button class="icon-btn" id="focusBtn" title="专注模式">▣</button>
+    <button class="icon-btn" id="themeBtn" title="切换主题">◐</button>
+    <button class="ghost-btn" id="resetBtn">重置账户</button>
+    <button class="primary-btn" data-route="trade">模拟交易</button>
+  </div>
+</header>
+<div class="market-ticker"><div class="ticker-track" id="tickerTrack"><span class="ticker-item">正在加载实时行情…</span></div></div>
+
+<aside class="sidebar" id="sidebar">
+  <p class="side-title">交易中心</p>
+  <button class="side-item active" data-route="trade"><span>↗</span>专业交易</button>
+  <button class="side-item" data-route="markets"><span>⌁</span>市场行情</button>
+  <button class="side-item" data-route="strategies"><span>✦</span>策略中心</button>
+  <p class="side-title">账户与分析</p>
+  <button class="side-item" data-route="assets"><span>◈</span>资产账户</button>
+  <button class="side-item" data-route="analytics"><span>◎</span>交易分析</button>
+  <button class="side-item" data-route="copilot"><span>AI</span>市场 Copilot</button>
+  <div class="side-account">
+    <span>模拟账户总权益</span><strong id="sideEquity">$100,000.00</strong><small>实时估值 · 本地保存</small>
+    <div class="risk-bar"><i id="riskMeter" style="width:18%"></i></div>
+    <small>风险等级：<b id="riskText">低</b></small>
+    <button data-route="assets">查看账户详情</button>
+  </div>
+  <div class="side-note">Charts powered by <a href="https://www.tradingview.com" target="_blank" rel="noopener">TradingView Lightweight Charts™</a><br>模拟交易，不处理真实资产。</div>
+</aside>
+
+<main class="app-main">
+  <section class="page trade-page active" id="page-trade">
+    <div class="pairbar">
+      <div class="pair-select-wrap">
+        <button class="pair-select" id="pairSelectBtn"><span class="coin btc" id="pairIcon">₿</span><span class="pair-copy"><strong id="pairName">BTC / USDT</strong><small id="pairSub">Bitcoin · 现货</small></span><span>⌄</span></button>
+      </div>
+      <div class="pair-price"><strong id="lastPrice">--</strong><small id="priceUsd">≈ -- USD</small></div>
+      <div class="pair-kpi"><span>24h涨跌</span><b id="change24">--</b></div>
+      <div class="pair-kpi"><span>24h最高</span><b id="high24">--</b></div>
+      <div class="pair-kpi"><span>24h最低</span><b id="low24">--</b></div>
+      <div class="pair-kpi"><span>24h成交额</span><b id="vol24">--</b></div>
+      <div class="pair-kpi" id="fundingKpi"><span>资金费率</span><b id="fundingRate">--</b><small id="fundingCountdown">--</small></div>
+      <div class="pair-kpi" id="markKpi"><span>标记价格</span><b id="markPrice">--</b></div>
+      <div class="pair-kpi" id="indexKpi"><span>指数价格</span><b id="indexPrice">--</b></div>
+      <div class="pair-kpi" id="oiKpi"><span>持仓量</span><b id="openInterest">--</b></div>
+      <div class="pairbar-spacer"></div>
+      <button class="ghost-btn" id="favoriteBtn">☆ 自选</button>
+      <div class="account-mini"><div><span>总权益</span><b id="topEquity">$100,000.00</b></div><div><span>可用</span><b id="topAvailable">100,000.00 USDT</b></div></div>
+    </div>
+
+    <div class="terminal-grid">
+      <section class="watch-panel panel">
+        <div class="watch-head"><input id="watchSearch" placeholder="搜索币种"><div class="watch-tabs" id="watchTabs"><button class="active" data-watch="all">全部</button><button data-watch="fav">自选</button><button data-watch="up">涨幅</button></div></div>
+        <div class="watch-list" id="watchList"></div>
+      </section>
+
+      <section class="chart-panel panel" id="chartPanel">
+        <div class="chart-toolbar">
+          <div class="toolbar-group" id="timeframes"><button data-bar="1m">1分</button><button data-bar="5m">5分</button><button data-bar="15m">15分</button><button class="active" data-bar="1H">1时</button><button data-bar="4H">4时</button><button data-bar="1D">日线</button></div>
+          <div class="toolbar-group indicator-tools"><button class="active" id="maBtn">MA</button><button id="emaBtn">EMA</button><button id="bollBtn">BOLL</button><button class="active" id="volumeBtn">VOL</button><button id="rsiBtn">RSI</button><button id="macdBtn">MACD</button><button id="fitBtn">适配</button><button id="realtimeBtn">实时</button><button id="fullscreenBtn">全屏</button></div>
+        </div>
+        <div class="chart-legend" id="chartLegend"><span>O <b>--</b></span><span>H <b>--</b></span><span>L <b>--</b></span><span>C <b>--</b></span></div>
+        <div class="chart-status" id="chartStatus">正在初始化图表</div>
+        <div class="chart-host" id="chartHost"></div>
+        <div class="indicator-panel hidden" id="indicatorPanel"><div class="indicator-title"><span id="indicatorName">RSI(14)</span><span id="indicatorValue">--</span></div><canvas id="indicatorCanvas"></canvas></div>
+        <div class="chart-loading" id="chartLoading"><span>正在加载实时K线…</span></div>
+      </section>
+
+      <section class="market-panel panel">
+        <div class="market-tabs"><div id="marketTabs"><button class="active" data-market-tab="book">订单簿</button><button data-market-tab="trades">最新成交</button><button data-market-tab="depth">深度图</button></div><div class="book-tools"><select id="bookGrouping"><option value="0.01">0.01</option><option value="0.1" selected>0.1</option><option value="1">1</option><option value="10">10</option></select><span class="muted" id="spread">价差 --</span></div></div>
+        <div class="market-view active" id="market-book"><div class="book-head"><span>价格(USDT)</span><span>数量</span><span>累计</span></div><div class="book-scroll" id="asks"></div><div class="book-mid"><strong id="bookMid">--</strong><span id="bookDirection">实时中间价</span></div><div class="book-scroll" id="bids"></div></div>
+        <div class="market-view" id="market-trades"><div class="trade-head"><span>价格</span><span>数量</span><span>时间</span></div><div class="trade-scroll" id="recentTrades"></div></div>
+        <div class="market-view" id="market-depth"><div class="depth-wrap"><canvas id="depthCanvas"></canvas></div></div>
+      </section>
+
+      <section class="order-panel panel">
+        <div class="product-tabs" id="productTabs"><button class="active" data-product="spot">现货</button><button data-product="perp">永续</button></div>
+        <div class="order-tabs" id="orderTabs"><button class="active" data-order="limit">限价</button><button data-order="market">市价</button><button data-order="trigger">条件</button><button data-order="oco">OCO</button><button data-order="twap">TWAP</button><button data-order="iceberg">冰山</button></div>
+        <div class="side-tabs" id="sideTabs"><button class="buy active" data-side="buy">买入 / 做多</button><button class="sell" data-side="sell">卖出 / 做空</button></div>
+        <label class="field" id="priceField"><span>委托价格</span><div class="field-box"><input id="orderPrice" inputmode="decimal"><b>USDT</b></div></label>
+        <label class="field hidden" id="triggerField"><span>触发价格</span><div class="field-box"><input id="triggerPrice" inputmode="decimal"><b>USDT</b></div></label>
+        <div class="form-grid hidden" id="algoFields"><label class="field"><span id="algoLabelA">算法参数</span><div class="field-box"><input id="algoParamA" inputmode="decimal"><b id="algoUnitA">分钟</b></div></label><label class="field"><span id="algoLabelB">拆单数量</span><div class="field-box"><input id="algoParamB" inputmode="numeric"><b id="algoUnitB">份</b></div></label></div>
+        <div class="form-grid">
+          <label class="field"><span>数量</span><div class="field-box"><input id="orderAmount" inputmode="decimal"><b id="baseLabel">BTC</b></div></label>
+          <label class="field hidden" id="leverageField"><span>杠杆倍数</span><div class="field-box"><select id="leverage"><option>1x</option><option>2x</option><option>3x</option><option>5x</option><option selected>10x</option><option>20x</option><option>50x</option></select></div></label>
+        </div>
+        <input class="amount-range" id="amountSlider" type="range" min="0" max="100" value="0"><div class="range-labels"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+        <div class="advanced-toggle"><label><input type="checkbox" id="tpCheck"> 设置止盈止损</label><button id="advancedBtn">展开高级设置</button></div>
+        <div class="execution-options"><label><input type="checkbox" id="postOnly"> Post Only</label><label><input type="checkbox" id="reduceOnly"> Reduce Only</label><label><input type="checkbox" id="stpOption"> 自成交保护</label></div>
+        <div class="form-grid hidden" id="advancedFields"><label class="field"><span>止盈价格</span><div class="field-box"><input id="takeProfit" inputmode="decimal"><b>USDT</b></div></label><label class="field"><span>止损价格</span><div class="field-box"><input id="stopLoss" inputmode="decimal"><b>USDT</b></div></label></div>
+        <div class="order-summary"><div><span>可用余额</span><b id="availableBalance">100,000.00 USDT</b></div><div><span>预计委托价值</span><b id="orderValue">0.00 USDT</b></div><div><span>预计手续费</span><b id="orderFee">0.00 USDT</b></div><div id="marginRow" class="hidden"><span>预计占用保证金</span><b id="estimatedMargin">--</b></div><div id="liqRow" class="hidden"><span>参考强平价</span><b id="liquidation">--</b></div></div>
+        <button class="submit-order buy" id="submitOrder">模拟买入 BTC</button><p class="order-notice">仅为本地模拟交易，不产生真实资金与资产。</p>
+      </section>
+
+      <section class="positions-panel panel">
+        <div class="positions-top"><div class="position-tabs" id="positionTabs"><button class="active" data-position="positions">持仓 <span id="positionCount">0</span></button><button data-position="orders">当前委托 <span id="orderCount">0</span></button><button data-position="history">成交记录</button><button data-position="journal">交易日志</button></div><div class="position-actions"><button id="exportBtn">导出报告</button></div></div>
+        <div class="table-wrap"><table><thead id="positionsHead"></thead><tbody id="positionsBody"></tbody></table></div>
+      </section>
+    </div>
+  </section>
+
+  <section class="page" id="page-markets">
+    <div class="page-head"><div><span>MARKET INTELLIGENCE</span><h1>全市场行情</h1><p>实时价格、成交额、波动率与主流数字资产表现。</p></div><div class="page-tools"><div class="search-box"><span>⌕</span><input id="marketSearch" placeholder="搜索币种或交易对"></div></div></div>
+    <div class="market-summary"><article><span>主流资产成交额</span><strong id="marketVolume">--</strong><em>24h</em></article><article><span>上涨资产</span><strong id="gainers">--</strong><em>实时统计</em></article><article><span>市场波动</span><strong id="marketVolatility">--</strong><em>平均绝对涨跌</em></article><article><span>数据连接</span><strong id="marketSourceText">连接中</strong><em id="lastUpdate">--</em></article></div>
+    <section class="panel market-table-panel"><div class="panel-head"><div><strong>USDT 市场</strong><span>公开实时行情</span></div><div class="market-filter" id="marketFilter"><button class="active" data-filter="all">全部</button><button data-filter="up">涨幅榜</button><button data-filter="down">跌幅榜</button><button data-filter="volume">成交榜</button></div></div><div class="table-wrap"><table><thead><tr><th>资产</th><th>最新价</th><th>24h涨跌</th><th>24h最高</th><th>24h最低</th><th>24h成交额</th><th>区间位置</th><th></th></tr></thead><tbody id="marketsBody"></tbody></table></div></section>
+  </section>
+
+  <section class="page" id="page-strategies">
+    <div class="page-head"><div><span>STRATEGY LAB</span><h1>策略中心</h1><p>使用实时行情驱动的模拟策略，不触碰真实资金。</p></div><div class="page-tools"><button class="primary-btn" id="newStrategyBtn">创建策略</button></div></div>
+    <div class="strategy-kpis"><article><span>运行中</span><strong id="runningBots">2</strong><em>个策略</em></article><article><span>模拟累计收益</span><strong class="positive">+18.42%</strong><em>演示统计</em></article><article><span>最大策略回撤</span><strong class="negative">-6.10%</strong><em>过去30日</em></article><article><span>风险预算占用</span><strong>34%</strong><em>上限100%</em></article></div>
+    <div class="strategy-grid" id="strategyGrid"></div>
+  </section>
+
+  <section class="page" id="page-assets">
+    <div class="page-head"><div><span>PORTFOLIO CONTROL</span><h1>资产与账户</h1><p>模拟账户权益、资产结构、盈亏与资金使用效率。</p></div><div class="page-tools"><button class="ghost-btn" id="depositDemoBtn">增加模拟资金</button><button class="primary-btn" data-route="trade">去交易</button></div></div>
+    <div class="asset-hero"><article class="panel equity-overview"><span>模拟账户总权益</span><strong id="assetEquity">$100,000.00</strong><em id="assetReturn">0.00%</em><canvas id="equityCanvas"></canvas><div class="equity-stats"><div><span>可用余额</span><b id="assetCash">$100,000.00</b></div><div><span>持仓价值</span><b id="assetPositionValue">$0.00</b></div><div><span>未实现盈亏</span><b id="assetUnrealized">$0.00</b></div><div><span>累计手续费</span><b id="totalFees">$0.00</b></div></div></article><article class="panel allocation-card"><div class="panel-head"><div><strong>资产配置</strong><span>按当前市值</span></div></div><div class="allocation-body"><canvas id="allocationCanvas"></canvas><div id="allocationLegend"></div></div></article></div>
+    <section class="panel asset-table"><div class="panel-head"><div><strong>资产明细</strong><span>现货与永续仓位</span></div></div><div class="table-wrap"><table><thead><tr><th>资产</th><th>产品</th><th>数量</th><th>平均成本</th><th>最新价</th><th>市值/保证金</th><th>未实现盈亏</th><th>占比</th><th></th></tr></thead><tbody id="assetBody"></tbody></table></div></section>
+  </section>
+
+  <section class="page" id="page-analytics">
+    <div class="page-head"><div><span>RISK & PERFORMANCE</span><h1>交易分析</h1><p>从风险、收益、纪律和行为四个维度诊断模拟账户。</p></div><div class="page-tools"><button class="ghost-btn" id="refreshAnalyticsBtn">重新计算</button></div></div>
+    <div class="analytics-top"><article class="panel risk-score-card"><span>综合风险评分</span><div class="risk-ring" id="riskRing"><strong id="riskScore">18</strong><small>/100</small></div><em id="riskLevel">低风险</em><p id="riskSummary">当前账户以现金为主，暂无明显仓位风险。</p></article><article class="panel performance-card"><div class="panel-head"><div><strong>核心表现</strong><span>基于模拟成交记录</span></div></div><div class="performance-grid"><div><span>累计收益</span><strong id="perfReturn">0.00%</strong></div><div><span>最大回撤</span><strong id="perfDrawdown">0.00%</strong></div><div><span>胜率</span><strong id="perfWinRate">--</strong></div><div><span>盈亏比</span><strong id="perfRatio">--</strong></div><div><span>成交次数</span><strong id="perfTrades">0</strong></div><div><span>连续亏损</span><strong id="perfLossStreak">0</strong></div></div></article></div>
+    <div class="analytics-grid"><article class="panel"><div class="panel-head"><div><strong>仓位风险</strong><span>集中度与杠杆</span></div></div><div class="risk-list" id="positionRiskList"></div></article><article class="panel"><div class="panel-head"><div><strong>交易纪律</strong><span>行为规则检测</span></div></div><div class="discipline-list" id="disciplineList"></div></article><article class="panel ai-report"><div class="ai-head"><span>AI</span><div><strong>账户诊断摘要</strong><small>规则引擎生成</small></div></div><p id="aiReport">正在计算账户结构与交易行为…</p><div class="ai-actions"><button data-route="trade">调整仓位</button><button id="copyReportBtn">复制摘要</button></div></article></div>
+  </section>
+
+  <section class="page" id="page-copilot">
+    <div class="page-head"><div><span>ATLAS INTELLIGENCE</span><h1>AI Market Copilot</h1><p>基于实时行情、技术指标、盘口结构与模拟账户风险生成可解释的市场洞察。</p></div><div class="page-tools"><button class="ghost-btn" id="refreshCopilotBtn">刷新分析</button><button class="primary-btn" data-route="trade">进入交易</button></div></div>
+    <div class="copilot-hero">
+      <article class="panel copilot-score"><div class="copilot-label"><span class="ai-orb">AI</span><div><strong id="copilotPair">BTC / USDT</strong><small id="copilotTimestamp">等待实时数据</small></div></div><div class="signal-gauge"><div id="signalGauge"><strong id="signalScore">50</strong><small>/100</small></div><span id="signalLabel">中性</span></div><p id="signalSummary">正在读取趋势、波动率、成交量和盘口数据…</p></article>
+      <article class="panel levels-card"><div class="panel-head"><div><strong>关键价位</strong><span>动态计算</span></div></div><div class="level-grid"><div><span>第一压力位</span><strong id="resistance1">--</strong></div><div><span>第二压力位</span><strong id="resistance2">--</strong></div><div><span>第一支撑位</span><strong id="support1">--</strong></div><div><span>第二支撑位</span><strong id="support2">--</strong></div></div></article>
+    </div>
+    <div class="copilot-grid"><article class="panel insight-card"><span>趋势结构</span><strong id="trendInsight">等待数据</strong><p id="trendReason">--</p></article><article class="panel insight-card"><span>动量与波动</span><strong id="momentumInsight">等待数据</strong><p id="momentumReason">--</p></article><article class="panel insight-card"><span>盘口与流动性</span><strong id="liquidityInsight">等待数据</strong><p id="liquidityReason">--</p></article><article class="panel insight-card"><span>账户适配度</span><strong id="accountFitInsight">等待数据</strong><p id="accountFitReason">--</p></article></div>
+    <article class="panel scenario-panel"><div class="panel-head"><div><strong>情景推演</strong><span>规则引擎 · 非投资建议</span></div></div><div class="scenario-grid"><div class="bull"><span>偏多情景</span><strong id="bullProbability">--</strong><p id="bullScenario">--</p></div><div class="neutral"><span>震荡情景</span><strong id="neutralProbability">--</strong><p id="neutralScenario">--</p></div><div class="bear"><span>偏空情景</span><strong id="bearProbability">--</strong><p id="bearScenario">--</p></div></div></article>
+  </section>
+</main>
+
+<nav class="mobile-nav"><button class="active" data-route="trade"><span>↗</span>交易</button><button data-route="markets"><span>⌁</span>行情</button><button data-route="strategies"><span>✦</span>策略</button><button data-route="assets"><span>◈</span>资产</button><button data-route="analytics"><span>◎</span>分析</button><button data-route="copilot"><span>AI</span>AI</button></nav>
+
+<div class="pair-menu" id="pairMenu"><div class="pair-menu-head"><input id="pairSearch" placeholder="搜索币种"></div><div class="pair-menu-tabs" id="pairTypeTabs"><button class="active" data-pairtype="spot">现货</button><button data-pairtype="perp">永续</button></div><div class="pair-menu-list" id="pairMenuList"></div></div>
+<div class="command" id="command"><div class="command-box"><input id="commandInput" placeholder="搜索交易对、页面或操作"><div class="command-list" id="commandList"></div></div></div>
+<div class="modal" id="resetModal" hidden><div class="modal-card"><h3>重置模拟账户？</h3><p>所有模拟持仓、委托和成交记录将被清空，初始资金恢复为 100,000 USDT。</p><div><button class="ghost-btn" data-close-modal>取消</button><button class="danger-btn" id="confirmReset">确认重置</button></div></div></div>
+<div class="modal" id="fundModal" hidden><div class="modal-card"><h3>增加模拟资金</h3><p>仅增加本地演示账户余额，不涉及真实充值。</p><label class="field"><span>增加金额</span><div class="field-box"><input id="fundAmount" value="50000" inputmode="decimal"><b>USDT</b></div></label><div><button class="ghost-btn" data-close-modal>取消</button><button class="primary-btn" id="confirmFund">确认增加</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="./app.js?v=6"></script>
+</body>
+</html>
