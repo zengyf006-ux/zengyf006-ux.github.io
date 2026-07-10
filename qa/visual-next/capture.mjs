@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-core';
 import fs from 'node:fs/promises';
 
 const target = 'http://127.0.0.1:4173/atlas-x-next/index-v3.html';
@@ -10,8 +10,9 @@ const viewports = [
 ];
 
 await fs.mkdir('qa-artifacts-next/screenshots', { recursive: true });
-const browser = await chromium.launch({ headless: true });
-const report = { target, generatedAt: new Date().toISOString(), results: [] };
+const executablePath = process.env.CHROME_BIN || '/usr/bin/google-chrome';
+const browser = await chromium.launch({ headless: true, executablePath, args: ['--no-sandbox'] });
+const report = { target, executablePath, generatedAt: new Date().toISOString(), results: [] };
 let failed = false;
 
 for (const viewport of viewports) {
