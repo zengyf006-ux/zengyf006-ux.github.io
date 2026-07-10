@@ -30,19 +30,22 @@
   });
 
   async function start() {
-    ensureStyle('./refinements.css');
-    ensureStyle('./release-polish.css');
-    ensureStyle('./terminal-quality.css');
-    ensureStyle('./mobile-final.css');
-    ensureStyle('./chart-pro-tools.css');
-    ensureStyle('./trading-advanced.css');
-    ensureStyle('./advanced-visual-final.css');
-    ensureStyle('./execution-guard.css');
-    ensureStyle('./performance-analytics.css');
-    ensureStyle('./performance-layout-polish.css');
-    ensureStyle('./portfolio-risk.css');
-    ensureStyle('./mobile-account-tools.css');
-    ensureStyle('./semantic-typography.css');
+    [
+      './refinements.css',
+      './release-polish.css',
+      './terminal-quality.css',
+      './mobile-final.css',
+      './chart-pro-tools.css',
+      './trading-advanced.css',
+      './advanced-visual-final.css',
+      './execution-guard.css',
+      './performance-analytics.css',
+      './performance-layout-polish.css',
+      './portfolio-risk.css',
+      './mobile-account-tools.css',
+      './data-health.css',
+      './semantic-typography.css',
+    ].forEach(ensureStyle);
 
     try {
       if (!document.querySelector('.ticket-context') || !document.querySelector('#controlPopover')) {
@@ -55,9 +58,9 @@
       await loadScript('./advanced-stability.js');
       await loadScript('./execution-guard.js');
       await loadScript('./performance-analytics.js');
-      await loadScript('./performance-accounting.js');
       await loadScript('./portfolio-risk.js');
       await loadScript('./mobile-account-tools.js');
+      await loadScript('./data-health.js');
       document.documentElement.dataset.atlasQuality = 'ready';
     } catch (error) {
       console.error('ATLAS quality bootstrap failed', error);
