@@ -16,7 +16,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 11
+    timeout-minutes: 12
     strategy:
       fail-fast: false
       matrix:
@@ -78,6 +78,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/portfolio-risk.mjs
 
+      - name: Verify market data routing
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/market-data-router.mjs
+
       - name: Verify semantic Chinese typography
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -116,6 +122,7 @@ jobs:
             qa-artifacts-pro/execution-guard-report.json
             qa-artifacts-pro/performance-analytics-report.json
             qa-artifacts-pro/portfolio-risk-report.json
+            qa-artifacts-pro/market-data-router-report.json
             qa-artifacts-pro/semantic-typography-report.json
             qa-artifacts-pro/advanced-visual-report.json
             qa-artifacts-pro/mobile-layout-report.json
