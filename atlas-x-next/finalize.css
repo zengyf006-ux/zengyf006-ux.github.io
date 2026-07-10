@@ -3,13 +3,28 @@
 .mobile-account-insight { display: none; }
 
 @media (max-width: 760px) {
-  .toast {
-    top: calc(env(safe-area-inset-top) + 66px);
-    bottom: auto;
-    max-width: calc(100vw - 32px);
-    transform: translate(-50%, -10px);
+  .topbar-actions .toast {
+    position: static;
+    inset: auto;
+    display: none;
+    min-width: 0;
+    max-width: 168px;
+    height: 30px;
+    padding: 0 10px;
+    overflow: hidden;
+    align-items: center;
+    border-radius: 8px;
+    opacity: 0;
+    transform: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .toast.show { transform: translate(-50%, 0); }
+  .topbar-actions .toast.show {
+    display: flex;
+    opacity: 1;
+    transform: none;
+  }
+  .topbar-actions:has(.toast.show) .mode-pill { display: none; }
 
   .account-panel.mobile-active {
     overflow: auto;
@@ -91,6 +106,7 @@
 }
 
 @media (max-width: 380px) {
+  .topbar-actions .toast { max-width: 148px; font-size: 9px; }
   .mobile-account-overview > div { padding: 11px 8px; }
   .mobile-account-overview b { font-size: 9px; }
 }
