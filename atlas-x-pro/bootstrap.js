@@ -36,6 +36,7 @@
     ensureStyle('./mobile-final.css');
     ensureStyle('./chart-pro-tools.css');
     ensureStyle('./trading-advanced.css');
+    ensureStyle('./advanced-visual-final.css');
 
     try {
       if (!document.querySelector('.ticket-context') || !document.querySelector('#controlPopover')) {
