@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const files=['01','02','03','04','05','06','07'].map(n=>`./app-b64/${n}.txt?v=1302`);
+const files=['01','02','03','04','05','06a','06b','06c','07'].map(n=>`./app-b64/${n}.txt?v=1303`);
 const enter=document.getElementById('introEnter');
 let queued=false;
 const queue=e=>{
