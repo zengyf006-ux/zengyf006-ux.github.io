@@ -1,6 +1,16 @@
 (() => {
   'use strict';
 
+  const style = document.createElement('link');
+  style.rel = 'stylesheet';
+  style.href = './refinements.css';
+  document.head.append(style);
+
+  const polish = document.createElement('script');
+  polish.src = './pro-polish.js';
+  polish.async = false;
+  document.head.append(polish);
+
   const params = new URLSearchParams(location.search);
   const qaMode = params.has('qa');
   window.__ATLAS_QA_MODE__ = qaMode;
