@@ -1,0 +1,93 @@
+name: Build ATLAS X direct client
+
+on:
+  push:
+    paths:
+      - '.github/workflows/atlas-x-direct.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build browser-native ATLAS X bundle
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, gzip
+
+          root = Path('atlas-x')
+          names = ['01','02','03','04','05','06','07a','07b','08a','08b']
+          encoded = ''.join((root / 'bundle' / f'{name}.txt').read_text(encoding='utf-8').strip() for name in names)
+          source = gzip.decompress(base64.b64decode(encoded)).decode('utf-8')
+
+          source = source.replace('setTimeout(enter,680)', 'window.__ATLAS_ENTER=enter')
+          source = source.replace(" $('#enterDemo')?.click();\n", '')
+          source = source.replace(
+              "const intro=$('#presentationIntro');if(intro){intro.querySelector('span').textContent='ATLAS X · PROFESSIONAL TRADING';intro.querySelector('h1').innerHTML='专业数字资产模拟交易终端';intro.querySelector('p').textContent='实时行情 · 专业K线 · 现货与永续完整模拟';intro.querySelector('button').textContent='进入终端'}",
+              "const intro=$('#presentationIntro');if(intro)intro.dataset.appReady='true'"
+          )
+          (root / 'direct-app.js').write_text(source, encoding='utf-8')
+
+          boot = (root / 'boot.js').read_text(encoding='utf-8')
+          marker = "const files=['01'"
+          pos = boot.find(marker)
+          if pos < 0:
+              raise SystemExit('Unable to locate dynamic loader marker in atlas-x/boot.js')
+
+          replacement = r'''const script=d.createElement('script');
+          script.src='./direct-app.js?v=rc3';
+          script.async=false;
+          script.onload=()=>{
+           enterFn=window.__ATLAS_ENTER||(()=>{intro.classList.add('hide');app.classList.add('ready');app.setAttribute('aria-hidden','false')});
+           sourceReady=true;
+           button.querySelector('span').textContent='进入交易终端';
+           readyText.textContent='所有核心模块已就绪';
+           readyValue.textContent='100%';
+           ready.classList.add('ready');
+           if(queued)runEnter();
+          };
+          script.onerror=()=>{
+           readyText.textContent='模块加载失败';readyValue.textContent='--';
+           button.querySelector('span').textContent='重新加载终端';
+           button.onclick=()=>location.reload();
+          };
+          d.head.appendChild(script);
+          })();
+          '''
+          (root / 'launch-direct.js').write_text(boot[:pos] + replacement, encoding='utf-8')
+
+          html = (root / 'index.html').read_text(encoding='utf-8')
+          start = html.find('<script src="./chart.js')
+          if start < 0:
+              start = html.find('<script src="./launch-direct.js')
+          if start < 0:
+              raise SystemExit('Unable to locate ATLAS X script entry in index.html')
+          end = html.find('</body>', start)
+          if end < 0:
+              raise SystemExit('Unable to locate closing body tag')
+          html = html[:start] + '<script src="./launch-direct.js?v=rc3"></script>\n' + html[end:]
+          (root / 'index.html').write_text(html, encoding='utf-8')
+          PY
+
+          node --check atlas-x/direct-app.js
+          node --check atlas-x/launch-direct.js
+
+      - name: Commit generated direct client
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add atlas-x/direct-app.js atlas-x/launch-direct.js atlas-x/index.html
+          if git diff --cached --quiet; then
+            echo 'No generated changes'
+          else
+            git commit -m 'Build ATLAS X direct client'
+            git push
+          fi
