@@ -36,7 +36,7 @@ try {
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/400.css', timeout: 6000 });
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css', timeout: 6000 });
   await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
-  await page.waitForSelector('#marketList .market-row', { state: 'visible', timeout: 12000 });
+  await page.waitForFunction(() => document.querySelectorAll('#marketList .market-row').length >= 10, null, { timeout: 12000 });
   await page.waitForTimeout(650);
 
   const source = await page.evaluate(() => [...document.querySelectorAll('#marketList .market-row')].map(row => ({
