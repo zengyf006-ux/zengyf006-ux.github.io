@@ -269,8 +269,8 @@
       ];
       let i=0;
       function next(){
-        if(window.LightweightCharts){ import('./app.js?v=5'); return; }
-        if(i>=urls.length){ document.getElementById('chartLoading').innerHTML='<span>图表组件加载失败，请使用 Safari 或 Chrome 重试。</span>'; import('./app.js?v=5'); return; }
+        if(window.LightweightCharts){ import('./app.js?v=5').then(()=>import('./patch.js?v=5')); return; }
+        if(i>=urls.length){ document.getElementById('chartLoading').innerHTML='<span>图表组件加载失败，请使用 Safari 或 Chrome 重试。</span>'; import('./app.js?v=5').then(()=>import('./patch.js?v=5')); return; }
         const s=document.createElement('script'); s.src=urls[i++]; s.onload=next; s.onerror=next; document.head.appendChild(s);
       }
       next();
