@@ -2,6 +2,7 @@ import { chromium } from 'playwright-core';
 import fs from 'node:fs/promises';
 
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
+const fontCss = 'http://127.0.0.1:4173/node_modules/@fontsource-variable/noto-sans-sc/wght.css';
 const viewports = [
   { name: 'iphone-390x844', width: 390, height: 844, mobile: true },
   { name: 'iphone-430x932', width: 430, height: 932, mobile: true },
@@ -19,6 +20,16 @@ const browser = await chromium.launch({
 const report = { target, generatedAt: new Date().toISOString(), results: [] };
 let failed = false;
 const allTrue = object => Object.values(object).every(Boolean);
+
+async function injectQaFont(page) {
+  await page.addStyleTag({ url: fontCss });
+  await page.addStyleTag({ content: `
+    html, body, button, input, select {
+      font-family: "Noto Sans SC Variable", "Noto Sans SC", sans-serif !important;
+    }
+  ` });
+  await page.evaluate(async () => { await document.fonts.ready; });
+}
 
 for (const viewport of viewports) {
   const context = await browser.newContext({
@@ -39,19 +50,7 @@ for (const viewport of viewports) {
 
   try {
     const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await page.addStyleTag({ content: `
-      @font-face {
-        font-family: "Atlas QA SC";
-        src: url("/atlas-x-pro/vendor-font/qa-font.woff2") format("woff2");
-        font-style: normal;
-        font-weight: 100 900;
-        font-display: block;
-      }
-      html, body, button, input, select {
-        font-family: "Atlas QA SC", "Noto Sans SC", sans-serif !important;
-      }
-    ` });
-    await page.evaluate(async () => { await document.fonts.ready; });
+    await injectQaFont(page);
     await page.waitForSelector('.pro-shell', { state: 'visible', timeout: 20000 });
     await page.waitForTimeout(1800);
 
@@ -74,6 +73,7 @@ for (const viewport of viewports) {
       };
     });
 
+    const chineseFontLoaded = await page.evaluate(() => document.fonts.check('16px "Noto Sans SC Variable"', '交易账户行情买入卖出'));
     const structural = {
       httpOk: Boolean(response && response.status() < 400),
       noHorizontalOverflow: metrics.bodyWidth <= metrics.viewportWidth + 1,
@@ -82,6 +82,7 @@ for (const viewport of viewports) {
       requiredVisible: Object.values(visibility).every(Boolean),
       noForbiddenCopy: metrics.forbidden.length === 0,
       feedModeDeclared: ['live', 'demo', 'connecting'].includes(metrics.feedMode),
+      chineseFontLoaded,
       noConsoleErrors: consoleErrors.length === 0,
       noPageErrors: pageErrors.length === 0,
     };
@@ -102,6 +103,8 @@ for (const viewport of viewports) {
 
       await page.locator('[data-mobile-side="buy"]').click();
       interactions.orderSheetOpen = await page.locator('body').evaluate(body => body.classList.contains('order-sheet-open'));
+      const sheetBox = await page.locator('#orderTicket').boundingBox();
+      interactions.orderSheetFits = Boolean(sheetBox && sheetBox.height <= viewport.height * 0.83 && sheetBox.y >= 0);
       await page.locator('[data-order-type="market"]').click();
       await page.locator('#orderTotal').fill('1200');
       interactions.estimateUpdated = Number(await page.locator('#orderQuantity').inputValue()) > 0;
@@ -113,6 +116,24 @@ for (const viewport of viewports) {
       interactions.balanceChanged = (await page.locator('#availableBalance').innerText()).trim() !== '100,000.00';
       await shot('account');
     } else {
+      await page.locator('#quickSearchButton').click();
+      interactions.quickSearchFocused = await page.locator('#marketSearch').evaluate(element => element === document.activeElement);
+
+      const compactBefore = await page.locator('.pro-shell').evaluate(element => element.classList.contains('compact-mode'));
+      await page.locator('#layoutButton').click();
+      const compactAfter = await page.locator('.pro-shell').evaluate(element => element.classList.contains('compact-mode'));
+      interactions.layoutToggled = compactBefore !== compactAfter;
+      await page.locator('#layoutButton').click();
+
+      await page.locator('.notification-button').click();
+      interactions.notificationPopoverVisible = await page.locator('#controlPopover').isVisible();
+      await page.locator('[data-close-popover]').click();
+
+      await page.locator('[data-main-nav="markets"]').click();
+      interactions.marketModuleVisible = await page.locator('.module-overlay[data-module="markets"]').isVisible();
+      await shot('market-module');
+      await page.locator('.module-close').click();
+
       await page.locator('#marketSearch').fill('ETH');
       interactions.marketSearchFiltered = await page.locator('#marketList [data-symbol="ETHUSDT"]').isVisible();
       await page.locator('#marketList [data-symbol="ETHUSDT"]').click();
@@ -122,6 +143,9 @@ for (const viewport of viewports) {
       interactions.timeframeChanged = await page.locator('[data-timeframe="4h"]').evaluate(el => el.classList.contains('active'));
       await page.locator('#orderBook .book-row').first().click();
       interactions.bookPriceFilled = Number(await page.locator('#orderPrice').inputValue()) > 0;
+
+      await page.locator('#pricePrecision').selectOption('1');
+      interactions.precisionControlApplied = await page.locator('#pricePrecision').evaluate(element => element.value === '1');
 
       await page.locator('[data-order-type="limit"]').click();
       await page.locator('#orderTotal').fill('1500');
@@ -139,14 +163,15 @@ for (const viewport of viewports) {
       interactions.positionCreated = (await page.locator('#positionsBody').innerText()).includes('ETH/USDT');
       interactions.accountEquityVisible = Number((await page.locator('#accountEquity').innerText()).replace(/[^0-9.-]/g, '')) > 0;
       await shot('position');
+
+      await page.locator('[data-main-nav="assets"]').click();
+      interactions.assetsModuleVisible = await page.locator('.module-overlay[data-module="assets"]').isVisible();
+      await shot('assets-module');
+      await page.locator('.module-close').click();
     }
 
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.addStyleTag({ content: `
-      @font-face { font-family: "Atlas QA SC"; src: url("/atlas-x-pro/vendor-font/qa-font.woff2") format("woff2"); font-weight: 100 900; }
-      html, body, button, input, select { font-family: "Atlas QA SC", "Noto Sans SC", sans-serif !important; }
-    ` });
-    await page.evaluate(async () => { await document.fonts.ready; });
+    await injectQaFont(page);
     await page.waitForSelector('.pro-shell', { state: 'visible', timeout: 20000 });
     await page.waitForTimeout(600);
     interactions.marketPersisted = (await page.locator('#activePair').innerText()).includes('ETH/USDT');
