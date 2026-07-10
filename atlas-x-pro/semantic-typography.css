@@ -1,0 +1,51 @@
+/* Semantic UI copy must never inherit a digits-only monospace face. */
+:root {
+  --atlas-ui-font: "Atlas QA SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+}
+
+.account-view [data-label="方向"],
+.account-view [data-label="类型"],
+.account-view [data-label="状态"],
+.positions-table [data-label="方向"],
+.orders-table [data-label="方向"],
+.orders-table [data-label="类型"],
+.history-table [data-label="方向"],
+.history-table [data-label="状态"] {
+  font-family: var(--atlas-ui-font);
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+
+.order-confirm-grid > div:first-child b,
+.order-confirm-grid > div:nth-child(2) b {
+  font-family: var(--atlas-ui-font);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  letter-spacing: .005em;
+}
+
+.execution-status,
+.execution-status strong,
+.execution-status span,
+.execution-status b,
+.order-confirm-warning,
+.order-confirm-actions button,
+.price-alert-panel,
+.mobile-account-tools,
+.performance-dashboard {
+  font-family: var(--atlas-ui-font);
+}
+
+/* Pure numeric values keep deterministic alignment. */
+.account-view [data-label="数量"],
+.account-view [data-label="开仓均价"],
+.account-view [data-label="标记价格"],
+.account-view [data-label="未实现盈亏"],
+.account-view [data-label="收益率"],
+.account-view [data-label="委托价"],
+.account-view [data-label="成交价"],
+.account-view [data-label="手续费"],
+.order-confirm-grid > div:nth-child(n+3) b {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
