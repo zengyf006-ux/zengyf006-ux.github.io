@@ -41,6 +41,26 @@
     height: 100%;
   }
 
+  .book-content.active {
+    min-height: 0;
+  }
+  .book-side {
+    min-height: 0;
+    overflow: hidden;
+  }
+  #asksRows .book-row:first-child,
+  #bidsRows .book-row:last-child {
+    display: none;
+  }
+  .mid-price {
+    position: relative;
+    z-index: 3;
+    flex: 0 0 46px;
+    min-height: 46px;
+    background: #0a1017;
+    box-shadow: 0 -1px 0 var(--line), 0 1px 0 var(--line);
+  }
+
   .price-alert-panel {
     top: auto !important;
     right: 0 !important;
