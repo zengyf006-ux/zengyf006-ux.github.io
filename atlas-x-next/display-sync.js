@@ -17,6 +17,14 @@
     document.head.append(link);
   }
 
+  function mountToastInHeader() {
+    const toast = $('#toast');
+    const actions = $('.topbar-actions');
+    if (toast && actions && !actions.contains(toast)) {
+      actions.insertBefore(toast, actions.firstChild);
+    }
+  }
+
   function currentPrice() {
     return numberFrom($('#lastPrice')?.textContent);
   }
@@ -118,6 +126,7 @@
 
   function init() {
     loadFinalStyles();
+    mountToastInHeader();
     createAccountOverview();
     requestAnimationFrame(() => {
       suppressInitializationToast();
