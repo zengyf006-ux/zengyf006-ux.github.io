@@ -30,8 +30,11 @@ jobs:
           npm init -y
           npm install --no-save playwright-core@1.55.0 @fontsource-variable/noto-sans-sc
           test -x /usr/bin/google-chrome
-          mkdir -p atlas-x-pro/vendor-font
-          cp node_modules/@fontsource-variable/noto-sans-sc/files/noto-sans-sc-chinese-simplified-wght-normal.woff2 atlas-x-pro/vendor-font/noto-sans-sc.woff2
+          mkdir -p "$HOME/.local/share/fonts"
+          FONT_FILE=$(find node_modules/@fontsource-variable/noto-sans-sc/files -type f -name '*.woff2' | head -n 1)
+          test -n "$FONT_FILE"
+          cp "$FONT_FILE" "$HOME/.local/share/fonts/atlas-noto-sans-sc.woff2"
+          fc-cache -f "$HOME/.local/share/fonts"
 
       - name: Start static server
         run: |
