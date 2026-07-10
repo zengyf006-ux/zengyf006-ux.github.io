@@ -1,48 +1,28 @@
 (() => {
   'use strict';
-
-  const core = document.createElement('script');
-  core.src = './app-core.js';
-  core.async = false;
-
-  const desiredRows = () => {
-    const panel = document.querySelector('.orderbook-panel');
-    const height = panel?.clientHeight || 500;
-    if (window.innerWidth < 821) return 6;
-    if (height < 470) return 6;
-    if (height < 620) return 8;
-    return 10;
-  };
-
-  const pruneBook = () => {
-    const target = desiredRows();
-    const asks = document.querySelector('#askRows');
-    const bids = document.querySelector('#bidRows');
-    const trades = document.querySelector('#tradeRows');
-
-    if (asks) {
-      while (asks.children.length > target) asks.firstElementChild?.remove();
-    }
-    if (bids) {
-      while (bids.children.length > target) bids.lastElementChild?.remove();
-    }
-    if (trades) {
-      while (trades.children.length > Math.max(target * 2, 12)) trades.lastElementChild?.remove();
-    }
-  };
-
-  const installRefinement = () => {
-    const observer = new MutationObserver(pruneBook);
-    ['#askRows', '#bidRows', '#tradeRows'].forEach(selector => {
-      const node = document.querySelector(selector);
-      if (node) observer.observe(node, { childList: true });
-    });
-    pruneBook();
-    window.addEventListener('resize', pruneBook, { passive: true });
-  };
-
-  core.addEventListener('load', () => {
-    window.setTimeout(installRefinement, 0);
-  });
-  document.head.appendChild(core);
+  const state={side:'buy',orderType:'market',timeframe:'1H',price:64407.6,previousPrice:64407.6,candles:[],pointerIndex:null};
+  const $=(s,r=document)=>r.querySelector(s); const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+  const format=(v,d=1)=>Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
+  function seededRandom(seed){let v=seed%2147483647;if(v<=0)v+=2147483646;return()=> (v=v*16807%2147483647)/2147483647}
+  function buildCandles(seed=41,count=78){const random=seededRandom(seed);const candles=[];let close=62540;for(let i=0;i<count;i++){const trend=i>count*.58?82:24;const open=close;close=open+(random()-.47)*480+trend;const high=Math.max(open,close)+random()*220;const low=Math.min(open,close)-random()*210;const volume=40+random()*180;candles.push({open,high,low,close,volume,time:`${String((i+5)%24).padStart(2,'0')}:00`})}const delta=state.price-candles.at(-1).close;candles.forEach((c,i)=>{const w=i/(candles.length-1);c.open+=delta*w;c.high+=delta*w;c.low+=delta*w;c.close+=delta*w});return candles}
+  function movingAverage(c,p){return c.map((_,i)=>{const s=c.slice(Math.max(0,i-p+1),i+1);return s.reduce((t,x)=>t+x.close,0)/s.length})}
+  function drawChart(){const canvas=$('#chartCanvas'),stage=$('#chartStage');if(!canvas||!stage)return;const rect=stage.getBoundingClientRect(),ratio=Math.min(devicePixelRatio||1,2),width=Math.max(320,Math.floor(rect.width)),height=Math.max(260,Math.floor(rect.height));canvas.width=Math.floor(width*ratio);canvas.height=Math.floor(height*ratio);canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;const ctx=canvas.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);const mobile=width<620;const padding={top:18,right:mobile?52:62,bottom:28,left:12};const volumeHeight=Math.min(70,height*.18),chartBottom=height-padding.bottom-volumeHeight,chartHeight=chartBottom-padding.top,chartWidth=width-padding.left-padding.right;const visibleCount=mobile?46:66,visible=state.candles.slice(-visibleCount);const max=Math.max(...visible.map(c=>c.high)),min=Math.min(...visible.map(c=>c.low)),range=Math.max(1,max-min);const toY=p=>padding.top+((max-p)/range)*chartHeight;const step=chartWidth/visible.length,candleWidth=clamp(step*.6,3,9);
+    ctx.strokeStyle='#1b2a3b';ctx.lineWidth=1;ctx.font='10px ui-monospace, SFMono-Regular, Menlo, monospace';ctx.fillStyle='#6f7f94';ctx.textBaseline='middle';for(let i=0;i<=5;i++){const y=padding.top+chartHeight/5*i;ctx.beginPath();ctx.moveTo(padding.left,y+.5);ctx.lineTo(width-padding.right,y+.5);ctx.stroke();ctx.textAlign='left';ctx.fillText(format(max-range/5*i,1),width-padding.right+7,y)}for(let i=0;i<=6;i++){const x=padding.left+chartWidth/6*i;ctx.beginPath();ctx.moveTo(x+.5,padding.top);ctx.lineTo(x+.5,height-padding.bottom);ctx.stroke()}
+    const maxVol=Math.max(...visible.map(c=>c.volume));visible.forEach((c,i)=>{const x=padding.left+step*i+step/2,up=c.close>=c.open,color=up?'#25c99a':'#f05d6d',oy=toY(c.open),cy=toY(c.close),hy=toY(c.high),ly=toY(c.low);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(Math.round(x)+.5,hy);ctx.lineTo(Math.round(x)+.5,ly);ctx.stroke();ctx.globalAlpha=.9;ctx.fillRect(x-candleWidth/2,Math.min(oy,cy),candleWidth,Math.max(1.4,Math.abs(cy-oy)));ctx.globalAlpha=.18;const vh=c.volume/maxVol*(volumeHeight-10);ctx.fillRect(x-candleWidth/2,height-padding.bottom-vh,candleWidth,vh);ctx.globalAlpha=1});
+    const drawLine=(series,color)=>{ctx.strokeStyle=color;ctx.lineWidth=1.35;ctx.beginPath();series.forEach((p,i)=>{const x=padding.left+step*i+step/2,y=toY(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke()};drawLine(movingAverage(visible,10),'#6b8cff');drawLine(movingAverage(visible,20),'#b984e8');ctx.fillStyle='#6f7f94';ctx.textAlign='center';ctx.textBaseline='top';[0,Math.floor((visible.length-1)/3),Math.floor((visible.length-1)*2/3),visible.length-1].forEach(i=>ctx.fillText(visible[i].time,padding.left+step*i+step/2,height-padding.bottom+7));
+    const lastY=toY(state.price),up=state.price>=state.previousPrice;ctx.strokeStyle=up?'#25c99a':'#f05d6d';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(padding.left,lastY+.5);ctx.lineTo(width-padding.right,lastY+.5);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=up?'#25c99a':'#f05d6d';ctx.fillRect(width-padding.right,lastY-10,padding.right,20);ctx.fillStyle='#07110d';ctx.font='800 10px ui-monospace, SFMono-Regular, Menlo, monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(format(state.price,1),width-padding.right/2,lastY);
+    if(Number.isInteger(state.pointerIndex)){const idx=clamp(state.pointerIndex,0,visible.length-1),c=visible[idx],x=padding.left+step*idx+step/2,y=toY(c.close);ctx.strokeStyle='#718097';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(x,padding.top);ctx.lineTo(x,height-padding.bottom);ctx.moveTo(padding.left,y);ctx.lineTo(width-padding.right,y);ctx.stroke();ctx.setLineDash([])}canvas.dataset.step=String(step);canvas.dataset.paddingLeft=String(padding.left);canvas.dataset.visibleCount=String(visible.length)}
+  function buildOrderbook(){const mobile=innerWidth<761;const rows=mobile?7:(innerHeight<1000?7:9);const random=seededRandom(Math.round(state.price));let ac=0,bc=0;const asks=[],bids=[];for(let i=rows;i>=1;i--){const amount=.03+random()*.58;ac+=amount;asks.push(`<div class="book-row" style="--depth:${18+random()*75}%;--depth-color:rgba(240,93,109,.08)"><span class="ask">${format(state.price+i*9.8,1)}</span><span>${amount.toFixed(4)}</span><span>${ac.toFixed(3)}</span></div>`)}for(let i=1;i<=rows;i++){const amount=.03+random()*.58;bc+=amount;bids.push(`<div class="book-row" style="--depth:${18+random()*75}%;--depth-color:rgba(37,201,154,.075)"><span class="bid">${format(state.price-i*9.6,1)}</span><span>${amount.toFixed(4)}</span><span>${bc.toFixed(3)}</span></div>`)}$('#askRows').innerHTML=asks.join('');$('#bidRows').innerHTML=bids.join('');const trades=[];const now=Date.now();for(let i=0;i<18;i++){const up=random()>.48;trades.push(`<div class="trade-row"><span class="${up?'positive':'negative'}">${format(state.price+(random()-.5)*34,1)}</span><span>${(.002+random()*.22).toFixed(4)}</span><span>${new Date(now-i*7000).toLocaleTimeString('zh-CN',{hour12:false})}</span></div>`)}$('#tradeRows').innerHTML=trades.join('');$('#mobileTradeRows').innerHTML=trades.slice(0,12).join('')}
+  function updateEstimate(){const amount=Number($('#orderAmount').value||0),price=state.orderType==='limit'?Number($('#limitPrice').value||state.price):state.price;$('#estimatedAmount').textContent=`${(amount/Math.max(price,1)).toFixed(6)} BTC`;$('#estimatedFee').textContent=`${(amount*.0008).toFixed(2)} USDT`}
+  function updateSide(side){state.side=side;$$('#sideTabs button[data-side]').forEach(b=>b.classList.toggle('active',b.dataset.side===side));const submit=$('#submitOrder');submit.className=`submit-order ${side}`;submit.textContent=`${side==='buy'?'买入':'卖出'} BTC`}
+  function openSheet(side){updateSide(side);document.body.classList.add('trade-sheet-open');$('#sheetBackdrop').hidden=false}
+  function closeSheet(){document.body.classList.remove('trade-sheet-open');setTimeout(()=>$('#sheetBackdrop').hidden=true,280)}
+  function showToast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.classList.remove('show'),2200)}
+  function submitOrder(){const amount=Number($('#orderAmount').value||0);if(amount<=0){showToast('请输入模拟下单金额');return}const price=state.orderType==='limit'?Number($('#limitPrice').value||state.price):state.price,qty=amount/price;$('#accountBody').innerHTML=`<tr><td><strong>BTC/USDT</strong></td><td class="${state.side==='buy'?'positive':'negative'}">${state.side==='buy'?'买入':'卖出'}</td><td>${qty.toFixed(6)} BTC</td><td>${format(price,1)}</td><td>${format(state.price,1)}</td><td class="positive">+0.00 USDT</td><td><button class="text-button" data-close-position type="button">平仓</button></td></tr>`;$('#orderAmount').value='';$('#amountRange').value='0';updateEstimate();showToast('模拟订单已成交');closeSheet()}
+  function switchMobileView(view){$$('.mobile-view-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.mobileView===view));$$('[data-mobile-panel]').forEach(p=>p.classList.toggle('mobile-active',p.dataset.mobilePanel===view));if(view==='chart')requestAnimationFrame(drawChart)}
+  function updatePrice(){state.previousPrice=state.price;state.price+=(Math.random()>.48?1:-1)*(2+Math.random()*14);const up=state.price>=state.previousPrice;$('#lastPrice').textContent=format(state.price,1);$('#mobilePrice').textContent=format(state.price,1);$('#priceUsd').textContent=`≈ $${format(state.price,2)}`;$('#spreadPrice').textContent=format(state.price,1);$('#spreadPrice').className=up?'positive':'negative';$('#limitPrice').value=state.price.toFixed(1);const c=state.candles.at(-1);c.close=state.price;c.high=Math.max(c.high,state.price);c.low=Math.min(c.low,state.price);buildOrderbook();updateEstimate();drawChart()}
+  function bind(){$$('.mobile-view-tabs button').forEach(b=>b.addEventListener('click',()=>switchMobileView(b.dataset.mobileView)));$$('#timeframes button').forEach(b=>b.addEventListener('click',()=>{state.timeframe=b.dataset.timeframe;$$('#timeframes button').forEach(x=>x.classList.toggle('active',x===b));state.candles=buildCandles(state.timeframe.charCodeAt(0)*17+state.timeframe.length*13);drawChart()}));$$('#bookTabs button').forEach(b=>b.addEventListener('click',()=>{$$('#bookTabs button').forEach(x=>x.classList.toggle('active',x===b));$$('[data-book-view]').forEach(v=>v.classList.toggle('active',v.dataset.bookView===b.dataset.bookTab))}));$$('#sideTabs button[data-side]').forEach(b=>b.addEventListener('click',()=>updateSide(b.dataset.side)));$$('#orderTypeTabs button').forEach(b=>b.addEventListener('click',()=>{state.orderType=b.dataset.orderType;$$('#orderTypeTabs button').forEach(x=>x.classList.toggle('active',x===b));$('.limit-field').hidden=state.orderType!=='limit';updateEstimate()}));$('#orderAmount').addEventListener('input',updateEstimate);$('#limitPrice').addEventListener('input',updateEstimate);$('#amountRange').addEventListener('input',e=>{$('#orderAmount').value=e.target.value?(100000*Number(e.target.value)/100).toFixed(2):'';updateEstimate()});$('#submitOrder').addEventListener('click',submitOrder);$$('[data-mobile-side]').forEach(b=>b.addEventListener('click',()=>openSheet(b.dataset.mobileSide)));$('#sheetClose').addEventListener('click',closeSheet);$('#sheetBackdrop').addEventListener('click',closeSheet);$('#chartCanvas').addEventListener('mousemove',e=>{const rect=e.currentTarget.getBoundingClientRect(),step=Number(e.currentTarget.dataset.step||1),pad=Number(e.currentTarget.dataset.paddingLeft||0),count=Number(e.currentTarget.dataset.visibleCount||1),x=e.clientX-rect.left;state.pointerIndex=clamp(Math.floor((x-pad)/step),0,count-1);const c=state.candles.slice(-count)[state.pointerIndex];if(c){$('#tooltipTime').textContent=`${state.timeframe} · ${c.time}`;$('#tooltipPrice').textContent=format(c.close,1);const ch=(c.close-c.open)/c.open*100;$('#tooltipChange').textContent=`${ch>=0?'+':''}${ch.toFixed(2)}%`;$('#tooltipChange').className=ch>=0?'positive':'negative';const tip=$('#chartTooltip');tip.hidden=false;tip.style.left=`${clamp(x+14,10,rect.width-140)}px`;tip.style.top='14px'}drawChart()});$('#chartCanvas').addEventListener('mouseleave',()=>{state.pointerIndex=null;$('#chartTooltip').hidden=true;drawChart()});$('#accountBody').addEventListener('click',e=>{if(e.target.closest('[data-close-position]')){$('#accountBody').innerHTML='<tr class="empty-row"><td colspan="7"><div class="empty-state"><span class="empty-icon">◎</span><b>暂无持仓</b><small>完成一笔模拟下单后，持仓与实时盈亏会显示在这里。</small></div></td></tr>';showToast('模拟持仓已平仓')}});let timer;addEventListener('resize',()=>{clearTimeout(timer);timer=setTimeout(()=>{buildOrderbook();drawChart()},120)})}
+  function init(){state.candles=buildCandles();buildOrderbook();bind();updateEstimate();switchMobileView('chart');requestAnimationFrame(drawChart);setInterval(updatePrice,3600)}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
 })();
