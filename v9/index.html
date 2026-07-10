@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05070b">
+<meta name="description" content="ATLAS X V9 — 多市场实时行情、专业执行、风险与分析一体化模拟交易终端">
+<title>ATLAS X V9｜专业模拟交易终端</title>
+<link rel="stylesheet" href="../v7/base.css?v=9">
+<link rel="stylesheet" href="../v7/pages.css?v=9">
+<link rel="stylesheet" href="../v7/pro.css?v=9">
+<link rel="stylesheet" href="../v8/v8.css?v=9">
+<link rel="stylesheet" href="./v9.css?v=901">
+<style>
+#v9boot{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:radial-gradient(circle at 50% 22%,#172642 0,transparent 39%),#05070b;color:#f5f7fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.v9boot-box{text-align:center;width:min(88vw,440px)}.v9boot-mark{width:62px;height:62px;margin:auto;display:grid;place-items:center;border-radius:19px;background:linear-gradient(145deg,#7892ff,#52e2ba);box-shadow:0 0 66px rgba(109,140,255,.34);font-size:20px;font-weight:950;color:#071018;animation:v9pulse 1s infinite alternate}.v9boot-title{margin-top:19px;font-size:16px;font-weight:850;letter-spacing:.08em}.v9boot-sub{margin-top:8px;color:#8490a2;font-size:11px;line-height:1.7}.v9boot-track{height:4px;margin:21px auto 0;overflow:hidden;border-radius:99px;background:#151d29}.v9boot-track i{display:block;width:28%;height:100%;border-radius:99px;background:linear-gradient(90deg,#7892ff,#52e2ba);animation:v9load 1s infinite}.v9boot-meta{margin-top:12px;color:#566173;font-size:8px;letter-spacing:.06em}@keyframes v9pulse{to{transform:scale(.86);filter:brightness(1.18)}}@keyframes v9load{from{transform:translateX(-135%)}to{transform:translateX(470%)}}
+</style>
+</head>
+<body>
+<div id="v9boot"><div class="v9boot-box"><div class="v9boot-mark">A</div><div class="v9boot-title">正在启动 ATLAS X V9</div><div class="v9boot-sub" id="v9bootStatus">装载多市场行情、交易执行、风险引擎与专业工作区…</div><div class="v9boot-track"><i></i></div><div class="v9boot-meta">REALTIME DATA · SIMULATED EXECUTION · LOCAL ACCOUNT</div></div></div>
+<script>
+(async()=>{
+ const status=document.getElementById('v9bootStatus');
+ const load=(src,timeout=15000)=>new Promise((resolve,reject)=>{const s=document.createElement('script'),t=setTimeout(()=>{s.remove();reject(new Error('加载超时 '+src))},timeout);s.src=src;s.onload=()=>{clearTimeout(t);resolve()};s.onerror=()=>{clearTimeout(t);reject(new Error('加载失败 '+src))};document.body.appendChild(s)});
+ try{
+  status.textContent='装载终端界面…';
+  const r=await fetch('../v7/index.html?v=901',{cache:'no-store'});if(!r.ok)throw new Error('基础终端 HTTP '+r.status);
+  const text=await r.text(),doc=new DOMParser().parseFromString(text,'text/html'),boot=document.getElementById('v9boot');doc.querySelectorAll('script').forEach(x=>x.remove());
+  document.body.innerHTML=doc.body.innerHTML;document.body.appendChild(boot);
+  const core=['core.js','market.js','account.js','ui-market.js','ui-account.js','pro.js'];
+  for(let i=0;i<core.length;i++){status.textContent=`装载核心模块 ${i+1} / ${core.length+3}…`;await load(`../v7/${core[i]}?v=901`)}
+  status.textContent='装载 V8 专业执行兼容层…';await load('../v8/v8.js?v=901');
+  status.textContent='装载 V9 风险、生命周期与工作区…';await load('./v9.js?v=901');
+  if(typeof MarketEngine==='undefined'||typeof AccountEngine==='undefined'||typeof bindV7!=='function')throw new Error('核心模块完整性校验失败');
+  status.textContent='启动交易终端…';await load('../v7/boot.js?v=901');
+ }catch(e){console.error(e);document.body.innerHTML=`<main class="v9-fatal"><div><span>ATLAS X V9</span><h2>终端启动失败</h2><p>${String(e.message||e)}</p><button onclick="location.reload()">重新加载</button><small>建议使用 Safari 或 Chrome，并确认网络可访问公开行情接口。</small></div></main>`}
+})();
+</script>
+</body>
+</html>
