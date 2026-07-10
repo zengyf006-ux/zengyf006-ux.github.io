@@ -1,8 +1,15 @@
-/* V11 second-pass mobile layout corrections */
+/* V11 multi-pass mobile layout corrections */
 @media(max-width:760px){
+ .app-main{padding-top:0!important}
  .pairbar{position:relative!important;grid-template-columns:repeat(12,minmax(0,1fr))!important;grid-template-areas:none!important}
  .pair-select-wrap{grid-column:1/7!important;grid-area:auto!important}
  .pair-price{grid-column:7/12!important;grid-area:auto!important}
  #favoriteBtn{position:static!important;grid-column:12/13!important;grid-area:auto!important;align-self:center!important;justify-self:end!important;right:auto!important;top:auto!important}
  .pairbar>.v11-kpi-change{grid-column:1/4!important}.pairbar>.v11-kpi-high{grid-column:4/7!important}.pairbar>.v11-kpi-low{grid-column:7/10!important}.pairbar>.v11-kpi-volume{grid-column:10/13!important}
+ .pairbar>.pair-kpi b{display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .chart-panel{height:auto!important;min-height:0!important;overflow:hidden!important}
+ .chart-host{height:52vh!important;min-height:400px!important}
+ .chart-panel.with-indicator .chart-host{height:42vh!important;min-height:330px!important}
+ .toast{bottom:156px!important}
 }
+@media(max-width:390px){.chart-host{min-height:380px!important}.chart-panel.with-indicator .chart-host{min-height:310px!important}}
