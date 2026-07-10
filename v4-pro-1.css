@@ -1,0 +1,15 @@
+/* ===== V4 PRO TERMINAL ===== */
+:root{--primary:#6f8cff;--primary-2:#8d79ff;--cyan:#69e3c1;--green:#21c993;--red:#f65b6c;--amber:#eeb853}
+body{letter-spacing:.002em;background:var(--bg)}
+.topbar{height:64px;padding:0 18px;gap:18px;background:rgba(7,9,13,.94);border-bottom-color:#171d27}
+.market-ticker{top:64px;height:34px}.sidebar{top:98px}.main{padding-top:120px}
+.brand-mark{border-radius:10px;background:linear-gradient(145deg,#f4f6ff,#91a5ff);color:#080a0f;box-shadow:none}.brand-copy strong{letter-spacing:.13em}
+.global-command{display:flex;align-items:center;gap:8px;width:min(280px,22vw);height:36px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg-elev);color:var(--muted)}
+.global-command input{width:100%;border:0;background:transparent;color:var(--text);outline:0;font-size:11px}.global-command kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:2px 5px;color:var(--muted-2);font-size:8px;background:var(--panel)}
+.demo-chip{display:flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid rgba(111,140,255,.22);border-radius:999px;background:rgba(111,140,255,.07);color:#aebcff;font-size:9px;white-space:nowrap}.demo-chip i{width:5px;height:5px;border-radius:50%;background:#8ca1ff;box-shadow:0 0 10px #8ca1ff}
+.card,.terminal-card{box-shadow:none;background:var(--panel);border-color:#1c2531}.page-head h1{font-size:26px}.hero-number{font-size:36px}.metric-card strong{font-weight:700}
+body.terminal-focus .sidebar{display:none}body.terminal-focus .main{margin-left:0;padding:98px 0 0}body.terminal-focus .top-nav{opacity:.55}body.terminal-focus .market-ticker{display:none}body.terminal-focus .topbar{border-bottom:1px solid var(--line)}
+.trade-page{margin:0;background:#07090d;min-height:calc(100vh - 64px)}
+.trade-pairbar{height:66px;padding:0 16px;gap:22px;background:#090c11;position:sticky;top:64px;z-index:44}.pair-select{min-width:200px}.pair-live-price strong{font-size:21px}.premium-stat strong{color:#cfd5df}.trade-balance{margin-left:auto;display:grid;grid-template-columns:auto auto;gap:2px 9px;align-items:center;min-width:150px}.trade-balance span{font-size:9px;color:var(--muted)}.trade-balance b{font-size:13px}.trade-balance small{grid-column:1/-1;color:var(--green);text-align:right;font-size:8px}
+.pro-terminal-layout{grid-template-columns:210px minmax(480px,1fr) 230px 320px;gap:1px;padding:1px;background:#171d26;min-height:calc(100vh - 131px)}
+.pro-terminal-layout>*{min-width:0}.terminal-main{display:grid;grid-template-rows:minmax(520px,1fr) 220px;gap:1px}.terminal-side{display:grid;grid-template-rows:minmax(360px,1fr) minmax(220px,.62fr);gap:1px}.terminal-order{display:grid;grid-template-rows:auto auto;gap:1px}.terminal-card{border-radius:0;border:0;background:#0b0f15}
