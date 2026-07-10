@@ -43,6 +43,9 @@
   .book-row, .trade-row { font-size: 10.5px; }
   .mobile-action-bar { grid-template-columns: 1fr 94px 94px; }
   .mobile-action-bar > button { font-size: 13px; }
+  .order-panel { height: min(510px, 68dvh); }
+  .order-content { justify-content: flex-start; }
+  .order-note { margin: 14px 0 0; padding-top: 0; }
 }
 
 @media (max-width: 380px) {
