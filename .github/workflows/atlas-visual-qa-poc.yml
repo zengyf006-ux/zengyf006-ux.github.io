@@ -1,0 +1,53 @@
+name: ATLAS visual QA proof
+
+on:
+  pull_request:
+    branches: ['qa/visual-base']
+    paths:
+      - 'atlas-x/**'
+      - 'qa/visual/**'
+      - '.github/workflows/atlas-visual-qa-poc.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start static server
+        run: |
+          python3 -m http.server 4173 > /tmp/atlas-http.log 2>&1 &
+          echo $! > /tmp/atlas-http.pid
+          sleep 2
+
+      - name: Capture and validate
+        run: node qa/visual/capture.mjs
+
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-visual-proof
+          path: |
+            qa-artifacts/screenshots
+            qa-artifacts/report.json
+            /tmp/atlas-http.log
+          retention-days: 1
+          if-no-files-found: warn
