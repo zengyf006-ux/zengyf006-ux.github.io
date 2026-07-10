@@ -39,6 +39,7 @@
     ensureStyle('./advanced-visual-final.css');
     ensureStyle('./execution-guard.css');
     ensureStyle('./performance-analytics.css');
+    ensureStyle('./performance-layout-polish.css');
     ensureStyle('./mobile-account-tools.css');
 
     try {
