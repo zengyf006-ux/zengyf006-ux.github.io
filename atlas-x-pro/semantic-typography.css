@@ -32,8 +32,19 @@
 .order-confirm-actions button,
 .price-alert-panel,
 .mobile-account-tools,
-.performance-dashboard {
+.performance-dashboard,
+.portfolio-risk-dashboard {
   font-family: var(--atlas-ui-font);
+}
+
+/* Portfolio risk status values mix numeric ratios with Chinese states. */
+.portfolio-risk-stat:last-child b,
+#portfolioRiskLevel,
+.portfolio-risk-signal > span {
+  font-family: var(--atlas-ui-font);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  letter-spacing: .005em;
 }
 
 /* Pure numeric values keep deterministic alignment. */
