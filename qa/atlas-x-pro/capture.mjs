@@ -2,7 +2,8 @@ import { chromium } from 'playwright-core';
 import fs from 'node:fs/promises';
 
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
-const fontCss = 'http://127.0.0.1:4173/node_modules/@fontsource-variable/noto-sans-sc/wght.css';
+const fontCss400 = 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/400.css';
+const fontCss700 = 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css';
 const viewports = [
   { name: 'iphone-390x844', width: 390, height: 844, mobile: true },
   { name: 'iphone-430x932', width: 430, height: 932, mobile: true },
@@ -22,13 +23,18 @@ let failed = false;
 const allTrue = object => Object.values(object).every(Boolean);
 
 async function injectQaFont(page) {
-  await page.addStyleTag({ url: fontCss });
+  await page.addStyleTag({ url: fontCss400 });
+  await page.addStyleTag({ url: fontCss700 });
   await page.addStyleTag({ content: `
     html, body, button, input, select {
-      font-family: "Noto Sans SC Variable", "Noto Sans SC", sans-serif !important;
+      font-family: "Noto Sans SC", sans-serif !important;
     }
   ` });
-  await page.evaluate(async () => { await document.fonts.ready; });
+  await page.waitForFunction(
+    () => document.fonts.check('16px "Noto Sans SC"', '交易账户行情买入卖出'),
+    null,
+    { timeout: 5000 },
+  ).catch(() => {});
 }
 
 for (const viewport of viewports) {
@@ -39,6 +45,7 @@ for (const viewport of viewports) {
     hasTouch: viewport.mobile,
   });
   const page = await context.newPage();
+  page.setDefaultTimeout(8000);
   const consoleErrors = [];
   const pageErrors = [];
   page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
@@ -52,7 +59,7 @@ for (const viewport of viewports) {
     const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await injectQaFont(page);
     await page.waitForSelector('.pro-shell', { state: 'visible', timeout: 20000 });
-    await page.waitForTimeout(1800);
+    await page.waitForTimeout(1500);
 
     const required = viewport.mobile
       ? ['.pro-topbar', '.mobile-market-head', '#chartCanvas', '.mobile-nav', '.mobile-trade-bar']
@@ -73,7 +80,7 @@ for (const viewport of viewports) {
       };
     });
 
-    const chineseFontLoaded = await page.evaluate(() => document.fonts.check('16px "Noto Sans SC Variable"', '交易账户行情买入卖出'));
+    const chineseFontLoaded = await page.evaluate(() => document.fonts.check('16px "Noto Sans SC"', '交易账户行情买入卖出'));
     const structural = {
       httpOk: Boolean(response && response.status() < 400),
       noHorizontalOverflow: metrics.bodyWidth <= metrics.viewportWidth + 1,
@@ -173,7 +180,7 @@ for (const viewport of viewports) {
     await page.reload({ waitUntil: 'domcontentloaded' });
     await injectQaFont(page);
     await page.waitForSelector('.pro-shell', { state: 'visible', timeout: 20000 });
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(500);
     interactions.marketPersisted = (await page.locator('#activePair').innerText()).includes('ETH/USDT');
     interactions.ordersOrPositionPersisted = (await page.locator('#accountWorkspace').innerText()).includes('ETH/USDT');
 
