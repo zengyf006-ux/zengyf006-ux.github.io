@@ -175,6 +175,10 @@ try {
     interactions.precisionControlApplied = await page.locator('#pricePrecision').evaluate(element => element.value === '1');
 
     await page.locator('[data-order-type="limit"]').click();
+    const livePrice = Number((await page.locator('#lastPrice').innerText()).replace(/,/g, ''));
+    const restingPrice = Number.isFinite(livePrice) && livePrice > 0 ? livePrice * 0.95 : 3000;
+    await page.locator('#orderPrice').fill(restingPrice.toFixed(2));
+    await page.locator('#orderPrice').dispatchEvent('input');
     await page.locator('#orderTotal').fill('1500');
     await page.locator('#submitOrder').click();
     await page.waitForTimeout(180);
