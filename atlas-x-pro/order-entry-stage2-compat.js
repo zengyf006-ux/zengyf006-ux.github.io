@@ -39,6 +39,7 @@
 
   function synchronizeLegacyOrderType(event) {
     if (synchronizingLegacyType || !matchMedia('(max-width: 820px)').matches) return;
+    if (document.documentElement.dataset.stage2BridgeOrderType) return;
     const legacy = event.target.closest('[data-order-type]');
     const legacyType = legacy?.dataset.orderType;
     if (!legacyType || !['market', 'limit', 'stop'].includes(legacyType)) return;
