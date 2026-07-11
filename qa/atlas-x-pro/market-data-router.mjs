@@ -67,11 +67,15 @@ try {
       state,
       spacing,
       expectedSpacing: engine?.intervalMs?.(state?.interval),
+      gatewayBase: engine?.gatewayBase,
+      engineVersion: engine?.version,
     };
   });
 
   checks.stageRouterActive = result.stageRouter === 'stage1';
   checks.qaModeDeclared = result.qaMode === true;
+  checks.engineVersionCorrect = result.engineVersion === 'atlas.market.client.v1';
+  checks.publicGatewayDeclared = String(result.gatewayBase || '').includes('/functions/v1/atlas-market-gateway');
   checks.engineSessionUnified = Boolean(result.state?.sessionId
     && result.state?.requestGeneration >= 1
     && result.state?.source === 'fixture'
@@ -112,9 +116,10 @@ try {
   checks.healthPanelVisible = await page.locator('#dataHealthPanel').isVisible();
   const panelText = await page.locator('#dataHealthPanel').innerText();
   checks.stageEngineDisclosed = panelText.includes('统一行情内核') || panelText.includes('统一实时流');
-  checks.demoSourceDisclosed = panelText.includes('演示行情') && panelText.includes('本地可重复演示源');
+  checks.demoSourceDisclosed = (panelText.includes('演示行情') || panelText.includes('确定性测试行情'))
+    && (panelText.includes('本地可重复演示源') || panelText.includes('本地确定性测试源'));
   checks.noKeyDisclosurePresent = panelText.includes('不使用API密钥') && panelText.includes('不读取真实账户');
-  checks.panelHasSeparateRoutes = panelText.includes('REST') && panelText.includes('WS');
+  checks.panelHasSeparateRoutes = panelText.includes('REST') && (panelText.includes('WS') || panelText.includes('流'));
   checks.providerAndIntervalVisible = panelText.includes(String(result.state?.provider || '').toUpperCase())
     && panelText.includes(String(result.state?.interval || ''));
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
