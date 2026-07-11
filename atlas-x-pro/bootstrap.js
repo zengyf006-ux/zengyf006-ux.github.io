@@ -44,6 +44,7 @@
       './performance-layout-polish.css',
       './portfolio-risk.css',
       './risk-position-sizing.css',
+      './advanced-order-oco.css',
       './market-intelligence.css',
       './market-intelligence-polish.css',
       './mobile-account-tools.css',
@@ -65,6 +66,7 @@
       await loadScript('./performance-analytics.js');
       await loadScript('./portfolio-risk.js');
       await loadScript('./risk-position-sizing.js');
+      await loadScript('./advanced-order-oco.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./mobile-account-tools.js');
       await loadScript('./data-health.js');
