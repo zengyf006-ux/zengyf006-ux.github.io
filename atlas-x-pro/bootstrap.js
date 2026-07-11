@@ -81,10 +81,12 @@
       await loadScript('./workspace-command-center.js');
       await loadScript('./workspace-command-center-compat.js');
       await loadScript('./pro-alert-center.js');
+      await loadScript('./pro-alert-draft-stability.js');
       await loadScript('./pro-alert-center-mobile.js');
       await loadScript('./alert-center-legacy-consolidation.js');
       await loadScript('./order-execution-audit.js');
       await loadScript('./market-intelligence.js');
+      await loadScript('./market-intelligence-entry-compat.js');
       await loadScript('./mobile-account-tools.js');
       document.documentElement.dataset.atlasQuality = 'ready';
     } catch (error) {
