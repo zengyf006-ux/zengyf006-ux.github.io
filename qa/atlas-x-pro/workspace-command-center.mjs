@@ -50,6 +50,8 @@ await context.addInitScript(state => {
 const page = await context.newPage();
 page.setDefaultTimeout(12000);
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
+const fontCss400 = 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/400.css';
+const fontCss700 = 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css';
 const checks = {};
 const consoleErrors = [];
 const pageErrors = [];
@@ -61,6 +63,14 @@ page.on('pageerror', error => pageErrors.push(String(error)));
 const readCore = () => page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.v1') || '{}'));
 const readOco = () => page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.advancedOrders.v1') || '{"orders":[]}'));
 const readExits = () => page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.exitStrategies.v1') || '{"strategies":[]}'));
+
+async function injectQaFont() {
+  await page.addStyleTag({ url: fontCss400, timeout: 6000 });
+  await page.addStyleTag({ url: fontCss700, timeout: 6000 });
+  await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(250);
+}
 
 async function waitReady() {
   await page.waitForSelector('.pro-shell', { state: 'visible' });
@@ -88,9 +98,7 @@ async function clickById(id) {
 
 try {
   await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 18000 });
-  await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/400.css', timeout: 6000 });
-  await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css', timeout: 6000 });
-  await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
+  await injectQaFont();
   await waitReady();
 
   checks.workspaceReady = await page.evaluate(() => document.documentElement.dataset.workspaceCenter === 'ready');
@@ -115,6 +123,7 @@ try {
   checks.riskModeApplied = await page.evaluate(() => document.documentElement.dataset.workspaceMode === 'risk');
 
   await page.reload({ waitUntil: 'domcontentloaded' });
+  await injectQaFont();
   await waitReady();
   checks.modePersistsAfterReload = await page.evaluate(() => document.documentElement.dataset.workspaceMode === 'risk');
 
