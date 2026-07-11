@@ -24,6 +24,24 @@
     touch-action: manipulation;
   }
 
+  .alert-center-tabs button,
+  #alertCenterMarkAllRead,
+  #alertCenterClearRead,
+  #alertRuleCreate,
+  .alert-center-price-shortcuts button,
+  .alert-center-rule > [data-alert-rule-toggle],
+  .alert-center-rule > [data-alert-rule-delete] {
+    min-height: 44px !important;
+    height: 44px !important;
+    touch-action: manipulation;
+  }
+
+  .alert-center-rule-inputs select,
+  .alert-center-rule-inputs input {
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+
   .mobile-market-head > .mobile-alert-button {
     width: 34px !important;
     height: 40px !important;
