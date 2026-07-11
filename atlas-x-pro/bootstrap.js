@@ -74,6 +74,7 @@
       await loadScript('./advanced-exit-strategies.js');
       await loadScript('./reservation-coordinator.js');
       await loadScript('./workspace-command-center.js');
+      await loadScript('./workspace-command-center-compat.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./mobile-account-tools.js');
       await loadScript('./data-health.js');
