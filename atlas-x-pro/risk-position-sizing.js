@@ -290,7 +290,7 @@
     panel.dataset.riskReward = String(result.riskReward);
     panel.dataset.cappedBy = result.cappedBy;
     panel.dataset.symbol = symbol;
-    panel.dataset.side = currentSide();
+    panel.dataset.riskSide = currentSide();
     panel.dataset.riskSizingState = result.valid ? 'ready' : 'invalid';
   }
 
