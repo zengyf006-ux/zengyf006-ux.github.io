@@ -211,12 +211,19 @@ try {
 
   checks.boundedStorage = (await readAlerts()).events.length <= 100 && (await readAlerts()).rules.length <= 30;
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
-  checks.mobileTouchTargets = viewport.mobile
-    ? await page.locator('[data-alert-tab="all"]').evaluate(element => element.getBoundingClientRect().height >= 38)
-      && await page.locator('#alertRuleCreate').evaluate(element => element.getBoundingClientRect().height >= 38)
-      && await page.locator('#alertCenterMarkAllRead').evaluate(element => element.getBoundingClientRect().height >= 38)
-      && await page.locator('.mobile-alert-button').evaluate(element => element.getBoundingClientRect().height >= 27)
-    : true;
+  if (viewport.mobile) {
+    const rulesTabHeight = await page.locator('[data-alert-tab="all"]').evaluate(element => element.getBoundingClientRect().height);
+    const ruleCreateHeight = await page.locator('#alertRuleCreate').evaluate(element => element.getBoundingClientRect().height);
+    await page.locator('[data-alert-tab="all"]').click();
+    const markAllReadHeight = await page.locator('#alertCenterMarkAllRead').evaluate(element => element.getBoundingClientRect().height);
+    const mobileEntryHeight = await page.locator('.mobile-alert-button').evaluate(element => element.getBoundingClientRect().height);
+    checks.mobileTouchTargets = rulesTabHeight >= 38
+      && ruleCreateHeight >= 38
+      && markAllReadHeight >= 38
+      && mobileEntryHeight >= 27;
+  } else {
+    checks.mobileTouchTargets = true;
+  }
   checks.noConsoleErrors = consoleErrors.length === 0;
   checks.noPageErrors = pageErrors.length === 0;
 
