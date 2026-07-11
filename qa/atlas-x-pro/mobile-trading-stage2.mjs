@@ -108,7 +108,11 @@ try {
     checks.toolsSheetWorks = await page.locator('[data-stage2-tools-group="timeframe"] button').count() >= 8
       && await page.locator('[data-stage2-action="fullscreen"]').isVisible();
     await page.locator('[data-stage2-tools-close]').click();
-    await page.waitForFunction(() => document.querySelector('#stage2ChartToolsSheet')?.dataset.open === 'false');
+    await page.waitForFunction(() => {
+      const sheet = document.querySelector('#stage2ChartToolsSheet');
+      return sheet?.dataset.open === 'false'
+        && sheet.getBoundingClientRect().top >= innerHeight - 1;
+    });
 
     const initialScroll = await page.evaluate(() => scrollY);
     await page.evaluate(() => window.AtlasMobileStage2.openFullscreenChart());
@@ -126,6 +130,19 @@ try {
     await page.screenshot({ path: `qa-artifacts-pro/screenshots/${name}-mobile-stage2-fullscreen.png`, fullPage: false, timeout: 12000 });
     await page.locator('[data-stage2-fullscreen-close]').click();
     await page.waitForFunction(() => !document.body.classList.contains('mobile-chart-fullscreen'));
+    await page.evaluate(() => new Promise(resolve => {
+      requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }));
+    await page.waitForFunction(() => {
+      const canvas = document.querySelector('#chartCanvas');
+      const stage = document.querySelector('#chartStage');
+      if (!canvas || !stage) return false;
+      const rect = stage.getBoundingClientRect();
+      const ratio = devicePixelRatio || 1;
+      return rect.height >= 250
+        && Math.abs(canvas.width - Math.round(rect.width * ratio)) <= 2
+        && Math.abs(canvas.height - Math.round(rect.height * ratio)) <= 2;
+    });
     checks.fullscreenRestores = await page.evaluate(expected => document.body.style.position === '' && Math.abs(scrollY - expected) <= 1, initialScroll);
 
     await page.evaluate(() => {
