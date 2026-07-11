@@ -68,6 +68,7 @@
       }
       await loadScript('./module-upgrades.js');
       await loadScript('./terminal-quality.js');
+      document.documentElement.dataset.terminalQuality = 'booting';
       await loadScript('./chart-pro-tools.js');
       await loadScript('./chart-trading-layer.js');
       await loadScript('./alert-center-legacy-preflight.js');
@@ -91,14 +92,15 @@
       await loadScript('./pro-alert-center-mobile.js');
       await loadScript('./pro-alert-touch-hardening.js');
       await loadScript('./alert-center-legacy-consolidation.js');
-      await loadScript('./order-execution-audit.js');
       await loadScript('./order-execution-audit-mobile-critical.js');
+      await loadScript('./order-execution-audit.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./market-intelligence-entry-compat.js');
       await loadScript('./pro-market-screener.js');
       await loadScript('./pro-market-screener-search-stability.js');
       await loadScript('./mobile-account-tools.js');
       document.documentElement.dataset.atlasQuality = 'ready';
+      document.documentElement.dataset.terminalQuality = 'ready';
     } catch (error) {
       console.error('ATLAS quality bootstrap failed', error);
     }
