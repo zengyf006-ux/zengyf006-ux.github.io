@@ -58,6 +58,7 @@
       './mobile-account-tools.css',
       './data-health.css',
       './semantic-typography.css',
+      './continuous-hardening.css',
     ].forEach(ensureStyle);
 
     try {
