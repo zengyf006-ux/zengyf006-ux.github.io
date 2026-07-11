@@ -29,8 +29,8 @@ const seedState = {
   ],
   orders: [
     {
-      id: 'chart-order', symbol: 'BTCUSDT', side: 'buy', type: 'limit', price: 64600,
-      qty: 0.1, total: 6460, filled: 0, estimatedFee: 5.168, createdAt: now - 100000,
+      id: 'chart-order', symbol: 'BTCUSDT', side: 'buy', type: 'limit', price: 63800,
+      qty: 0.1, total: 6380, filled: 0, estimatedFee: 5.104, createdAt: now - 100000,
       postOnly: false, reduceOnly: false,
     },
   ],
