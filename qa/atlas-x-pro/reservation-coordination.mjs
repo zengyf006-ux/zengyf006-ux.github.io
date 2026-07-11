@@ -119,7 +119,21 @@ try {
   }
   await page.waitForFunction(() => document.querySelectorAll('.chart-trade-layer .trailing-stop-line').length === 1);
   const trailingLine = page.locator('.chart-trade-layer .trailing-stop-line');
-  checks.trailingChartLineVisible = await trailingLine.isVisible();
+  checks.trailingChartLineVisible = await trailingLine.evaluate(element => {
+    const style = getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    const stage = document.querySelector('#chartStage')?.getBoundingClientRect();
+    const label = element.querySelector('span,b,em,small') || element;
+    const labelRect = label.getBoundingClientRect();
+    const intersectsStage = !stage || (rect.right >= stage.left && rect.left <= stage.right && rect.bottom >= stage.top && rect.top <= stage.bottom);
+    return style.display !== 'none'
+      && style.visibility !== 'hidden'
+      && Number(style.opacity || 1) > 0
+      && rect.width > 0
+      && labelRect.width > 0
+      && labelRect.height > 0
+      && intersectsStage;
+  });
   const lineText = await trailingLine.innerText();
   checks.trailingChartLabelDetailed = lineText.includes('追踪止损') && lineText.includes('0.1');
   const chartVisibility = await trailingLine.getAttribute('data-chart-visibility');
