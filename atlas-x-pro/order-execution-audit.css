@@ -69,6 +69,7 @@
 
 @media (max-width: 820px) {
   .account-tabs { min-width: 450px; }
+  .account-tabs button { min-height: 38px; }
   .execution-audit-view { overflow: hidden !important; }
   .execution-audit-summary { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .execution-audit-summary > div { min-height: 48px; padding: 7px 9px; }
