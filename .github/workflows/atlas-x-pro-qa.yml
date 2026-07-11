@@ -16,7 +16,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -96,6 +96,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/advanced-order-oco.mjs
 
+      - name: Verify trailing and scaled exits
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/exit-strategies.mjs
+
       - name: Verify live market intelligence
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -149,6 +155,7 @@ jobs:
             qa-artifacts-pro/risk-position-sizing-report.json
             qa-artifacts-pro/chart-trading-layer-report.json
             qa-artifacts-pro/advanced-order-oco-report.json
+            qa-artifacts-pro/exit-strategies-report.json
             qa-artifacts-pro/market-intelligence-report.json
             qa-artifacts-pro/market-data-router-report.json
             qa-artifacts-pro/semantic-typography-report.json
