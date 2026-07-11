@@ -3,19 +3,30 @@
   if (window.__ATLAS_CHART_TRADING_STAGE2_COMPAT__) return;
   window.__ATLAS_CHART_TRADING_STAGE2_COMPAT__ = true;
 
-  function ensureFullscreenCloseStyle() {
-    if (document.querySelector('#atlasStage2FullscreenCloseCompat')) return;
-    const style = document.createElement('style');
-    style.id = 'atlasStage2FullscreenCloseCompat';
-    style.textContent = `
-      @media (max-width: 820px) {
-        body.mobile-chart-fullscreen [data-stage2-fullscreen-close]:not([hidden]) {
-          display: grid !important;
-          place-items: center;
-        }
-      }
-    `;
-    document.head.append(style);
+  function syncFullscreenClose() {
+    const close = document.querySelector('[data-stage2-fullscreen-close]');
+    if (!close) return;
+    const visible = innerWidth <= 820
+      && document.body.classList.contains('mobile-chart-fullscreen')
+      && !close.hidden;
+    close.style.setProperty('display', visible ? 'grid' : 'none', 'important');
+    if (visible) close.style.setProperty('place-items', 'center');
+  }
+
+  function observeFullscreenClose() {
+    const close = document.querySelector('[data-stage2-fullscreen-close]');
+    if (!close) return false;
+    syncFullscreenClose();
+    new MutationObserver(syncFullscreenClose).observe(close, {
+      attributes: true,
+      attributeFilter: ['hidden'],
+    });
+    new MutationObserver(syncFullscreenClose).observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    window.addEventListener('resize', syncFullscreenClose);
+    return true;
   }
 
   function synchronize() {
@@ -26,7 +37,12 @@
   }
 
   function init() {
-    ensureFullscreenCloseStyle();
+    if (!observeFullscreenClose()) {
+      const observer = new MutationObserver(() => {
+        if (observeFullscreenClose()) observer.disconnect();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
     const stage = document.querySelector('#chartStage');
     if (!stage) return;
     new MutationObserver(synchronize).observe(stage, {
