@@ -54,6 +54,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/capture.mjs
 
+      - name: Verify realtime market and chart stage
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/realtime-market-chart.mjs
+
       - name: Verify professional workspace quality
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -150,12 +156,6 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/market-data-router.mjs
 
-      - name: Verify realtime market and chart stage
-        env:
-          CHROME_BIN: /usr/bin/google-chrome
-          ATLAS_VIEWPORT: ${{ matrix.viewport }}
-        run: node qa/atlas-x-pro/realtime-market-chart.mjs
-
       - name: Verify semantic Chinese typography
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -190,6 +190,7 @@ jobs:
           path: |
             qa-artifacts-pro/screenshots
             qa-artifacts-pro/report.json
+            qa-artifacts-pro/realtime-market-chart-report.json
             qa-artifacts-pro/quality-report.json
             qa-artifacts-pro/execution-guard-report.json
             qa-artifacts-pro/performance-analytics-report.json
@@ -206,7 +207,6 @@ jobs:
             qa-artifacts-pro/market-intelligence-report.json
             qa-artifacts-pro/pro-market-screener-report.json
             qa-artifacts-pro/market-data-router-report.json
-            qa-artifacts-pro/realtime-market-chart-report.json
             qa-artifacts-pro/semantic-typography-report.json
             qa-artifacts-pro/advanced-visual-report.json
             qa-artifacts-pro/mobile-layout-report.json
