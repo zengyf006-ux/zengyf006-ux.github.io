@@ -1,0 +1,35 @@
+@media (min-width: 821px) {
+  .mobile-alert-button { display: none !important; }
+}
+
+@media (max-width: 820px) {
+  .mobile-market-head > .mobile-alert-button {
+    position: relative;
+    display: grid;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+  }
+  .mobile-alert-button.has-alerts {
+    border-color: rgba(241,91,112,.32);
+    background: rgba(241,91,112,.055);
+    color: var(--text-2);
+  }
+  .mobile-alert-button .alert-center-badge {
+    top: -6px;
+    right: -6px;
+  }
+}
+
+@media (max-width: 390px) {
+  .mobile-market-head {
+    gap: 7px;
+    padding-inline: 9px;
+  }
+  .mobile-market-head > .mobile-alert-button,
+  .mobile-market-head > #mobileFavorite {
+    width: 27px;
+    height: 27px;
+    flex-basis: 27px;
+  }
+}
