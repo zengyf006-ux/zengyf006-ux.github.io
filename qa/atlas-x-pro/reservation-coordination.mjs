@@ -95,6 +95,11 @@ try {
   checks.ocoHonorsTrailingReservation = ocoStatus.includes('退出策略预留')
     && !(advancedOrders.orders || []).some(order => order.status === 'active')
     && (coreAfterOco.orders || []).length === 0;
+  await page.waitForFunction(() => {
+    const badge = document.querySelector('#ocoAvailableBadge');
+    return Math.abs(Number(badge?.dataset.availableQuantity) - 0.5) < 1e-8
+      && (badge?.textContent || '').includes('0.5');
+  });
   checks.ocoBadgeUsesUnifiedAvailability = (await page.locator('#ocoAvailableBadge').innerText()).includes('0.5');
 
   await openPanel('.risk-sizing-toggle', '.risk-sizing-body');
