@@ -25,6 +25,12 @@
   .chart-panel.mobile-active > .chart-footer { grid-area: footer; }
   .chart-panel.mobile-active > .stage2-mobile-context { grid-area: context; }
 
+  .chart-panel.mobile-active > .chart-stage > #chartCanvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
   body.mobile-chart-fullscreen .chart-panel {
     grid-template-rows:
       calc(54px + env(safe-area-inset-top))
