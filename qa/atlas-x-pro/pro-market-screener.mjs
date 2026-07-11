@@ -49,6 +49,7 @@ const gatewayMarkets = tickerRows.map((ticker, index) => ({
   trades: Number(ticker.count),
   serverTime: Date.now(),
 }));
+const expectedBtcRange = (gatewayMarkets[0].high - gatewayMarkets[0].low) / gatewayMarkets[0].open * 100;
 
 const browser = await chromium.launch({
   headless: true,
@@ -61,6 +62,8 @@ const context = await browser.newContext({
   hasTouch: viewport.mobile,
 });
 await context.addInitScript(() => {
+  if (sessionStorage.getItem('atlas-screener-seeded')) return;
+  sessionStorage.setItem('atlas-screener-seeded', 'true');
   localStorage.clear();
   localStorage.setItem('atlasX.pro.v1', JSON.stringify({
     activeSymbol: 'BTCUSDT', timeframe: '1h', indicator: 'ema', side: 'buy', orderType: 'market',
@@ -72,7 +75,7 @@ await context.addInitScript(() => {
 const page = await context.newPage();
 page.setDefaultTimeout(14000);
 const gatewayRoute = '**/functions/v1/atlas-market-gateway/markets*';
-await page.route(gatewayRoute, route => route.fulfill({
+const fulfillGateway = route => route.fulfill({
   status: 200,
   contentType: 'application/json',
   body: JSON.stringify({
@@ -82,7 +85,8 @@ await page.route(gatewayRoute, route => route.fulfill({
     receivedAt: Date.now(),
     markets: gatewayMarkets,
   }),
-}));
+});
+await page.route(gatewayRoute, fulfillGateway);
 
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
 const checks = {};
@@ -124,7 +128,7 @@ try {
 
   const btc = page.locator('.pro-market-row[data-screener-symbol="BTCUSDT"]');
   checks.metricsDerivedCorrectly = (await btc.locator('[data-metric="turnover"]').innerText()).includes('5.00B')
-    && Math.abs(Number(await btc.getAttribute('data-range-percent')) - 8) < 0.05
+    && Math.abs(Number(await btc.getAttribute('data-range-percent')) - expectedBtcRange) < 0.05
     && Math.abs(Number(await btc.getAttribute('data-spread-bps')) - 0.2) < 0.03;
 
   await page.locator('#marketScreenerSort').selectOption('turnover');
@@ -171,7 +175,11 @@ try {
   checks.comparePersistsAfterReload = await page.locator('.pro-market-compare-card').count() === 4;
 
   await page.unroute(gatewayRoute);
-  await page.route(gatewayRoute, route => route.abort());
+  await page.route(gatewayRoute, route => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    body: JSON.stringify({ error: { code: 'UPSTREAM_UNAVAILABLE', message: 'fixture outage' } }),
+  }));
   await page.evaluate(() => window.AtlasMarketScreener.refresh({ force: true }));
   await page.waitForFunction(() => document.querySelector('.pro-market-screener')?.dataset.source === 'cache');
   checks.validCacheUsedOnFailure = (await page.locator('.pro-market-screener').getAttribute('data-source')) === 'cache';
