@@ -1,0 +1,104 @@
+/* Trading context overlay: positions, orders and local risk-plan prices. */
+.chart-trade-layer {
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.chart-trading-enhanced .chart-marker-layer .position-line,
+.chart-trading-enhanced .chart-marker-layer .order-line {
+  display: none;
+}
+
+.chart-trade-layer .chart-price-line {
+  left: 38px;
+  right: 64px;
+  min-height: 1px;
+}
+
+.chart-trade-layer .chart-price-line > span {
+  left: auto;
+  right: 5px;
+  transform: translateY(var(--trade-label-shift, 0));
+  max-width: min(290px, calc(100% - 16px));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--atlas-ui-font, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-trade-layer .position-line {
+  border-top-style: solid;
+  border-top-color: rgba(33, 201, 151, .9);
+  color: var(--green);
+}
+
+.chart-trade-layer .buy-order-line {
+  border-top-color: rgba(33, 201, 151, .78);
+  color: var(--green);
+}
+
+.chart-trade-layer .sell-order-line {
+  border-top-color: rgba(241, 91, 112, .82);
+  color: var(--red);
+}
+
+.chart-trade-layer .plan-stop-line {
+  border-top-style: dashed;
+  border-top-color: rgba(241, 91, 112, .95);
+  color: var(--red);
+}
+
+.chart-trade-layer .plan-target-line {
+  border-top-style: dashed;
+  border-top-color: rgba(74, 222, 160, .92);
+  color: #4adea0;
+}
+
+.chart-stage.chart-picking-price {
+  cursor: crosshair;
+}
+
+.chart-stage.chart-picking-price::after {
+  content: "点击图表取价";
+  position: absolute;
+  z-index: 10;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(124, 140, 255, .55);
+  border-radius: 5px;
+  background: rgba(9, 14, 21, .92);
+  padding: 0 8px;
+  color: #b8c0ff;
+  font-family: var(--atlas-ui-font, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif);
+  font-size: 7px;
+  pointer-events: none;
+}
+
+@media (max-width: 820px) {
+  .chart-trade-layer .chart-price-line {
+    left: 8px;
+    right: 58px;
+  }
+
+  .chart-trade-layer .chart-price-line > span {
+    max-width: 190px;
+    font-size: 7px;
+  }
+
+  .chart-drawing-tools {
+    grid-template-columns: repeat(3, 27px);
+  }
+
+  .chart-stage.chart-picking-price::after {
+    top: 68px;
+    min-height: 24px;
+    font-size: 8px;
+  }
+}

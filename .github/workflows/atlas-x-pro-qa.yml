@@ -1,0 +1,272 @@
+name: ATLAS X Pro acceptance
+
+on:
+  pull_request:
+    branches: ['atlas-x-rebuild-base', 'atlas-x-pro-terminal']
+    paths:
+      - 'atlas-x-pro/**'
+      - 'qa/atlas-x-pro/**'
+      - 'supabase/functions/atlas-market-gateway/**'
+      - 'supabase/functions/atlas-market-gateway-markets/**'
+      - '.github/workflows/atlas-x-pro-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gateway-contract:
+    name: gateway-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify gateway normalization contract
+        run: node qa/atlas-x-pro/gateway-contract.mjs
+      - name: Upload gateway contract report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-market-gateway-contract
+          path: qa-artifacts-pro/gateway-contract-report.json
+          retention-days: 1
+          if-no-files-found: error
+
+  gateway-smoke:
+    name: gateway-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      ATLAS_MARKET_GATEWAY: https://vtcunypvhtudragsittb.supabase.co/functions/v1/atlas-market-gateway
+      ATLAS_MARKET_GATEWAY_MARKETS: https://vtcunypvhtudragsittb.supabase.co/functions/v1/atlas-market-gateway-markets
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify deployed public market gateways
+        run: node qa/atlas-x-pro/gateway-smoke.mjs
+      - name: Upload gateway smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-market-gateway-smoke
+          path: qa-artifacts-pro/gateway-smoke-report.json
+          retention-days: 1
+          if-no-files-found: error
+
+  acceptance:
+    name: acceptance-${{ matrix.viewport }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport:
+          - iphone-390x844
+          - iphone-430x932
+          - desktop-1440x900
+          - desktop-1920x1080
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare browser and deterministic Chinese font
+        run: |
+          npm init -y
+          npm install --no-save playwright-core@1.55.0 @fontsource/noto-sans-sc
+          test -x /usr/bin/google-chrome
+          test -f node_modules/@fontsource/noto-sans-sc/400.css
+          test -f node_modules/@fontsource/noto-sans-sc/700.css
+
+      - name: Start static server
+        run: |
+          python3 -m http.server 4173 > /tmp/atlas-pro-http.log 2>&1 &
+          echo $! > /tmp/atlas-pro-http.pid
+          sleep 2
+
+      - name: Capture and validate
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/capture.mjs
+
+      - name: Verify realtime market and chart stage
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/realtime-market-chart.mjs
+
+      - name: Verify professional interval persistence
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/interval-persistence.mjs
+
+      - name: Verify professional workspace quality
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/quality-extra.mjs
+
+      - name: Verify order execution protections
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/execution-guard.mjs
+
+      - name: Verify ledger-derived analytics
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/performance-analytics.mjs
+
+      - name: Verify portfolio risk center
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/portfolio-risk.mjs
+
+      - name: Verify risk position sizing
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/risk-position-sizing.mjs
+
+      - name: Verify chart trading layer
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/chart-trading-layer.mjs
+
+      - name: Verify OCO advanced orders
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/advanced-order-oco.mjs
+
+      - name: Verify trailing and scaled exits
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/exit-strategies.mjs
+
+      - name: Verify unified reservation coordination
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/reservation-coordination.mjs
+
+      - name: Verify workspace command center
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/workspace-command-center.mjs
+
+      - name: Verify professional alert center
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/pro-alert-center.mjs
+
+      - name: Verify alert entry consolidation
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/alert-entry-consolidation.mjs
+
+      - name: Verify order execution audit center
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/order-execution-audit.mjs
+
+      - name: Verify live market intelligence
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/market-intelligence.mjs
+
+      - name: Verify professional market screener
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/pro-market-screener.mjs
+
+      - name: Verify market data routing
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/market-data-router.mjs
+
+      - name: Verify semantic Chinese typography
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/semantic-typography.mjs
+
+      - name: Capture advanced visual states
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/advanced-visual.mjs
+
+      - name: Guard mobile first-screen layouts
+        if: startsWith(matrix.viewport, 'iphone-')
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/mobile-layout-guard.mjs
+
+      - name: Verify mobile account tools
+        if: startsWith(matrix.viewport, 'iphone-')
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/mobile-account-tools.mjs
+
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-x-pro-${{ matrix.viewport }}
+          path: |
+            qa-artifacts-pro/screenshots
+            qa-artifacts-pro/report.json
+            qa-artifacts-pro/realtime-market-chart-report.json
+            qa-artifacts-pro/interval-persistence-report.json
+            qa-artifacts-pro/quality-report.json
+            qa-artifacts-pro/execution-guard-report.json
+            qa-artifacts-pro/performance-analytics-report.json
+            qa-artifacts-pro/portfolio-risk-report.json
+            qa-artifacts-pro/risk-position-sizing-report.json
+            qa-artifacts-pro/chart-trading-layer-report.json
+            qa-artifacts-pro/advanced-order-oco-report.json
+            qa-artifacts-pro/exit-strategies-report.json
+            qa-artifacts-pro/reservation-coordination-report.json
+            qa-artifacts-pro/workspace-command-center-report.json
+            qa-artifacts-pro/pro-alert-center-report.json
+            qa-artifacts-pro/alert-entry-consolidation-report.json
+            qa-artifacts-pro/order-execution-audit-report.json
+            qa-artifacts-pro/market-intelligence-report.json
+            qa-artifacts-pro/pro-market-screener-report.json
+            qa-artifacts-pro/market-data-router-report.json
+            qa-artifacts-pro/semantic-typography-report.json
+            qa-artifacts-pro/advanced-visual-report.json
+            qa-artifacts-pro/mobile-layout-report.json
+            qa-artifacts-pro/mobile-account-tools-report.json
+            /tmp/atlas-pro-http.log
+          retention-days: 1
+          if-no-files-found: error

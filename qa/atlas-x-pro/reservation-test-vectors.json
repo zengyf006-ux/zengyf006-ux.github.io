@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "name": "trailing-only",
+      "held": 0.6,
+      "coreReserved": 0,
+      "trailingReserved": 0.1,
+      "expectedAvailable": 0.5
+    },
+    {
+      "name": "core-and-trailing",
+      "held": 0.6,
+      "coreReserved": 0.2,
+      "trailingReserved": 0.1,
+      "expectedAvailable": 0.3
+    },
+    {
+      "name": "fully-reserved",
+      "held": 0.6,
+      "coreReserved": 0.4,
+      "trailingReserved": 0.2,
+      "expectedAvailable": 0
+    }
+  ]
+}

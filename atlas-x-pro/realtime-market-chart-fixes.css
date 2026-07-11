@@ -1,0 +1,7 @@
+.chart-candle-detail {
+  pointer-events: none !important;
+}
+
+.chart-candle-detail [data-clear-candle-selection] {
+  pointer-events: auto !important;
+}

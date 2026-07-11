@@ -1,0 +1,75 @@
+/* Mobile account navigation and ledger tools */
+.mobile-account-tools {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .mobile-account-tools {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--line);
+    background: #090e14;
+  }
+  .mobile-account-tools button {
+    min-width: 0;
+    min-height: 48px;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    border: 1px solid #263547;
+    border-radius: 7px;
+    background: #0f1721;
+    color: var(--text-2);
+    padding: 7px 8px;
+    text-align: left;
+  }
+  .mobile-account-tools button:active {
+    border-color: #435875;
+    background: #152131;
+  }
+  .mobile-account-tools svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    color: var(--accent-2);
+  }
+  .mobile-account-tools button:nth-child(2) svg { color: var(--accent); }
+  .mobile-account-tools button:nth-child(3) svg { color: var(--amber); }
+  .mobile-account-tools button > span {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+  .mobile-account-tools strong {
+    overflow: hidden;
+    font-size: 9px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-account-tools small {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .mobile-account-tools { gap: 5px; padding-inline: 8px; }
+  .mobile-account-tools button {
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 5px;
+    padding-inline: 6px;
+  }
+  .mobile-account-tools svg { width: 17px; height: 17px; }
+  .mobile-account-tools strong { font-size: 8px; }
+}

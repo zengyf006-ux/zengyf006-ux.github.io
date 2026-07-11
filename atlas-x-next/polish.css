@@ -1,0 +1,55 @@
+/* Final visual polish layer: spacing, density and mobile hierarchy */
+@media (min-width: 761px) {
+  .workspace { grid-template-rows: minmax(470px, 1fr) 166px; }
+  .account-panel { min-height: 166px; }
+  .empty-row td { height: 82px; }
+  .book-row, .trade-row { font-size: 10.5px; }
+  .book-columns { font-size: 9.5px; }
+  .market-summary { box-shadow: inset 0 -1px 0 rgba(255,255,255,.015); }
+  .chart-panel, .orderbook-panel, .order-panel, .account-panel { box-shadow: 0 18px 44px rgba(0,0,0,.08); }
+}
+
+@media (max-width: 760px) {
+  :root { --summary-h: 144px; }
+  .market-summary {
+    grid-template-columns: 1fr;
+    grid-template-rows: 48px 44px 52px;
+    align-content: center;
+    padding: 0 14px;
+  }
+  .pair-selector {
+    grid-row: 1;
+    width: 100%;
+    grid-template-columns: 36px 1fr 18px;
+  }
+  .last-price {
+    grid-row: 2;
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+    justify-self: stretch;
+    gap: 8px;
+  }
+  .last-price strong { font-size: 26px; }
+  .last-price small { margin-left: auto; text-align: right; }
+  .market-metrics {
+    grid-row: 3;
+    grid-column: 1;
+  }
+  .market-metrics > div { padding-top: 10px; }
+  .workspace { padding: 9px; }
+  .panel { border-radius: 14px; }
+  .chart-info-bar { font-size: 9.5px; }
+  .book-row, .trade-row { font-size: 10.5px; }
+  .mobile-action-bar { grid-template-columns: 1fr 94px 94px; }
+  .mobile-action-bar > button { font-size: 13px; }
+  .order-panel { height: min(510px, 68dvh); }
+  .order-content { justify-content: flex-start; }
+  .order-note { margin: 14px 0 0; padding-top: 0; }
+}
+
+@media (max-width: 380px) {
+  .last-price strong { font-size: 24px; }
+  .last-price small { font-size: 8px; }
+  .mobile-action-bar { grid-template-columns: 1fr 86px 86px; }
+}

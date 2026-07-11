@@ -1,0 +1,13 @@
+/* Final geometry correction for desktop market rankings. */
+@media (min-width: 821px) {
+  .market-intelligence-list {
+    width: 100%;
+  }
+
+  .market-intelligence-row {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    justify-self: stretch;
+  }
+}
