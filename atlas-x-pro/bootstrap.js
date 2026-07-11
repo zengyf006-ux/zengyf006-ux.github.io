@@ -50,6 +50,7 @@
       './workspace-command-center.css',
       './workspace-command-center-compat.css',
       './pro-alert-center.css',
+      './pro-alert-center-mobile.css',
       './market-intelligence.css',
       './market-intelligence-polish.css',
       './mobile-account-tools.css',
@@ -77,6 +78,7 @@
       await loadScript('./workspace-command-center.js');
       await loadScript('./workspace-command-center-compat.js');
       await loadScript('./pro-alert-center.js');
+      await loadScript('./pro-alert-center-mobile.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./mobile-account-tools.js');
       await loadScript('./data-health.js');
