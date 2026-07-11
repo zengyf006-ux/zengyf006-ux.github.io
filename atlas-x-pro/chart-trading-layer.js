@@ -42,11 +42,12 @@
     return metrics.top + ((metrics.max - price) / (metrics.max - metrics.min)) * metrics.height;
   }
 
-  function priceForY(clientY, metrics) {
+  function pickForY(clientY, metrics) {
     const rect = metrics.canvas.getBoundingClientRect();
     const local = clientY - rect.top;
     const ratio = Math.min(1, Math.max(0, (local - metrics.top) / metrics.height));
-    return metrics.max - ratio * (metrics.max - metrics.min);
+    const price = metrics.max - ratio * (metrics.max - metrics.min);
+    return { price, ratio };
   }
 
   function decimalsForMarket() {
@@ -146,7 +147,7 @@
     const layer = $('.chart-trade-layer');
     const metrics = canvasMetrics();
     if (!layer || !metrics) return;
-    layer.dataset.symbol = activeSymbol();
+    layer.dataset.chartSymbol = activeSymbol();
     layer.innerHTML = '';
 
     const visible = collectMarkers()
@@ -237,6 +238,18 @@
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
+  function recordPick(mode, metrics, ratio, price) {
+    const stage = $('#chartStage');
+    if (!stage) return;
+    stage.dataset.lastPickMode = mode;
+    stage.dataset.lastPickPrice = String(price);
+    stage.dataset.lastPickRatio = String(ratio);
+    stage.dataset.lastPickMax = String(metrics.max);
+    stage.dataset.lastPickMin = String(metrics.min);
+    stage.dataset.lastPickTop = String(metrics.top);
+    stage.dataset.lastPickHeight = String(metrics.height);
+  }
+
   function finishPick() {
     pickMode = 'crosshair';
     $('#chartStage')?.classList.remove('chart-picking-price');
@@ -257,10 +270,12 @@
       if (!metrics) return;
       event.preventDefault();
       event.stopPropagation();
-      const price = priceForY(event.clientY, metrics);
-      if (pickMode === 'order-price') fillOrderPrice(price);
-      if (pickMode === 'plan-stop') fillRiskPrice('#riskStopPrice', price);
-      if (pickMode === 'plan-target') fillRiskPrice('#riskTargetPrice', price);
+      const mode = pickMode;
+      const { price, ratio } = pickForY(event.clientY, metrics);
+      recordPick(mode, metrics, ratio, price);
+      if (mode === 'order-price') fillOrderPrice(price);
+      if (mode === 'plan-stop') fillRiskPrice('#riskStopPrice', price);
+      if (mode === 'plan-target') fillRiskPrice('#riskTargetPrice', price);
       scheduleRender();
       finishPick();
     }, true);
