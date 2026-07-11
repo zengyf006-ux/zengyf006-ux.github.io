@@ -6,6 +6,7 @@ on:
     paths:
       - 'atlas-x-pro/**'
       - 'qa/atlas-x-pro/**'
+      - 'supabase/functions/atlas-market-gateway/**'
       - '.github/workflows/atlas-x-pro-qa.yml'
   workflow_dispatch:
 
@@ -13,6 +14,52 @@ permissions:
   contents: read
 
 jobs:
+  gateway-contract:
+    name: gateway-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify gateway normalization contract
+        run: node qa/atlas-x-pro/gateway-contract.mjs
+      - name: Upload gateway contract report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-market-gateway-contract
+          path: qa-artifacts-pro/gateway-contract-report.json
+          retention-days: 1
+          if-no-files-found: error
+
+  gateway-smoke:
+    name: gateway-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      ATLAS_MARKET_GATEWAY: https://vtcunypvhtudragsittb.supabase.co/functions/v1/atlas-market-gateway
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify deployed public market gateway
+        run: node qa/atlas-x-pro/gateway-smoke.mjs
+      - name: Upload gateway smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-market-gateway-smoke
+          path: qa-artifacts-pro/gateway-smoke-report.json
+          retention-days: 1
+          if-no-files-found: error
+
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
