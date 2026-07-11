@@ -37,6 +37,7 @@ const page = await context.newPage();
 page.setDefaultTimeout(12000);
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
 const checks = {};
+const geometry = {};
 const consoleErrors = [];
 const pageErrors = [];
 let fatalError = null;
@@ -99,9 +100,7 @@ try {
     const badge = document.querySelector('#ocoAvailableBadge');
     const available = Number(badge?.dataset.availableQuantity);
     const text = badge?.textContent || '';
-    return Math.abs(available - 0.5) < 1e-8 && text.includes('0.5')
-      ? { available, text }
-      : false;
+    return Math.abs(available - 0.5) < 1e-8 && text.includes('0.5') ? { available, text } : false;
   });
   const badgeSnapshot = await badgeHandle.jsonValue();
   checks.ocoBadgeUsesUnifiedAvailability = Math.abs(Number(badgeSnapshot?.available) - 0.5) < 1e-8
@@ -116,9 +115,32 @@ try {
   if (viewport.mobile) {
     await page.locator('#orderSheetClose').click();
     await page.waitForFunction(() => !document.body.classList.contains('order-sheet-open'));
+    await page.waitForFunction(() => {
+      const ticket = document.querySelector('#orderTicket');
+      if (!ticket) return true;
+      const style = getComputedStyle(ticket);
+      const rect = ticket.getBoundingClientRect();
+      return style.display === 'none'
+        || style.visibility === 'hidden'
+        || Number(style.opacity || 1) < 0.05
+        || rect.top >= innerHeight - 1;
+    }, null, { timeout: 2000 });
+    await page.locator('#chartStage').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(120);
   }
+
   await page.waitForFunction(() => document.querySelectorAll('.chart-trade-layer .trailing-stop-line').length === 1);
   const trailingLine = page.locator('.chart-trade-layer .trailing-stop-line');
+  geometry.trailing = await trailingLine.evaluate(element => {
+    const label = element.querySelector('span,b,em,small') || element;
+    const lineRect = element.getBoundingClientRect();
+    const labelRect = label.getBoundingClientRect();
+    return {
+      line: { left: lineRect.left, top: lineRect.top, width: lineRect.width, height: lineRect.height },
+      label: { left: labelRect.left, top: labelRect.top, width: labelRect.width, height: labelRect.height },
+      viewport: { width: innerWidth, height: innerHeight },
+    };
+  });
   checks.trailingChartLineVisible = await trailingLine.evaluate(element => {
     const lineStyle = getComputedStyle(element);
     const label = element.querySelector('span,b,em,small') || element;
@@ -163,7 +185,7 @@ try {
 
 const passed = !fatalError && Object.values(checks).every(Boolean);
 await fs.writeFile('qa-artifacts-pro/reservation-coordination-report.json', JSON.stringify({
-  target, viewport, checks, consoleErrors, pageErrors, fatalError, passed,
+  target, viewport, checks, geometry, consoleErrors, pageErrors, fatalError, passed,
   generatedAt: new Date().toISOString(),
 }, null, 2));
 await context.close().catch(() => {});
