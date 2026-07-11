@@ -54,6 +54,7 @@ const checks = {};
 const consoleErrors = [];
 const pageErrors = [];
 let fatalError = null;
+let mobileEntryHeightBeforeOpen = 0;
 
 page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
 page.on('pageerror', error => pageErrors.push(String(error)));
@@ -88,10 +89,20 @@ try {
   await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
   await page.waitForSelector('.pro-shell', { state: 'visible' });
   await page.waitForFunction(() => document.documentElement.dataset.alertCenter === 'ready');
-  if (viewport.mobile) await page.waitForSelector('.mobile-alert-button', { state: 'visible' });
+  if (viewport.mobile) {
+    await page.waitForSelector('.mobile-alert-button', { state: 'visible' });
+    await page.waitForFunction(() => {
+      const entry = document.querySelector('.mobile-alert-button');
+      if (!entry) return false;
+      const rect = entry.getBoundingClientRect();
+      const style = getComputedStyle(entry);
+      return style.display !== 'none' && style.visibility !== 'hidden' && rect.width >= 27 && rect.height >= 27;
+    });
+    mobileEntryHeightBeforeOpen = await page.locator('.mobile-alert-button').evaluate(element => element.getBoundingClientRect().height);
+  }
 
   checks.alertCenterReady = await page.evaluate(() => document.documentElement.dataset.alertCenter === 'ready');
-  checks.mobileEntryVisible = viewport.mobile ? await page.locator('.mobile-alert-button').isVisible() : true;
+  checks.mobileEntryVisible = viewport.mobile ? mobileEntryHeightBeforeOpen >= 27 : true;
   await openAlertCenter();
   checks.reusesControlPopover = await page.locator('#controlPopover').isVisible();
   checks.professionalTitleVisible = (await page.locator('#popoverTitle').innerText()).includes('专业预警中心');
@@ -214,15 +225,20 @@ try {
   checks.boundedStorage = (await readAlerts()).events.length <= 100 && (await readAlerts()).rules.length <= 30;
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
   if (viewport.mobile) {
+    await page.waitForFunction(() => {
+      const all = document.querySelector('[data-alert-tab="all"]')?.getBoundingClientRect().height || 0;
+      const create = document.querySelector('#alertRuleCreate')?.getBoundingClientRect().height || 0;
+      return all >= 38 && create >= 38;
+    });
     const rulesTabHeight = await page.locator('[data-alert-tab="all"]').evaluate(element => element.getBoundingClientRect().height);
     const ruleCreateHeight = await page.locator('#alertRuleCreate').evaluate(element => element.getBoundingClientRect().height);
     await page.locator('[data-alert-tab="all"]').click();
+    await page.waitForFunction(() => (document.querySelector('#alertCenterMarkAllRead')?.getBoundingClientRect().height || 0) >= 38);
     const markAllReadHeight = await page.locator('#alertCenterMarkAllRead').evaluate(element => element.getBoundingClientRect().height);
-    const mobileEntryHeight = await page.locator('.mobile-alert-button').evaluate(element => element.getBoundingClientRect().height);
     checks.mobileTouchTargets = rulesTabHeight >= 38
       && ruleCreateHeight >= 38
       && markAllReadHeight >= 38
-      && mobileEntryHeight >= 27;
+      && mobileEntryHeightBeforeOpen >= 27;
   } else {
     checks.mobileTouchTargets = true;
   }
