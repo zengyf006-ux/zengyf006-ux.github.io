@@ -65,61 +65,84 @@ try {
     && Math.abs(aggregation.asks[1]?.price - 100.2) < 1e-9;
   checks.bidRoundsDown = Math.abs(aggregation.bids[0]?.price - 99.9) < 1e-9
     && Math.abs(aggregation.bids[1]?.price - 99.8) < 1e-9;
-  checks.cumulativeMonotonic = [aggregation.asks, aggregation.bids].every(levels => levels.every((level, index) => index === 0 || level.cumulative >= levels[index - 1].cumulative));
+  checks.cumulativeMonotonic = [aggregation.asks, aggregation.bids]
+    .every(levels => levels.every((level, index) => index === 0 || level.cumulative >= levels[index - 1].cumulative));
 
   const snapshot = await page.evaluate(() => window.AtlasOrderBookStage2.getSnapshot());
-  evidence.snapshot = { step: snapshot.step, options: snapshot.options, mode: snapshot.mode, asks: snapshot.asks.length, bids: snapshot.bids.length };
+  evidence.snapshot = {
+    step: snapshot.step,
+    options: snapshot.options,
+    mode: snapshot.mode,
+    asks: snapshot.asks.length,
+    bids: snapshot.bids.length,
+  };
   checks.dynamicSteps = Array.isArray(snapshot.options) && snapshot.options.length === 4
     && snapshot.options.every(value => Number.isFinite(value) && value > 0);
   checks.liveEngineProjection = snapshot.asks.length > 0 && snapshot.bids.length > 0;
 
-  await page.evaluate(() => window.AtlasOrderBookStage2.setMode('bids'));
-  await page.waitForFunction(() => document.querySelector('#orderBook')?.dataset.stage2Mode === 'bids');
-  checks.bidOnlyWorks = await page.locator('#asksRows').isHidden() && await page.locator('#bidsRows').isVisible();
-
-  await page.evaluate(() => window.AtlasOrderBookStage2.setMode('asks'));
-  await page.waitForFunction(() => document.querySelector('#orderBook')?.dataset.stage2Mode === 'asks');
-  checks.askOnlyWorks = await page.locator('#bidsRows').isHidden() && await page.locator('#asksRows').isVisible();
-
-  await page.evaluate(() => window.AtlasOrderBookStage2.setMode('all'));
-  await page.waitForFunction(() => document.querySelector('#orderBook')?.dataset.stage2Mode === 'all');
-  checks.bothSidesWork = await page.locator('#asksRows').isVisible() && await page.locator('#bidsRows').isVisible();
-
-  const nextStep = snapshot.options.find(value => value !== snapshot.step) || snapshot.step;
-  await page.evaluate(step => window.AtlasOrderBookStage2.setAggregation(step), nextStep);
-  await page.waitForFunction(step => Number(document.querySelector('#orderBook')?.dataset.aggregation) === Number(step), nextStep);
-  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.mobileStage2.v1') || '{}'));
-  checks.preferencePersisted = Number(stored.bookAggregation) === Number(nextStep) && stored.bookMode === 'all';
-  checks.stableThreeColumns = await page.locator('#orderBook .book-row').first().evaluate(element => {
-    const spans = [...element.querySelectorAll(':scope > span')];
-    const style = getComputedStyle(element);
-    return spans.length === 3 && style.display === 'grid' && style.gridTemplateColumns.split(' ').length >= 3;
-  });
-  checks.rowsCarrySelectablePrice = await page.locator('#orderBook .book-row[data-book-price]').count() > 2;
-
-  checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
-  checks.mobileTouchTargets = viewport.mobile
-    ? await page.evaluate(() => {
-        const targets = [...document.querySelectorAll('.orderbook-panel [data-book-mode], .orderbook-panel #pricePrecision')]
-          .filter(element => {
-            const rect = element.getBoundingClientRect();
-            return rect.width > 0 && rect.height > 0;
-          });
-        return targets.length >= 4 && targets.every(element => element.getBoundingClientRect().height >= 40);
-      })
-    : true;
-  checks.noConsoleErrors = consoleErrors.length === 0;
-  checks.noPageErrors = pageErrors.length === 0;
-
   if (viewport.mobile) {
     await page.locator('[data-mobile-view="book"]').click();
     await page.waitForSelector('.orderbook-panel.mobile-active', { state: 'visible' });
+    await page.waitForFunction(() => document.querySelectorAll('#orderBook .stage2-book-row').length > 4);
+
+    await page.evaluate(() => window.AtlasOrderBookStage2.setMode('bids'));
+    await page.waitForFunction(() => document.querySelector('#orderBook')?.dataset.stage2Mode === 'bids');
+    checks.bidOnlyWorks = await page.locator('#asksRows').isHidden() && await page.locator('#bidsRows').isVisible();
+
+    await page.evaluate(() => window.AtlasOrderBookStage2.setMode('asks'));
+    await page.waitForFunction(() => document.querySelector('#orderBook')?.dataset.stage2Mode === 'asks');
+    checks.askOnlyWorks = await page.locator('#bidsRows').isHidden() && await page.locator('#asksRows').isVisible();
+
+    await page.evaluate(() => window.AtlasOrderBookStage2.setMode('all'));
+    await page.waitForFunction(() => document.querySelector('#orderBook')?.dataset.stage2Mode === 'all');
+    checks.bothSidesWork = await page.locator('#asksRows').isVisible() && await page.locator('#bidsRows').isVisible();
+
+    const nextStep = snapshot.options.find(value => value !== snapshot.step) || snapshot.step;
+    await page.evaluate(step => window.AtlasOrderBookStage2.setAggregation(step), nextStep);
+    await page.waitForFunction(step => Number(document.querySelector('#orderBook')?.dataset.aggregation) === Number(step), nextStep);
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.mobileStage2.v1') || '{}'));
+    checks.preferencePersisted = Number(stored.bookAggregation) === Number(nextStep) && stored.bookMode === 'all';
+    checks.stableThreeColumns = await page.locator('#orderBook .stage2-book-row').first().evaluate(element => {
+      const spans = [...element.querySelectorAll(':scope > span')];
+      const style = getComputedStyle(element);
+      return spans.length === 3 && style.display === 'grid' && style.gridTemplateColumns.split(' ').length >= 3;
+    });
+    checks.rowsCarrySelectablePrice = await page.locator('#orderBook .stage2-book-row[data-book-price]').count() > 2;
+    checks.mobileTouchTargets = await page.evaluate(() => {
+      const targets = [...document.querySelectorAll('.orderbook-panel [data-book-mode], .orderbook-panel #pricePrecision')]
+        .filter(element => {
+          const rect = element.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      return targets.length >= 4 && targets.every(element => element.getBoundingClientRect().height >= 40);
+    });
+    checks.desktopDomUntouched = true;
+
+    await page.screenshot({
+      path: `qa-artifacts-pro/screenshots/${name}-order-book-stage2.png`,
+      fullPage: false,
+      timeout: 12000,
+    });
+  } else {
+    checks.bidOnlyWorks = true;
+    checks.askOnlyWorks = true;
+    checks.bothSidesWork = true;
+    checks.preferencePersisted = true;
+    checks.stableThreeColumns = true;
+    checks.rowsCarrySelectablePrice = true;
+    checks.mobileTouchTargets = true;
+    checks.desktopDomUntouched = await page.evaluate(() => {
+      const rows = document.querySelectorAll('#orderBook .stage2-book-row');
+      const select = document.querySelector('#pricePrecision');
+      return rows.length === 0
+        && !select?.dataset.stage2Aggregation
+        && document.querySelector('#orderBook')?.dataset.stage2Mode === undefined;
+    });
   }
-  await page.screenshot({
-    path: `qa-artifacts-pro/screenshots/${name}-order-book-stage2.png`,
-    fullPage: false,
-    timeout: 12000,
-  });
+
+  checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
+  checks.noConsoleErrors = consoleErrors.length === 0;
+  checks.noPageErrors = pageErrors.length === 0;
 } catch (error) {
   fatalError = String(error);
   try { await page.screenshot({ path: `qa-artifacts-pro/screenshots/${name}-order-book-stage2-fatal.png`, fullPage: false }); } catch {}
