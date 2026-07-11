@@ -33,6 +33,9 @@
     './data-health.css',
     './semantic-typography.css',
     './continuous-hardening.css',
+    './order-entry-stage2.css',
+    './mobile-terminal-stage2.css',
+    './mobile-terminal-stage2-grid-fix.css',
   ];
 
   const ensureStyle = href => new Promise((resolve, reject) => {
@@ -87,6 +90,7 @@
   async function start() {
     try {
       document.documentElement.dataset.atlasQuality = 'booting';
+      document.documentElement.dataset.mobileTradingStage2 = 'booting';
       await Promise.all(STYLE_HREFS.map(ensureStyle));
       document.documentElement.dataset.atlasQualityStyles = 'ready';
 
@@ -126,9 +130,18 @@
       await loadScript('./pro-market-screener.js');
       await loadScript('./pro-market-screener-search-stability.js');
       await loadScript('./mobile-account-tools.js');
+      await loadScript('./core-trading-bridge-stage2.js');
+      await loadScript('./pro-order-book-stage2.js');
+      await loadScript('./order-entry-stage2.js');
+      await loadScript('./order-entry-stage2-compat.js');
+      await loadScript('./chart-trading-stage2-compat.js');
+      await loadScript('./mobile-terminal-stage2.js');
+      await loadScript('./mobile-chart-drawing-stage2.js');
+      document.documentElement.dataset.mobileTradingStage2 = 'ready';
       document.documentElement.dataset.atlasQuality = 'ready';
       document.documentElement.dataset.terminalQuality = 'ready';
     } catch (error) {
+      document.documentElement.dataset.mobileTradingStage2 = 'failed';
       document.documentElement.dataset.atlasQuality = 'failed';
       console.error('ATLAS quality bootstrap failed', error);
     }

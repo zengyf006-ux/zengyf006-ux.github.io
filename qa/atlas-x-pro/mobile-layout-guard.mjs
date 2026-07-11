@@ -23,7 +23,16 @@ const page = await context.newPage();
 page.setDefaultTimeout(8000);
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
 const checks = {};
+const measurements = {};
 let fatalError = null;
+
+const boxEvidence = box => box ? {
+  x: Number(box.x.toFixed(2)),
+  y: Number(box.y.toFixed(2)),
+  width: Number(box.width.toFixed(2)),
+  height: Number(box.height.toFixed(2)),
+  bottom: Number((box.y + box.height).toFixed(2)),
+} : null;
 
 try {
   await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 18000 });
@@ -46,11 +55,63 @@ try {
   const bidCount = await visibleBids.count();
   const lastAskBox = askCount ? await visibleAsks.nth(askCount - 1).boundingBox() : null;
   const firstBidBox = bidCount ? await visibleBids.first().boundingBox() : null;
+  const asksHostBox = await page.locator('#asksRows').boundingBox();
+  const bidsHostBox = await page.locator('#bidsRows').boundingBox();
   const midBox = await page.locator('.mid-price').boundingBox();
+  const orderBookBox = await page.locator('#orderBook').boundingBox();
+  measurements.orderBook = boxEvidence(orderBookBox);
+  measurements.asksHost = boxEvidence(asksHostBox);
+  measurements.lastAsk = boxEvidence(lastAskBox);
+  measurements.mid = boxEvidence(midBox);
+  measurements.firstBid = boxEvidence(firstBidBox);
+  measurements.bidsHost = boxEvidence(bidsHostBox);
+  measurements.askCount = askCount;
+  measurements.bidCount = bidCount;
+  measurements.askOverlapPx = lastAskBox && midBox
+    ? Number((lastAskBox.y + lastAskBox.height - midBox.y).toFixed(2))
+    : null;
+  measurements.bidOverlapPx = firstBidBox && midBox
+    ? Number((midBox.y + midBox.height - firstBidBox.y).toFixed(2))
+    : null;
+  measurements.styles = await page.evaluate(() => {
+    const describe = selector => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const style = getComputedStyle(element);
+      return {
+        display: style.display,
+        position: style.position,
+        overflow: style.overflow,
+        flex: style.flex,
+        minHeight: style.minHeight,
+        height: style.height,
+        paddingTop: style.paddingTop,
+        paddingBottom: style.paddingBottom,
+        marginTop: style.marginTop,
+        marginBottom: style.marginBottom,
+        borderTopWidth: style.borderTopWidth,
+        borderBottomWidth: style.borderBottomWidth,
+      };
+    };
+    return {
+      orderBook: describe('#orderBook'),
+      asksHost: describe('#asksRows'),
+      row: describe('#asksRows .book-row'),
+      mid: describe('.mid-price'),
+      bidsHost: describe('#bidsRows'),
+    };
+  });
+
   checks.mobileDepthCountReadable = askCount >= 8 && askCount <= 9 && bidCount >= 8 && bidCount <= 9;
   checks.askDoesNotOverlapMid = Boolean(lastAskBox && midBox && lastAskBox.y + lastAskBox.height <= midBox.y + 1);
   checks.bidDoesNotOverlapMid = Boolean(firstBidBox && midBox && firstBidBox.y >= midBox.y + midBox.height - 1);
   checks.orderBookRowsHaveReadableHeight = Boolean(lastAskBox && firstBidBox && lastAskBox.height >= 17 && firstBidBox.height >= 17);
+
+  await page.screenshot({
+    path: `qa-artifacts-pro/screenshots/${name}-mobile-layout-book.png`,
+    fullPage: false,
+    timeout: 12000,
+  });
 
   await page.locator('[data-book-view="trades"]').click();
   await page.waitForTimeout(100);
@@ -73,19 +134,22 @@ try {
 }
 
 const passed = !fatalError && Object.values(checks).every(Boolean);
-await fs.writeFile('qa-artifacts-pro/mobile-layout-report.json', JSON.stringify({
+const report = {
   target,
   viewport,
   checks,
+  measurements,
   fatalError,
   passed,
   generatedAt: new Date().toISOString(),
-}, null, 2));
+};
+await fs.writeFile('qa-artifacts-pro/mobile-layout-report.json', JSON.stringify(report, null, 2));
 await context.close().catch(() => {});
 await browser.close().catch(() => {});
 
 if (!passed) {
   console.error(`ATLAS X Pro mobile layout guard failed for ${name}`);
+  console.error(JSON.stringify(report, null, 2));
   process.exit(1);
 }
 console.log(`ATLAS X Pro mobile layout guard passed for ${name}`);

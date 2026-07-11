@@ -71,6 +71,9 @@ page.on('pageerror', error => pageErrors.push(String(error)));
 
 const closeEnough = (actual, expected, tolerance) => Number.isFinite(actual)
   && Math.abs(actual - expected) <= tolerance;
+const limitSelector = viewport.mobile
+  ? '[data-stage2-order-type="limit"]'
+  : '[data-order-type="limit"]';
 
 try {
   await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 18000 });
@@ -81,6 +84,7 @@ try {
   await page.waitForFunction(() => document.documentElement.dataset.riskSizing === 'ready', null, { timeout: 12000 });
 
   if (viewport.mobile) {
+    await page.waitForFunction(() => document.documentElement.dataset.orderEntryStage2 === 'ready');
     await page.locator('[data-mobile-side="buy"]').click();
     await page.waitForSelector('#orderTicket', { state: 'visible' });
   }
@@ -90,7 +94,7 @@ try {
   await page.locator('.risk-sizing-toggle').click();
   await page.waitForSelector('.risk-sizing-body', { state: 'visible' });
 
-  await page.locator('[data-order-type="limit"]').click();
+  await page.locator(limitSelector).click();
   await page.locator('#orderPrice').fill(String(entry));
   await page.locator('#orderPrice').dispatchEvent('input');
   await page.locator('#riskStopPrice').fill(String(stop));

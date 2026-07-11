@@ -161,12 +161,28 @@ async function activeInterval() {
   return page.evaluate(() => window.AtlasMarketDataEngine?.getState?.().interval || '');
 }
 
+async function selectedCandleCenterX() {
+  return page.evaluate(() => {
+    const selection = window.AtlasChartExperience?.getSelection?.();
+    const canvas = document.querySelector('#chartCanvas');
+    const selectedIndex = Number(selection?.index);
+    const left = Number(canvas?.dataset.left);
+    const step = Number(canvas?.dataset.step);
+    const width = canvas?.getBoundingClientRect()?.width || 0;
+    if (![selectedIndex, left, step, width].every(Number.isFinite) || !(step > 0) || !(width > 8)) return null;
+    return Math.max(4, Math.min(width - 4, left + (selectedIndex + 0.5) * step));
+  });
+}
+
 try {
   const navigationStartedAt = Date.now();
   await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 18_000 });
   await injectQaFont();
   await page.waitForFunction(() => document.documentElement.dataset.marketDataEngine === 'ready', null, { timeout: 12_000 });
   await page.waitForFunction(() => window.AtlasMarketDataEngine?.getState?.().connectionState === 'live', null, { timeout: 8_000 });
+  if (viewport.mobile) {
+    await page.waitForFunction(() => document.documentElement.dataset.mobileTerminalStage2 === 'ready');
+  }
   measurements.initialLiveMs = Date.now() - navigationStartedAt;
 
   checks.engineReady = await page.evaluate(() => document.documentElement.dataset.marketDataEngine === 'ready');
@@ -231,31 +247,68 @@ try {
   if (!canvasBox) throw new Error('Chart canvas has no bounding box');
   const clickX = Math.max(70, Math.min(canvasBox.width - 90, canvasBox.width * 0.58));
   const clickY = Math.max(70, Math.min(canvasBox.height - 80, canvasBox.height * 0.46));
-  await canvas.click({ position: { x: clickX, y: clickY } });
   const detail = page.locator('#chartCandleDetail');
-  await detail.waitFor({ state: 'visible' });
-  checks.richCardVisible = await detail.isVisible();
+  const compact = page.locator('.stage2-candle-strip');
+
+  await canvas.click({ position: { x: clickX, y: clickY } });
+  if (viewport.mobile) {
+    await page.waitForFunction(() => document.querySelector('.stage2-candle-strip')?.dataset.open === 'true');
+    checks.richCardVisible = await compact.isVisible();
+    checks.compactCardComplete = await compact.evaluate(card => ['O','H','L','C','时间','涨跌','成交量','周期']
+      .every(text => card.textContent.includes(text)));
+    await page.locator('[data-stage2-candle-more]').click();
+    await page.waitForFunction(() => document.body.classList.contains('stage2-candle-detail-open'));
+    await detail.waitFor({ state: 'visible' });
+  } else {
+    await detail.waitFor({ state: 'visible' });
+    checks.richCardVisible = await detail.isVisible();
+    checks.compactCardComplete = true;
+  }
   checks.richCardComplete = await detail.evaluate(card => [
     '开盘','最高','最低','收盘','涨跌额','涨跌幅','振幅','成交量','成交额','EMA10','EMA20','数据源',
   ].every(text => card.textContent.includes(text)));
   checks.detailHasClose = await detail.locator('[data-clear-candle-selection]').isVisible();
   await shot('candle-detail');
 
-  await canvas.click({ position: { x: clickX, y: clickY } });
-  await detail.waitFor({ state: 'hidden' });
-  checks.sameCandleCancels = await detail.isHidden();
+  if (viewport.mobile) {
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.body.classList.contains('stage2-candle-detail-open')
+      && document.querySelector('.stage2-candle-strip')?.dataset.open === 'false');
+    checks.escapeCancels = await compact.isHidden();
 
-  await canvas.click({ position: { x: clickX + 18, y: clickY } });
-  await detail.waitFor({ state: 'visible' });
-  await page.keyboard.press('Escape');
-  await detail.waitFor({ state: 'hidden' });
-  checks.escapeCancels = await detail.isHidden();
+    await canvas.click({ position: { x: clickX, y: clickY } });
+    await page.waitForFunction(() => document.querySelector('.stage2-candle-strip')?.dataset.open === 'true');
+    const centerX = await selectedCandleCenterX();
+    if (!Number.isFinite(centerX)) throw new Error('Selected candle center could not be resolved');
+    await canvas.click({ position: { x: centerX, y: clickY } });
+    await page.waitForFunction(() => document.querySelector('.stage2-candle-strip')?.dataset.open === 'false');
+    checks.sameCandleCancels = await compact.isHidden();
 
-  await canvas.click({ position: { x: clickX + 28, y: clickY } });
-  await detail.waitFor({ state: 'visible' });
-  await page.locator('[data-clear-candle-selection]').click();
-  await detail.waitFor({ state: 'hidden' });
-  checks.closeButtonCancels = await detail.isHidden();
+    await canvas.click({ position: { x: Math.min(canvasBox.width - 50, clickX + 28), y: clickY } });
+    await page.waitForFunction(() => document.querySelector('.stage2-candle-strip')?.dataset.open === 'true');
+    await page.locator('[data-stage2-candle-more]').click();
+    await page.waitForFunction(() => document.body.classList.contains('stage2-candle-detail-open'));
+    await detail.locator('[data-clear-candle-selection]').click();
+    await page.waitForFunction(() => document.querySelector('.stage2-candle-strip')?.dataset.open === 'false'
+      && !document.body.classList.contains('stage2-candle-detail-open'));
+    checks.closeButtonCancels = await compact.isHidden();
+  } else {
+    await canvas.click({ position: { x: clickX, y: clickY } });
+    await detail.waitFor({ state: 'hidden' });
+    checks.sameCandleCancels = await detail.isHidden();
+
+    await canvas.click({ position: { x: clickX + 18, y: clickY } });
+    await detail.waitFor({ state: 'visible' });
+    await page.keyboard.press('Escape');
+    await detail.waitFor({ state: 'hidden' });
+    checks.escapeCancels = await detail.isHidden();
+
+    await canvas.click({ position: { x: clickX + 28, y: clickY } });
+    await detail.waitFor({ state: 'visible' });
+    await detail.locator('[data-clear-candle-selection]').click();
+    await detail.waitFor({ state: 'hidden' });
+    checks.closeButtonCancels = await detail.isHidden();
+  }
 
   checks.extremaVisible = await page.locator('.chart-extrema-label').count() === 2;
   checks.extremaKinds = await page.locator('.chart-extrema-label').evaluateAll(elements => {
@@ -267,7 +320,9 @@ try {
 
   await page.locator('[data-timeframe="30m"]').click();
   await page.waitForFunction(() => window.AtlasMarketDataEngine?.getState?.().interval === '30m');
-  checks.intervalSwitchClearsSelection = await detail.isHidden();
+  checks.intervalSwitchClearsSelection = viewport.mobile
+    ? await page.waitForFunction(() => document.querySelector('.stage2-candle-strip')?.dataset.open === 'false').then(() => true)
+    : await detail.isHidden();
 
   checks.noHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
   checks.noConsoleErrors = consoleErrors.length === 0;

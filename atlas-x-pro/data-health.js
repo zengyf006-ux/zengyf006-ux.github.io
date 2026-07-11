@@ -139,10 +139,10 @@
     $('#dataHealthLatency').textContent = Number.isFinite(Number(market?.latencyMs)) ? `${Math.max(0, Math.round(Number(market.latencyMs)))} ms` : '-- ms';
     $('#dataHealthRestHost').textContent = isFixture(market) ? '本地确定性测试源' : gatewayHost();
     $('#dataHealthRestStatus').textContent = market?.loading ? '正在获取快照与K线' : market?.error ? '最近请求失败' : '快照与K线已就绪';
-    $('#dataHealthRestMeta').textContent = String(market?.source || '--').toUpperCase();
+    $('#dataHealthRestMeta').textContent = String(market?.interval || market?.source || '--');
     $('#dataHealthWsHost').textContent = streamLabel(market);
     $('#dataHealthWsStatus').textContent = statusText(market);
-    $('#dataHealthWsMeta').textContent = ageText(market);
+    $('#dataHealthWsMeta').textContent = market?.provider ? String(market.provider).toUpperCase() : ageText(market);
   }
 
   function openPanel() {
@@ -162,6 +162,10 @@
   function bind() {
     window.addEventListener('atlas:market-state', updatePanel);
     window.addEventListener('atlas:data-route', updatePanel);
+    document.addEventListener('pointerdown', event => {
+      if (event.target.closest('[data-open-data-health], #dataHealthPanel')) return;
+      closePanel();
+    }, true);
     document.addEventListener('click', event => {
       if (event.target.closest('[data-open-data-health]')) {
         event.preventDefault();
@@ -170,10 +174,9 @@
         return;
       }
       if (event.target.closest('[data-close-data-health]')) {
+        event.preventDefault();
         closePanel();
-        return;
       }
-      if (!event.target.closest('#dataHealthPanel')) closePanel();
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && !$('#dataHealthPanel')?.hidden) closePanel();

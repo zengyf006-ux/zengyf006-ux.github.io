@@ -46,6 +46,9 @@ page.on('pageerror', error => pageErrors.push(String(error)));
 
 const readCore = () => page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.v1') || '{}'));
 const readExitStore = () => page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.exitStrategies.v1') || '{"strategies":[]}'));
+const orderTypeSelector = type => viewport.mobile
+  ? `[data-stage2-order-type="${type}"]`
+  : `[data-order-type="${type}"]`;
 
 async function openExitPanel(tab = 'trailing') {
   if (viewport.mobile && !await page.locator('body').evaluate(body => body.classList.contains('order-sheet-open'))) {
@@ -118,7 +121,7 @@ try {
   checks.trailingReservedLocally = Math.abs(Number(await page.locator('.advanced-exit-panel').getAttribute('data-trailing-reserved')) - 0.1) < 1e-10;
 
   await page.locator('.side-selector [data-side="sell"]').click();
-  await page.locator('[data-order-type="market"]').click();
+  await page.locator(orderTypeSelector('market')).click();
   await page.locator('#orderQuantity').fill('0.55');
   await page.locator('#orderQuantity').dispatchEvent('input');
   await page.locator('#submitOrder').click();

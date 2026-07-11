@@ -96,6 +96,18 @@ async function clickChartAtRatio(ratio, mode) {
   });
 }
 
+async function activateChartTool(tool) {
+  if (viewport.mobile) {
+    await page.locator('[data-stage2-tools-open]').click();
+    await page.waitForSelector('#stage2ChartToolsSheet[data-open="true"]', { state: 'visible' });
+    await page.locator(`[data-stage2-proxy-attribute="data-chart-tool"][data-stage2-proxy-value="${tool}"]`).click();
+    await page.locator('[data-stage2-tools-close]').click();
+    await page.waitForFunction(() => document.querySelector('#stage2ChartToolsSheet')?.dataset.open === 'false');
+  } else {
+    await page.locator(`[data-chart-tool="${tool}"]`).click();
+  }
+}
+
 async function ensureRiskPlanOpen() {
   if (viewport.mobile && !await page.locator('body').evaluate(body => body.classList.contains('order-sheet-open'))) {
     await page.locator('[data-mobile-side="buy"]').click();
@@ -124,7 +136,10 @@ try {
     return Number(canvas?.dataset.max) > Number(canvas?.dataset.min)
       && Number(canvas?.dataset.priceHeight) > 100;
   }, null, { timeout: 12000 });
-  await page.waitForFunction(() => document.documentElement.dataset.chartTradingLayer === 'ready', null, { timeout: 12000 });
+  await page.waitForFunction(isMobile => document.documentElement.dataset.chartTradingLayer === 'ready'
+    && (!isMobile || (document.documentElement.dataset.mobileChartDrawingStage2 === 'ready'
+      && document.documentElement.dataset.chartTradingStage2Compat === 'ready')),
+  viewport.mobile, { timeout: 12000 });
 
   const chartMetrics = await page.locator('#chartCanvas').evaluate(element => ({
     max: Number(element.dataset.max),
@@ -151,19 +166,25 @@ try {
   checks.positionLabelDetailed = positionCopy.includes('持仓成本') && positionCopy.includes('0.25');
   checks.orderLabelDetailed = orderCopy.includes('买入') && orderCopy.includes('限价') && orderCopy.includes('0.1');
 
-  checks.threePickToolsPresent = await page.locator('[data-chart-tool="order-price"], [data-chart-tool="plan-stop"], [data-chart-tool="plan-target"]').count() === 3;
+  checks.threePickToolsPresent = viewport.mobile
+    ? await page.locator('[data-stage2-proxy-attribute="data-chart-tool"][data-stage2-proxy-value="order-price"], [data-stage2-proxy-attribute="data-chart-tool"][data-stage2-proxy-value="plan-stop"], [data-stage2-proxy-attribute="data-chart-tool"][data-stage2-proxy-value="plan-target"]').count() === 3
+    : await page.locator('[data-chart-tool="order-price"], [data-chart-tool="plan-stop"], [data-chart-tool="plan-target"]').count() === 3;
 
-  await page.locator('[data-chart-tool="order-price"]').click();
+  await activateChartTool('order-price');
   const orderPick = await clickChartAtRatio(0.56, 'order-price');
-  if (viewport.mobile) await page.waitForFunction(() => document.body.classList.contains('order-sheet-open'));
-  await page.waitForFunction(() => document.querySelector('[data-order-type="limit"]')?.classList.contains('active'));
+  if (viewport.mobile) {
+    await page.waitForFunction(() => document.body.classList.contains('order-sheet-open'));
+    await page.waitForFunction(() => document.querySelector('[data-stage2-order-type="limit"]')?.classList.contains('active'));
+  } else {
+    await page.waitForFunction(() => document.querySelector('[data-order-type="limit"]')?.classList.contains('active'));
+  }
   const pickedOrderPrice = Number(await page.locator('#orderPrice').inputValue());
   checks.orderPickMathCorrect = orderPick.mathCorrect;
   checks.orderPricePickerWorks = Math.abs(pickedOrderPrice - orderPick.price) < 0.011;
   checks.orderPickerDoesNotSubmit = await page.locator('#historyBody [data-label="状态"]').count() === 0;
   await closeMobileSheet();
 
-  await page.locator('[data-chart-tool="plan-stop"]').click();
+  await activateChartTool('plan-stop');
   const stopPick = await clickChartAtRatio(0.78, 'plan-stop');
   if (viewport.mobile) await page.waitForFunction(() => document.body.classList.contains('order-sheet-open'));
   await page.waitForSelector('.risk-sizing-body', { state: 'visible' });
@@ -172,7 +193,7 @@ try {
   checks.stopPickerWorks = Math.abs(pickedStop - stopPick.price) < 0.011;
   await closeMobileSheet();
 
-  await page.locator('[data-chart-tool="plan-target"]').click();
+  await activateChartTool('plan-target');
   const targetPick = await clickChartAtRatio(0.22, 'plan-target');
   if (viewport.mobile) await page.waitForFunction(() => document.body.classList.contains('order-sheet-open'));
   await page.waitForSelector('.risk-sizing-body', { state: 'visible' });

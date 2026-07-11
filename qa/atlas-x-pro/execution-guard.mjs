@@ -35,6 +35,9 @@ page.on('pageerror', error => pageErrors.push(String(error)));
 const sleepForLock = () => page.waitForTimeout(930);
 const countOrders = () => page.locator('#ordersBody [data-cancel-order]').count();
 const countPositions = () => page.locator('#positionsBody [data-close-position]').count();
+const orderTypeSelector = type => viewport.mobile
+  ? `[data-stage2-order-type="${type}"]`
+  : `[data-order-type="${type}"]`;
 
 async function openTicket(side = 'buy') {
   if (viewport.mobile) {
@@ -45,7 +48,7 @@ async function openTicket(side = 'buy') {
 }
 
 async function setMarketOrder(total) {
-  await page.locator('[data-order-type="market"]').click();
+  await page.locator(orderTypeSelector('market')).click();
   await page.locator('#postOnly').uncheck();
   await page.locator('#reduceOnly').uncheck();
   await page.locator('#orderTotal').fill(String(total));
@@ -66,6 +69,7 @@ try {
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css', timeout: 6000 });
   await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
   await page.waitForFunction(() => document.documentElement.dataset.executionGuard === 'ready', null, { timeout: 12000 });
+  if (viewport.mobile) await page.waitForFunction(() => document.documentElement.dataset.orderEntryStage2 === 'ready');
   await page.waitForTimeout(600);
 
   checks.executionGuardReady = await page.evaluate(() => document.documentElement.dataset.executionGuard === 'ready');
@@ -78,7 +82,7 @@ try {
   checks.minimumNotionalCreatedNothing = await countPositions() === 0 && await countOrders() === 0;
   await screenshot('guard-minimum-blocked');
 
-  await page.locator('[data-order-type="limit"]').click();
+  await page.locator(orderTypeSelector('limit')).click();
   await page.locator('#postOnly').check();
   const bestAsk = await page.locator('#asksRows [data-book-price]').evaluateAll(rows => Math.min(...rows.map(row => Number(row.dataset.bookPrice)).filter(Number.isFinite)));
   await page.locator('#orderPrice').fill(String(bestAsk * 1.02));
@@ -89,7 +93,7 @@ try {
 
   await page.locator('#postOnly').uncheck();
   await page.locator('#reduceOnly').check();
-  await page.locator('[data-order-type="market"]').click();
+  await page.locator(orderTypeSelector('market')).click();
   await page.locator('#orderTotal').fill('100');
   await page.locator('#submitOrder').click();
   checks.reduceOnlyBuyBlocked = (await page.locator('#executionStatusCopy').innerText()).includes('只减仓仅允许卖出');
@@ -105,7 +109,7 @@ try {
     await page.locator('[data-mobile-side="sell"]').click();
   }
   await openTicket('sell');
-  await page.locator('[data-order-type="limit"]').click();
+  await page.locator(orderTypeSelector('limit')).click();
   await page.locator('#postOnly').uncheck();
   await page.locator('#reduceOnly').uncheck();
   const held = Number((await page.locator('#positionsBody [data-label="数量"]').innerText()).replace(/,/g, ''));
@@ -123,7 +127,7 @@ try {
     await page.locator('[data-mobile-side="sell"]').click();
   }
   await openTicket('sell');
-  await page.locator('[data-order-type="limit"]').click();
+  await page.locator(orderTypeSelector('limit')).click();
   await page.locator('#orderPrice').fill(String(current * 1.04));
   await page.locator('#orderQuantity').fill(String(held));
   await page.locator('#orderQuantity').dispatchEvent('input');
