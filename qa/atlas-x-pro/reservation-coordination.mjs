@@ -110,8 +110,13 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('.chart-trade-layer .trailing-stop-line').length === 1);
   const trailingLine = page.locator('.chart-trade-layer .trailing-stop-line');
   checks.trailingChartLineVisible = await trailingLine.isVisible();
-  checks.trailingChartLabelDetailed = (await trailingLine.innerText()).includes('追踪止损')
-    && (await trailingLine.innerText()).includes('0.1');
+  const lineText = await trailingLine.innerText();
+  checks.trailingChartLabelDetailed = lineText.includes('追踪止损') && lineText.includes('0.1');
+  const chartVisibility = await trailingLine.getAttribute('data-chart-visibility');
+  checks.trailingChartRangeState = ['visible', 'above', 'below'].includes(chartVisibility || '');
+  checks.offscreenRiskRemainsExplicit = chartVisibility === 'visible'
+    || (chartVisibility === 'above' && lineText.includes('高于可视区'))
+    || (chartVisibility === 'below' && lineText.includes('低于可视区'));
 
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
   checks.noConsoleErrors = consoleErrors.length === 0;
