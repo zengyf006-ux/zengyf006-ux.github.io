@@ -16,7 +16,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 22
+    timeout-minutes: 24
     strategy:
       fail-fast: false
       matrix:
@@ -114,6 +114,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/workspace-command-center.mjs
 
+      - name: Verify professional alert center
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/pro-alert-center.mjs
+
       - name: Verify live market intelligence
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -170,6 +176,7 @@ jobs:
             qa-artifacts-pro/exit-strategies-report.json
             qa-artifacts-pro/reservation-coordination-report.json
             qa-artifacts-pro/workspace-command-center-report.json
+            qa-artifacts-pro/pro-alert-center-report.json
             qa-artifacts-pro/market-intelligence-report.json
             qa-artifacts-pro/market-data-router-report.json
             qa-artifacts-pro/semantic-typography-report.json
