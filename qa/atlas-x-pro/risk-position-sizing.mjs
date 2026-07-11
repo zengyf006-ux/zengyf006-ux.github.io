@@ -138,12 +138,12 @@ try {
   await page.waitForFunction(expectedStop => {
     const panel = document.querySelector('.risk-sizing-panel');
     const stopInput = document.querySelector('#riskStopPrice');
-    return panel?.dataset.symbol === 'ETHUSDT' && stopInput?.value !== expectedStop;
+    return panel?.dataset.riskSymbol === 'ETHUSDT' && stopInput?.value !== expectedStop;
   }, String(stop));
   checks.planIsolatedBySymbol = await page.evaluate(expectedStop => {
     const panel = document.querySelector('.risk-sizing-panel');
     const stopInput = document.querySelector('#riskStopPrice');
-    return panel?.dataset.symbol === 'ETHUSDT' && stopInput?.value !== expectedStop;
+    return panel?.dataset.riskSymbol === 'ETHUSDT' && stopInput?.value !== expectedStop;
   }, String(stop));
 
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
