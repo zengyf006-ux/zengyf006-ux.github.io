@@ -65,7 +65,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 32
+    timeout-minutes: 36
     strategy:
       fail-fast: false
       matrix:
@@ -114,6 +114,24 @@ jobs:
           CHROME_BIN: /usr/bin/google-chrome
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/interval-persistence.mjs
+
+      - name: Verify professional order book
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/professional-orderbook.mjs
+
+      - name: Verify professional order entry
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/professional-order-entry.mjs
+
+      - name: Verify Stage 2 mobile terminal
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/mobile-terminal-stage2.mjs
 
       - name: Verify professional workspace quality
         env:
@@ -247,6 +265,9 @@ jobs:
             qa-artifacts-pro/report.json
             qa-artifacts-pro/realtime-market-chart-report.json
             qa-artifacts-pro/interval-persistence-report.json
+            qa-artifacts-pro/professional-orderbook-report.json
+            qa-artifacts-pro/professional-order-entry-report.json
+            qa-artifacts-pro/mobile-terminal-stage2-report.json
             qa-artifacts-pro/quality-report.json
             qa-artifacts-pro/execution-guard-report.json
             qa-artifacts-pro/performance-analytics-report.json
