@@ -47,6 +47,7 @@
       './advanced-order-oco.css',
       './advanced-exit-strategies.css',
       './reservation-coordinator.css',
+      './workspace-command-center.css',
       './market-intelligence.css',
       './market-intelligence-polish.css',
       './mobile-account-tools.css',
@@ -71,6 +72,7 @@
       await loadScript('./advanced-order-oco.js');
       await loadScript('./advanced-exit-strategies.js');
       await loadScript('./reservation-coordinator.js');
+      await loadScript('./workspace-command-center.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./mobile-account-tools.js');
       await loadScript('./data-health.js');
