@@ -85,7 +85,7 @@
             type: 'ticker', provider: 'fixture', symbol, interval, sequence: sequence++, serverTime: at - 3, receivedAt: at,
             data: { price: currentPrice, open: currentPrice * .991, high: currentPrice * 1.018, low: currentPrice * .982, volume: 8_320, quoteVolume: currentPrice * 8_320, change: .91, bid: currentPrice * .99999, ask: currentPrice * 1.00001 },
           });
-        }, 240);
+        }, 900);
         return () => {
           stopped = true;
           clearInterval(timer);
@@ -96,7 +96,7 @@
 
   installQaProvider();
 
-  const stylesheet = './realtime-market-chart.css';
+  const stylesheets = ['./realtime-market-chart.css', './realtime-market-chart-fixes.css'];
   const scripts = [
     './market-data-engine.js',
     './chart-experience.js',
@@ -104,17 +104,18 @@
   ];
 
   if (document.readyState === 'loading') {
-    document.write(`<link rel="stylesheet" href="${stylesheet}">`);
+    stylesheets.forEach(source => document.write(`<link rel="stylesheet" href="${source}">`));
     scripts.forEach(source => document.write(`<script src="${source}"><\/script>`));
     return;
   }
 
-  if (!document.querySelector(`link[href="${stylesheet}"]`)) {
+  stylesheets.forEach(source => {
+    if (document.querySelector(`link[href="${source}"]`)) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = stylesheet;
+    link.href = source;
     document.head.append(link);
-  }
+  });
 
   let chain = Promise.resolve();
   scripts.forEach(source => {
