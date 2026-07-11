@@ -1,0 +1,313 @@
+.professional-orderbook {
+  --pro-book-grid: minmax(92px,1.18fr) minmax(72px,.9fr) minmax(72px,.9fr);
+}
+
+.professional-orderbook .book-controls > [data-book-mode],
+.professional-orderbook .book-controls > #pricePrecision {
+  display: none !important;
+}
+
+.pro-book-controls {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pro-book-mode-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b1118;
+  padding: 2px;
+}
+
+.pro-book-mode-group button {
+  min-width: 38px;
+  height: 28px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted);
+  padding: 0 7px;
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.pro-book-mode-group button:hover,
+.pro-book-mode-group button.active {
+  background: #182230;
+  color: var(--text);
+}
+
+.pro-book-precision-label {
+  min-width: 74px;
+  height: 32px;
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr);
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b1118;
+  padding: 0 6px;
+}
+
+.pro-book-precision-label span {
+  color: var(--muted-2);
+  font-size: 6px;
+}
+
+.pro-book-precision-label select {
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: 650 7px var(--mono);
+}
+
+.pro-book-layout {
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(80px,1fr) auto minmax(80px,1fr);
+  overflow: hidden;
+}
+
+.pro-book-columns,
+.pro-book-row {
+  display: grid;
+  grid-template-columns: var(--pro-book-grid);
+  align-items: center;
+  column-gap: 8px;
+}
+
+.pro-book-columns {
+  min-height: 30px;
+  border-bottom: 1px solid var(--line);
+  background: #0c1219;
+  padding: 0 9px;
+  color: var(--muted-2);
+  font-size: 6px;
+}
+
+.pro-book-columns span,
+.pro-book-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.pro-book-columns span:first-child,
+.pro-book-row span:first-child {
+  text-align: left;
+}
+
+.pro-book-side {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.pro-book-side[hidden] {
+  display: none !important;
+}
+
+.pro-book-row {
+  position: relative;
+  isolation: isolate;
+  flex: 0 0 25px;
+  width: 100%;
+  min-height: 25px;
+  border: 0;
+  border-bottom: 1px solid rgba(38,50,65,.32);
+  background: transparent;
+  color: var(--text-2);
+  padding: 0 9px;
+  font: 570 7px var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.pro-book-row::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 1px;
+  right: 0;
+  bottom: 1px;
+  width: var(--book-depth,0%);
+  pointer-events: none;
+  transition: width .12s linear;
+}
+
+.pro-book-row[data-book-side="ask"]::before {
+  background: linear-gradient(90deg,transparent,rgba(241,91,112,.115));
+}
+
+.pro-book-row[data-book-side="bid"]::before {
+  background: linear-gradient(90deg,transparent,rgba(33,201,151,.115));
+}
+
+.pro-book-row:hover,
+.pro-book-row:focus-visible {
+  background: rgba(124,140,255,.08);
+  outline: 0;
+}
+
+.pro-book-row [data-book-cell="price"].ask { color: var(--red); }
+.pro-book-row [data-book-cell="price"].bid { color: var(--green); }
+.pro-book-row [data-book-cell="quantity"] { color: #aeb9c8; }
+.pro-book-row [data-book-cell="cumulative"] { color: var(--muted); }
+
+.pro-book-mid {
+  min-height: 47px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #101822;
+  padding: 5px 9px;
+}
+
+.pro-book-mid > div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.pro-book-mid strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+  font: 760 12px var(--mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pro-book-mid small {
+  color: var(--muted-2);
+  font: 500 6px var(--mono);
+}
+
+.pro-book-mid #midDirection {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(124,140,255,.1);
+  color: var(--accent);
+  font-size: 10px;
+}
+
+.pro-book-spread {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: end;
+  align-items: center;
+  gap: 2px 5px;
+  text-align: right;
+}
+
+.pro-book-spread span {
+  color: var(--muted-2);
+  font-size: 6px;
+}
+
+.pro-book-spread b {
+  color: var(--text-2);
+  font: 650 7px var(--mono);
+}
+
+.pro-book-spread small {
+  grid-column: 1/-1;
+}
+
+@media (max-width: 820px) {
+  .professional-orderbook {
+    --pro-book-grid: minmax(110px,1.18fr) minmax(82px,.86fr) minmax(82px,.86fr);
+  }
+
+  .professional-orderbook .book-toolbar {
+    min-height: 52px;
+    padding: 5px 8px;
+  }
+
+  .professional-orderbook .book-controls {
+    min-width: 0;
+  }
+
+  .pro-book-controls {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .pro-book-mode-group button {
+    min-width: 48px;
+    height: 40px;
+    font-size: 8px;
+    touch-action: manipulation;
+  }
+
+  .pro-book-precision-label {
+    min-width: 92px;
+    height: 42px;
+  }
+
+  .pro-book-precision-label select {
+    height: 36px;
+    font-size: 8px;
+  }
+
+  .pro-book-layout {
+    grid-template-rows: auto minmax(160px,1fr) auto minmax(160px,1fr);
+  }
+
+  .pro-book-columns {
+    min-height: 34px;
+    padding-inline: 10px;
+    font-size: 7px;
+  }
+
+  .pro-book-row {
+    flex-basis: 36px;
+    min-height: 36px;
+    padding-inline: 10px;
+    font-size: 9px;
+    touch-action: manipulation;
+  }
+
+  .pro-book-mid {
+    min-height: 58px;
+    padding-inline: 10px;
+  }
+
+  .pro-book-mid strong { font-size: 16px; }
+  .pro-book-spread b { font-size: 8px; }
+}
+
+@media (max-width: 390px) {
+  .professional-orderbook {
+    --pro-book-grid: minmax(96px,1.12fr) minmax(72px,.84fr) minmax(72px,.84fr);
+  }
+
+  .pro-book-mode-group button {
+    min-width: 43px;
+    padding-inline: 5px;
+  }
+
+  .pro-book-precision-label {
+    min-width: 84px;
+  }
+}
