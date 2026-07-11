@@ -116,7 +116,7 @@
   function rowMarkup(level, side, max, digits) {
     const depth = Math.min(100, level.cumulative / Math.max(max, 1e-12) * 100);
     const quantityDigits = level.quantity >= 100 ? 2 : level.quantity >= 1 ? 4 : 6;
-    return `<button class="book-row stage2-book-row" type="button" data-book-price="${level.price}" data-book-side="${side}" style="--depth:${depth.toFixed(3)}%;--depth-color:${side === 'ask' ? 'rgba(241,91,112,.10)' : 'rgba(33,201,151,.10)'}"><span class="${side}">${format(level.price, digits)}</span><span>${format(level.quantity, quantityDigits)}</span><span>${format(level.cumulative, quantityDigits)}</span></button>`;
+    return `<button class="book-row stage2-book-row" type="button" data-book-price="${level.price}" data-book-side="${side}" style="min-height:24px!important;--depth:${depth.toFixed(3)}%;--depth-color:${side === 'ask' ? 'rgba(241,91,112,.10)' : 'rgba(33,201,151,.10)'}"><span class="${side}">${format(level.price, digits)}</span><span>${format(level.quantity, quantityDigits)}</span><span>${format(level.cumulative, quantityDigits)}</span></button>`;
   }
 
   function render(force = false) {
