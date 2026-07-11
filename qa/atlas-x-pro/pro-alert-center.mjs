@@ -65,6 +65,7 @@ const alertBadgeSelector = viewport.mobile ? '.mobile-alert-button .alert-center
 async function openAlertCenter() {
   if (viewport.mobile) {
     await page.waitForFunction(() => document.documentElement.dataset.mobileAlertEntry === 'ready');
+    await page.waitForSelector('.mobile-alert-button', { state: 'visible' });
   }
   await page.locator(alertEntrySelector).click();
   await page.waitForSelector('#controlPopover', { state: 'visible' });
@@ -87,6 +88,7 @@ try {
   await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
   await page.waitForSelector('.pro-shell', { state: 'visible' });
   await page.waitForFunction(() => document.documentElement.dataset.alertCenter === 'ready');
+  if (viewport.mobile) await page.waitForSelector('.mobile-alert-button', { state: 'visible' });
 
   checks.alertCenterReady = await page.evaluate(() => document.documentElement.dataset.alertCenter === 'ready');
   checks.mobileEntryVisible = viewport.mobile ? await page.locator('.mobile-alert-button').isVisible() : true;
