@@ -74,18 +74,36 @@ async function testDepthChart() {
 }
 
 async function testPriceAlert() {
-  const scope = viewport.mobile ? 'mobile' : 'desktop';
-  const button = page.locator(`[data-open-price-alert="${scope}"]`);
+  const button = page.locator(viewport.mobile ? '.mobile-alert-button' : '.notification-button');
   checks.priceAlertButtonVisible = await button.isVisible();
   await button.click();
-  checks.priceAlertPanelVisible = await page.locator('#priceAlertPanel').isVisible();
+  checks.priceAlertPanelVisible = await page.locator('#controlPopover .alert-center-shell').isVisible();
+  await page.locator('[data-alert-tab="rules"]').click();
   const current = Number((await page.locator('#lastPrice').innerText()).replace(/,/g, ''));
-  await page.locator('#alertCondition').selectOption('below');
-  await page.locator('#alertPrice').fill(String(current + Math.max(1, current * 0.001)));
-  await page.locator('#addPriceAlert').click();
-  await page.waitForTimeout(120);
-  checks.priceAlertTriggered = await page.locator('#alertList .alert-row.triggered').count() === 1;
-  await page.locator('[data-close-price-alert]').click();
+  const threshold = Number((current * 1.001).toFixed(2));
+  await page.locator('#alertRuleDirection').selectOption('price_below');
+  await page.locator('#alertRuleThreshold').fill(String(threshold));
+  await page.locator('#alertRuleCreate').click();
+  await page.waitForFunction(() => {
+    const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}');
+    return store.rules?.length >= 1;
+  });
+  const rule = await page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}').rules?.[0]);
+  const above = threshold + Math.max(2, threshold * 0.0002);
+  const below = threshold - Math.max(2, threshold * 0.0002);
+  await page.evaluate(({ abovePrice, belowPrice }) => {
+    window.AtlasAlertCenter?.evaluateNow?.({ symbol: 'BTCUSDT', price: abovePrice });
+    window.AtlasAlertCenter?.evaluateNow?.({ symbol: 'BTCUSDT', price: belowPrice });
+  }, { abovePrice: above, belowPrice: below });
+  await page.waitForFunction(ruleId => {
+    const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"events":[]}');
+    return store.events?.some(event => event.kind === 'price' && event.ruleId === ruleId);
+  }, rule.id);
+  checks.priceAlertTriggered = await page.evaluate(ruleId => {
+    const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"events":[]}');
+    return store.events?.filter(event => event.kind === 'price' && event.ruleId === ruleId).length === 1;
+  }, rule.id);
+  await page.locator('[data-close-popover]').click();
 }
 
 async function submitMarketOrder(total = '500') {
@@ -110,10 +128,13 @@ try {
   await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 18000 });
   await injectQaFont();
   await page.waitForFunction(
-    () => document.documentElement.dataset.terminalQuality === 'ready'
+    isMobile => document.documentElement.dataset.terminalQuality === 'ready'
       && document.documentElement.dataset.chartProTools === 'ready'
-      && document.documentElement.dataset.tradingAdvanced === 'ready',
-    null,
+      && document.documentElement.dataset.tradingAdvanced === 'ready'
+      && document.documentElement.dataset.alertCenter === 'ready'
+      && document.documentElement.dataset.alertEntryConsolidated === 'ready'
+      && (!isMobile || document.documentElement.dataset.mobileAlertEntry === 'ready'),
+    viewport.mobile,
     { timeout: 12000 },
   );
   await page.waitForTimeout(700);
