@@ -129,8 +129,12 @@ try {
     checks.fullscreenRestores = await page.evaluate(expected => document.body.style.position === '' && Math.abs(scrollY - expected) <= 1, initialScroll);
 
     await page.evaluate(() => {
-      const detail = document.querySelector('#chartCandleDetail');
-      if (!detail) return;
+      const state = window.AtlasMarketDataEngine?.getState?.();
+      const index = Math.max(0, (state?.candles?.length || 1) - 4);
+      window.AtlasChartExperience?.select?.(index, 'stage2-shell-qa');
+    });
+    await page.waitForFunction(() => document.querySelector('.stage2-candle-strip')?.dataset.open === 'true');
+    await page.evaluate(() => {
       const values = {
         detailTime: '2026/07/11 13:00', detailInterval: '1H', detailOpen: '64,000.00', detailHigh: '64,500.00',
         detailLow: '63,800.00', detailClose: '64,300.00', detailChangePercent: '+0.47%', detailVolume: '1.23K',
@@ -139,9 +143,11 @@ try {
         const element = document.getElementById(id);
         if (element) element.textContent = value;
       });
-      detail.hidden = false;
     });
-    await page.waitForFunction(() => document.querySelector('.stage2-candle-strip')?.dataset.open === 'true');
+    await page.waitForFunction(() => {
+      const text = document.querySelector('.stage2-candle-strip')?.textContent || '';
+      return text.includes('64,000.00') && text.includes('+0.47%');
+    });
     checks.compactCandleWorks = (await page.locator('.stage2-candle-strip').innerText()).includes('64,000.00')
       && (await page.locator('.stage2-candle-strip').innerText()).includes('+0.47%')
       && await page.locator('#chartCandleDetail').isHidden();
