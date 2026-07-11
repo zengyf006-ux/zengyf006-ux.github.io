@@ -101,16 +101,17 @@ try {
   await page.locator('#alertRuleDirection').selectOption('price_above');
   await page.locator('#alertRuleThreshold').fill(String(threshold));
   await page.locator('#alertRuleCreate').click();
-  await page.waitForFunction(() => {
+  await page.waitForFunction(expectedThreshold => {
     const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}');
-    return store.rules?.length === 1;
-  });
+    return store.rules?.some(rule => rule.symbol === 'BTCUSDT'
+      && rule.type === 'price_above'
+      && Math.abs(Number(rule.threshold) - expectedThreshold) < 0.02);
+  }, threshold);
   const afterCreate = await readAlerts();
-  const rule = afterCreate.rules[0];
-  checks.priceRulePersisted = rule?.symbol === 'BTCUSDT'
-    && rule?.type === 'price_above'
-    && Math.abs(Number(rule?.threshold) - threshold) < 0.02
-    && rule?.enabled === true;
+  const rule = afterCreate.rules.find(item => item.symbol === 'BTCUSDT'
+    && item.type === 'price_above'
+    && Math.abs(Number(item.threshold) - threshold) < 0.02);
+  checks.priceRulePersisted = Boolean(rule?.id) && rule?.enabled === true;
   checks.ruleCardVisible = await page.locator(`[data-alert-rule-id="${rule.id}"]`).isVisible();
 
   await evaluateAt(threshold - Math.max(10, threshold * 0.002));
