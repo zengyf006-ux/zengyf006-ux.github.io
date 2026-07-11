@@ -79,7 +79,10 @@ async function setCommandQuery(query) {
 }
 
 async function clickById(id) {
-  await page.evaluate(buttonId => document.getElementById(buttonId)?.click(), id);
+  await page.evaluate(buttonId => {
+    const element = document.getElementById(buttonId);
+    element?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+  }, id);
   await page.waitForTimeout(80);
 }
 
@@ -142,7 +145,7 @@ try {
   const sideAfterInputShortcut = await page.locator('.side-selector [data-side].active').getAttribute('data-side');
   checks.inputShortcutIsolation = sideBeforeInputShortcut === sideAfterInputShortcut;
 
-  await page.locator('body').press('Escape');
+  await page.locator('#orderQuantity').blur();
   await page.locator('body').press('s');
   await page.waitForTimeout(80);
   checks.sellShortcutWorks = await page.locator('.side-selector [data-side="sell"]').evaluate(element => element.classList.contains('active'));
