@@ -89,12 +89,17 @@ async function testPriceAlert() {
     return store.rules?.length >= 1;
   });
   const rule = await page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}').rules?.[0]);
-  const above = threshold + Math.max(2, threshold * 0.0002);
-  const below = threshold - Math.max(2, threshold * 0.0002);
-  await page.evaluate(({ abovePrice, belowPrice }) => {
-    window.AtlasAlertCenter?.evaluateNow?.({ symbol: 'BTCUSDT', price: abovePrice });
-    window.AtlasAlertCenter?.evaluateNow?.({ symbol: 'BTCUSDT', price: belowPrice });
-  }, { abovePrice: above, belowPrice: below });
+  const distance = Math.max(2, Number(rule.threshold) * 0.0002);
+  const firstPrice = rule.type === 'price_above'
+    ? Number(rule.threshold) - distance
+    : Number(rule.threshold) + distance;
+  const secondPrice = rule.type === 'price_above'
+    ? Number(rule.threshold) + distance
+    : Number(rule.threshold) - distance;
+  await page.evaluate(({ symbol, first, second }) => {
+    window.AtlasAlertCenter?.evaluateNow?.({ symbol, price: first });
+    window.AtlasAlertCenter?.evaluateNow?.({ symbol, price: second });
+  }, { symbol: rule.symbol, first: firstPrice, second: secondPrice });
   await page.waitForFunction(ruleId => {
     const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"events":[]}');
     return store.events?.some(event => event.kind === 'price' && event.ruleId === ruleId);
