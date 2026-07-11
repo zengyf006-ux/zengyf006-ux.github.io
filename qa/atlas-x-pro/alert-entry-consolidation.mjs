@@ -61,7 +61,7 @@ try {
     && rule.type === 'price_above'
     && Math.abs(Number(rule.threshold) - 65000) < 0.001
     && rule.enabled === true);
-  checks.legacyMigrationMarked = Boolean(localStorage.getItem('atlasX.pro.alertCenter.legacyMigrated.v1'));
+  checks.legacyMigrationMarked = await page.evaluate(() => Boolean(localStorage.getItem('atlasX.pro.alertCenter.legacyMigrated.v1')));
   checks.legacyButtonsRemoved = await page.locator('[data-open-price-alert]').count() === 0;
   checks.legacyPanelRemoved = await page.locator('#priceAlertPanel').count() === 0;
   checks.singleMobileAlertEntry = viewport.mobile
