@@ -16,7 +16,7 @@ jobs:
   perpetual-core:
     name: perpetual-core
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,6 +35,11 @@ jobs:
         run: |
           set -o pipefail
           node qa/atlas-x-pro/perpetual-funding.mjs 2>&1 | tee qa-artifacts-pro/perpetual-funding.log
+      - name: Verify perpetual lifecycle controller
+        shell: bash
+        run: |
+          set -o pipefail
+          node qa/atlas-x-pro/perpetual-controller.mjs 2>&1 | tee qa-artifacts-pro/perpetual-controller.log
       - name: Upload perpetual core reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -45,6 +50,8 @@ jobs:
             qa-artifacts-pro/perpetual-risk-report.json
             qa-artifacts-pro/perpetual-order-report.json
             qa-artifacts-pro/perpetual-funding-report.json
+            qa-artifacts-pro/perpetual-controller-report.json
             qa-artifacts-pro/perpetual-funding.log
+            qa-artifacts-pro/perpetual-controller.log
           retention-days: 1
           if-no-files-found: warn
