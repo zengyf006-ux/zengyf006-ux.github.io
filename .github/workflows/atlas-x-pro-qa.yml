@@ -102,6 +102,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/exit-strategies.mjs
 
+      - name: Verify unified reservation coordination
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/reservation-coordination.mjs
+
       - name: Verify live market intelligence
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -156,6 +162,7 @@ jobs:
             qa-artifacts-pro/chart-trading-layer-report.json
             qa-artifacts-pro/advanced-order-oco-report.json
             qa-artifacts-pro/exit-strategies-report.json
+            qa-artifacts-pro/reservation-coordination-report.json
             qa-artifacts-pro/market-intelligence-report.json
             qa-artifacts-pro/market-data-router-report.json
             qa-artifacts-pro/semantic-typography-report.json
