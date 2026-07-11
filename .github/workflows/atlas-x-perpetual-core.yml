@@ -1,0 +1,43 @@
+name: ATLAS X Perpetual Core
+
+on:
+  pull_request:
+    branches: ['atlas-x-pro-terminal']
+    paths:
+      - 'atlas-x-pro/perpetual-*.js'
+      - 'qa/atlas-x-pro/perpetual-*.mjs'
+      - '.github/workflows/atlas-x-perpetual-core.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  perpetual-core:
+    name: perpetual-core
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify perpetual ledger
+        run: node qa/atlas-x-pro/perpetual-ledger.mjs
+      - name: Verify perpetual risk engine
+        run: node qa/atlas-x-pro/perpetual-risk-engine.mjs
+      - name: Verify perpetual order engine
+        run: node qa/atlas-x-pro/perpetual-order-engine.mjs
+      - name: Upload perpetual core reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-x-perpetual-core
+          path: |
+            qa-artifacts-pro/perpetual-ledger-report.json
+            qa-artifacts-pro/perpetual-risk-report.json
+            qa-artifacts-pro/perpetual-order-report.json
+          retention-days: 1
+          if-no-files-found: warn
