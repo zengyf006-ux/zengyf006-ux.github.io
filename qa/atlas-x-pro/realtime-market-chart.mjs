@@ -180,10 +180,14 @@ try {
   await page.locator('[data-timeframe="1m"]').click();
   await page.locator('[data-timeframe="30m"]').click();
   await page.locator('[data-timeframe="1d"]').click();
-  await page.waitForFunction(() => window.AtlasMarketDataEngine?.getState?.().interval === '1d');
   await page.waitForFunction(() => {
     const state = window.AtlasMarketDataEngine?.getState?.();
-    return state?.interval === '1d' && state?.candles?.length >= 100 && state.source === 'fixture';
+    const candles = state?.candles || [];
+    return state?.interval === '1d'
+      && state?.loading === false
+      && state?.source === 'fixture'
+      && candles.length >= 100
+      && candles[1]?.time - candles[0]?.time === 86_400_000;
   });
   measurements.intervalSwitchCommitMs = Date.now() - switchStartedAt;
   checks.lastIntervalWins = await activeInterval() === '1d';
@@ -194,9 +198,13 @@ try {
       && candles[1].time - candles[0].time === 86_400_000
       && document.documentElement.dataset.activeMarketInterval === '1d';
   });
-  checks.oldRequestDidNotOverwrite = await page.waitForTimeout(650).then(async () => activeInterval() === '1d');
+  await page.waitForTimeout(650);
+  checks.oldRequestDidNotOverwrite = await activeInterval() === '1d';
 
   const marketState = await page.evaluate(() => window.AtlasMarketDataEngine?.getState?.());
+  measurements.finalInterval = marketState?.interval;
+  measurements.finalSpacingMs = Number(marketState?.candles?.[1]?.time) - Number(marketState?.candles?.[0]?.time);
+  measurements.finalGeneration = marketState?.requestGeneration;
   checks.sessionUnified = Boolean(marketState?.sessionId
     && marketState.provider === 'fixture'
     && marketState.ticker?.price > 0
@@ -225,6 +233,7 @@ try {
   const clickY = Math.max(70, Math.min(canvasBox.height - 80, canvasBox.height * 0.46));
   await canvas.click({ position: { x: clickX, y: clickY } });
   const detail = page.locator('#chartCandleDetail');
+  await detail.waitFor({ state: 'visible' });
   checks.richCardVisible = await detail.isVisible();
   checks.richCardComplete = await detail.evaluate(card => [
     '开盘','最高','最低','收盘','涨跌额','涨跌幅','振幅','成交量','成交额','EMA10','EMA20','数据源',
@@ -233,14 +242,19 @@ try {
   await shot('candle-detail');
 
   await canvas.click({ position: { x: clickX, y: clickY } });
+  await detail.waitFor({ state: 'hidden' });
   checks.sameCandleCancels = await detail.isHidden();
 
   await canvas.click({ position: { x: clickX + 18, y: clickY } });
+  await detail.waitFor({ state: 'visible' });
   await page.keyboard.press('Escape');
+  await detail.waitFor({ state: 'hidden' });
   checks.escapeCancels = await detail.isHidden();
 
   await canvas.click({ position: { x: clickX + 28, y: clickY } });
+  await detail.waitFor({ state: 'visible' });
   await page.locator('[data-clear-candle-selection]').click();
+  await detail.waitFor({ state: 'hidden' });
   checks.closeButtonCancels = await detail.isHidden();
 
   checks.extremaVisible = await page.locator('.chart-extrema-label').count() === 2;
