@@ -35,6 +35,7 @@
     './continuous-hardening.css',
     './order-entry-stage2.css',
     './mobile-terminal-stage2.css',
+    './mobile-terminal-stage2-grid-fix.css',
   ];
 
   const ensureStyle = href => new Promise((resolve, reject) => {
