@@ -42,6 +42,7 @@
       './performance-analytics.css',
       './performance-layout-polish.css',
       './portfolio-risk.css',
+      './risk-position-sizing.css',
       './market-intelligence.css',
       './market-intelligence-polish.css',
       './mobile-account-tools.css',
@@ -61,6 +62,7 @@
       await loadScript('./execution-guard.js');
       await loadScript('./performance-analytics.js');
       await loadScript('./portfolio-risk.js');
+      await loadScript('./risk-position-sizing.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./mobile-account-tools.js');
       await loadScript('./data-health.js');
