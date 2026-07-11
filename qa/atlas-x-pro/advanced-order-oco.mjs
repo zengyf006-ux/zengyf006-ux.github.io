@@ -153,9 +153,10 @@ try {
   checks.duplicateBlocked = duplicateState.orders.filter(order => order.status === 'active').length === 1
     && (await page.locator('#advancedOcoStatus').innerText()).includes('重复');
 
-  await page.evaluate(price => {
+  await page.evaluate(async price => {
     const element = document.querySelector('#lastPrice');
     if (element) element.textContent = Number(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    await window.AtlasAdvancedOco?.evaluateNow?.();
   }, stopTrigger - Math.max(1, current * 0.002));
   await page.waitForFunction(id => {
     const stored = JSON.parse(localStorage.getItem('atlasX.pro.advancedOrders.v1') || '{"orders":[]}');
