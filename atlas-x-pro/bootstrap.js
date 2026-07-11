@@ -54,6 +54,7 @@
       './order-execution-audit.css',
       './market-intelligence.css',
       './market-intelligence-polish.css',
+      './pro-market-screener.css',
       './mobile-account-tools.css',
       './data-health.css',
       './semantic-typography.css',
@@ -87,6 +88,7 @@
       await loadScript('./order-execution-audit.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./market-intelligence-entry-compat.js');
+      await loadScript('./pro-market-screener.js');
       await loadScript('./mobile-account-tools.js');
       document.documentElement.dataset.atlasQuality = 'ready';
     } catch (error) {
