@@ -141,7 +141,7 @@
     rendering = true;
     try {
       mountMobileControls(snapshot);
-      const rowCount = snapshot.mode === 'all' ? 9 : 18;
+      const rowCount = snapshot.mode === 'all' ? 8 : 16;
       const asks = snapshot.asks.slice(0, rowCount);
       const bids = snapshot.bids.slice(0, rowCount);
       const askMax = asks.at(-1)?.cumulative || 1;
