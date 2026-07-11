@@ -15,7 +15,13 @@
       originalParent = button.parentElement;
       originalNextSibling = button.nextSibling;
     }
+    document.querySelectorAll('.mobile-alert-button').forEach(entry => {
+      if (entry !== button) entry.classList.remove('mobile-alert-button');
+    });
     button.classList.add('mobile-alert-button');
+    button.hidden = false;
+    button.removeAttribute('hidden');
+    button.removeAttribute('aria-hidden');
     button.setAttribute('aria-label', '专业预警中心');
     if (button.parentElement !== head) {
       if (favorite?.parentElement === head) head.insertBefore(button, favorite);
