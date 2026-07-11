@@ -15,6 +15,7 @@
 .chart-trade-layer .chart-price-line {
   left: 38px;
   right: 64px;
+  min-height: 1px;
 }
 
 .chart-trade-layer .chart-price-line > span {
