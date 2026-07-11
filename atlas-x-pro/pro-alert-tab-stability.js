@@ -5,8 +5,10 @@
 
   let desiredTab = 'all';
   let restoring = false;
+  let scheduled = false;
 
   function restore() {
+    scheduled = false;
     if (restoring) return;
     const shell = document.querySelector('#controlPopover.alert-center-popover .alert-center-shell');
     if (!shell) return;
@@ -14,11 +16,17 @@
     if (!target || target.classList.contains('active')) return;
     restoring = true;
     target.click();
-    queueMicrotask(() => { restoring = false; });
+    queueMicrotask(() => {
+      restoring = false;
+      const active = document.querySelector('#controlPopover.alert-center-popover [data-alert-tab].active');
+      if (active?.dataset.alertTab !== desiredTab) scheduleRestore();
+    });
   }
 
   function scheduleRestore() {
-    queueMicrotask(() => requestAnimationFrame(restore));
+    if (scheduled) return;
+    scheduled = true;
+    queueMicrotask(restore);
   }
 
   document.addEventListener('click', event => {
@@ -38,6 +46,7 @@
   const init = () => {
     const popover = document.querySelector('#controlPopover') || document.body;
     observer.observe(popover, { childList: true, subtree: true });
+    window.addEventListener('atlas:alert-center-updated', scheduleRestore);
     document.documentElement.dataset.alertTabStability = 'ready';
   };
 
