@@ -88,6 +88,7 @@
       await loadScript('./order-execution-audit.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./market-intelligence-entry-compat.js');
+      await loadScript('./pro-market-screener-qa-network.js');
       await loadScript('./pro-market-screener.js');
       await loadScript('./mobile-account-tools.js');
       document.documentElement.dataset.atlasQuality = 'ready';
