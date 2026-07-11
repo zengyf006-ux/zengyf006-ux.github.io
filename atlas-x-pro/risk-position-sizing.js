@@ -70,9 +70,9 @@
   }
 
   function availableCash() {
-    const visible = numberFrom($('#availableBalance')?.textContent);
-    if (visible >= 0) return visible;
-    return Number(readCoreState().cash) || 0;
+    const element = $('#availableBalance');
+    if (element) return Math.max(0, numberFrom(element.textContent));
+    return Math.max(0, Number(readCoreState().cash) || 0);
   }
 
   function heldQuantity(symbol = activeSymbol()) {
@@ -289,7 +289,7 @@
     panel.dataset.maxLoss = String(result.maxLoss);
     panel.dataset.riskReward = String(result.riskReward);
     panel.dataset.cappedBy = result.cappedBy;
-    panel.dataset.symbol = symbol;
+    panel.dataset.riskSymbol = symbol;
     panel.dataset.riskSide = currentSide();
     panel.dataset.riskSizingState = result.valid ? 'ready' : 'invalid';
   }
@@ -364,12 +364,17 @@
       $(selector)?.addEventListener('input', () => scheduleRefresh());
     });
 
-    const watch = ['#activePair', '#lastPrice', '#accountEquity', '#availableBalance']
+    const symbolWatch = $('#activePair');
+    if (symbolWatch) {
+      new MutationObserver(() => scheduleRefresh(true))
+        .observe(symbolWatch, { childList: true, characterData: true, subtree: true });
+    }
+    const valueWatch = ['#lastPrice', '#accountEquity', '#availableBalance']
       .map(selector => $(selector))
       .filter(Boolean);
-    if (watch.length) {
-      const observer = new MutationObserver(() => scheduleRefresh(true));
-      watch.forEach(element => observer.observe(element, { childList: true, characterData: true, subtree: true }));
+    if (valueWatch.length) {
+      const observer = new MutationObserver(() => scheduleRefresh(false));
+      valueWatch.forEach(element => observer.observe(element, { childList: true, characterData: true, subtree: true }));
     }
   }
 
