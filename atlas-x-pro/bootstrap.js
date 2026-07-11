@@ -48,6 +48,7 @@
       './advanced-exit-strategies.css',
       './reservation-coordinator.css',
       './workspace-command-center.css',
+      './workspace-command-center-compat.css',
       './market-intelligence.css',
       './market-intelligence-polish.css',
       './mobile-account-tools.css',
