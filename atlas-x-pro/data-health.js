@@ -5,7 +5,6 @@
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-  let openTimer = 0;
 
   function engine() {
     return window.AtlasMarketDataEngine;
@@ -147,7 +146,6 @@
   }
 
   function openPanel() {
-    openTimer = 0;
     const panel = $('#dataHealthPanel');
     if (!panel) return;
     updatePanel();
@@ -155,14 +153,7 @@
     $$('[data-open-data-health]').forEach(button => button.classList.add('active'));
   }
 
-  function requestOpenPanel() {
-    clearTimeout(openTimer);
-    openTimer = setTimeout(openPanel, 0);
-  }
-
   function closePanel() {
-    clearTimeout(openTimer);
-    openTimer = 0;
     const panel = $('#dataHealthPanel');
     if (panel) panel.hidden = true;
     $$('[data-open-data-health]').forEach(button => button.classList.remove('active'));
@@ -171,18 +162,21 @@
   function bind() {
     window.addEventListener('atlas:market-state', updatePanel);
     window.addEventListener('atlas:data-route', updatePanel);
+    document.addEventListener('pointerdown', event => {
+      if (event.target.closest('[data-open-data-health], #dataHealthPanel')) return;
+      closePanel();
+    }, true);
     document.addEventListener('click', event => {
       if (event.target.closest('[data-open-data-health]')) {
         event.preventDefault();
         event.stopPropagation();
-        requestOpenPanel();
+        openPanel();
         return;
       }
       if (event.target.closest('[data-close-data-health]')) {
+        event.preventDefault();
         closePanel();
-        return;
       }
-      if (!event.target.closest('#dataHealthPanel')) closePanel();
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && !$('#dataHealthPanel')?.hidden) closePanel();
