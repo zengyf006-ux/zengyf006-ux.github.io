@@ -94,8 +94,17 @@ async function createOco(quantity, takeProfit, stopTrigger, tif = 'gtc') {
 async function createRelativeOco(quantity, takeProfitMultiplier, stopMultiplier, tif = 'gtc') {
   const previousIds = (await readAdvanced()).orders.map(order => order.id);
   await openOcoPanel();
+  await page.waitForFunction(() => {
+    const enginePrice = Number(window.AtlasMarketDataEngine?.getState?.().ticker?.price);
+    const domPrice = Number((document.querySelector('#lastPrice')?.textContent || '').replace(/,/g, ''));
+    return enginePrice > 0 && domPrice > 0 && Math.abs(domPrice - enginePrice) / enginePrice < 0.001;
+  }, null, { timeout: 12000 });
   const draft = await page.evaluate(({ quantity: qty, takeProfitMultiplier: tpMultiplier, stopMultiplier: slMultiplier, tifValue }) => {
-    const current = Number((document.querySelector('#lastPrice')?.textContent || '').replace(/,/g, ''));
+    const enginePrice = Number(window.AtlasMarketDataEngine?.getState?.().ticker?.price);
+    const domPrice = Number((document.querySelector('#lastPrice')?.textContent || '').replace(/,/g, ''));
+    const current = enginePrice > 0 ? enginePrice : domPrice;
+    const lastPrice = document.querySelector('#lastPrice');
+    if (lastPrice) lastPrice.textContent = current.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const takeProfit = Number((current * tpMultiplier).toFixed(2));
     const stopTrigger = Number((current * slMultiplier).toFixed(2));
     const setValue = (selector, value, eventName = 'input') => {
