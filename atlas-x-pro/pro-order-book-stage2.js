@@ -4,9 +4,11 @@
   window.__ATLAS_ORDER_BOOK_STAGE2__ = true;
 
   const PREF_KEY = 'atlasX.pro.mobileStage2.v1';
+  const MOBILE_BREAKPOINT = 820;
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const numberFrom = value => Number(String(value ?? '').replace(/[^0-9.-]/g, ''));
+  const isMobile = () => innerWidth <= MOBILE_BREAKPOINT;
   let rendering = false;
   let renderFrame = 0;
   let lastSignature = '';
@@ -14,6 +16,7 @@
   function readPrefs() {
     try { return JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); } catch { return {}; }
   }
+
   function writePrefs(patch) {
     const next = { ...readPrefs(), ...patch };
     try { localStorage.setItem(PREF_KEY, JSON.stringify(next)); } catch {}
@@ -28,14 +31,6 @@
       : null;
   }
 
-  function precisionFor(price) {
-    if (price >= 10000) return 1;
-    if (price >= 1000) return 2;
-    if (price >= 100) return 3;
-    if (price >= 1) return 4;
-    return 6;
-  }
-
   function stepOptions(price) {
     if (price >= 10000) return [0.1, 1, 10, 50];
     if (price >= 1000) return [0.01, 0.1, 1, 5];
@@ -45,15 +40,18 @@
   }
 
   function aggregate(levels, step, side) {
+    const normalizedStep = Number(step);
+    if (!(normalizedStep > 0)) return [];
     const buckets = new Map();
-    levels.map(normalizeLevel).filter(Boolean).forEach(level => {
-      const ratio = level.price / step;
-      const key = side === 'ask' ? Math.ceil(ratio - 1e-10) : Math.floor(ratio + 1e-10);
-      const current = buckets.get(key) || 0;
-      buckets.set(key, current + level.quantity);
+    (levels || []).map(normalizeLevel).filter(Boolean).forEach(level => {
+      const ratio = level.price / normalizedStep;
+      const key = side === 'ask'
+        ? Math.ceil(ratio - 1e-10)
+        : Math.floor(ratio + 1e-10);
+      buckets.set(key, (buckets.get(key) || 0) + level.quantity);
     });
     const sorted = [...buckets.entries()]
-      .map(([key, quantity]) => ({ price: key * step, quantity }))
+      .map(([key, quantity]) => ({ price: key * normalizedStep, quantity }))
       .sort((a, b) => side === 'ask' ? a.price - b.price : b.price - a.price);
     let cumulative = 0;
     return sorted.map(level => ({ ...level, cumulative: cumulative += level.quantity }));
@@ -68,8 +66,6 @@
     const requested = Number(prefs.bookAggregation);
     const step = options.includes(requested) ? requested : options[1];
     const mode = ['all', 'bids', 'asks'].includes(prefs.bookMode) ? prefs.bookMode : 'all';
-    const asks = aggregate(book.asks || [], step, 'ask');
-    const bids = aggregate(book.bids || [], step, 'bid');
     return {
       symbol: engine.symbol || ($('#activePair')?.textContent || '').replace('/', ''),
       connectionState: engine.connectionState || 'booting',
@@ -78,8 +74,8 @@
       step,
       options,
       mode,
-      asks,
-      bids,
+      asks: aggregate(book.asks || [], step, 'ask'),
+      bids: aggregate(book.bids || [], step, 'bid'),
       receivedAt: Number(engine.lastReceivedAt) || 0,
     };
   }
@@ -96,12 +92,14 @@
     });
   }
 
-  function mountControls(snapshot) {
+  function mountMobileControls(snapshot) {
     const select = $('#pricePrecision');
     if (!select) return;
     const optionSignature = snapshot.options.join('|');
     if (select.dataset.stage2Options !== optionSignature) {
-      select.innerHTML = snapshot.options.map(step => `<option value="${step}">${format(step, decimals(step))}</option>`).join('');
+      select.innerHTML = snapshot.options
+        .map(step => `<option value="${step}">${format(step, decimals(step))}</option>`)
+        .join('');
       select.dataset.stage2Options = optionSignature;
     }
     select.value = String(snapshot.step);
@@ -111,7 +109,7 @@
       const active = button.dataset.bookMode === snapshot.mode;
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
-      button.style.minHeight = innerWidth <= 820 ? '40px' : '';
+      button.style.minHeight = '40px';
     });
   }
 
@@ -122,6 +120,9 @@
   }
 
   function render(force = false) {
+    document.documentElement.dataset.orderBookStage2 = 'ready';
+    if (!isMobile()) return;
+
     const asksHost = $('#asksRows');
     const bidsHost = $('#bidsRows');
     if (!asksHost || !bidsHost || rendering) return;
@@ -135,12 +136,12 @@
       bids: snapshot.bids.slice(0, 24),
     });
     if (!force && signature === lastSignature) return;
+
     lastSignature = signature;
     rendering = true;
     try {
-      mountControls(snapshot);
-      const mobile = innerWidth <= 820;
-      const rowCount = mobile ? (snapshot.mode === 'all' ? 11 : 22) : 14;
+      mountMobileControls(snapshot);
+      const rowCount = snapshot.mode === 'all' ? 11 : 22;
       const asks = snapshot.asks.slice(0, rowCount);
       const bids = snapshot.bids.slice(0, rowCount);
       const askMax = asks.at(-1)?.cumulative || 1;
@@ -150,6 +151,7 @@
       bidsHost.innerHTML = bids.map(level => rowMarkup(level, 'bid', bidMax, digits)).join('');
       asksHost.hidden = snapshot.mode === 'bids';
       bidsHost.hidden = snapshot.mode === 'asks';
+
       const orderBook = $('#orderBook');
       if (orderBook) {
         orderBook.dataset.stage2Mode = snapshot.mode;
@@ -159,7 +161,6 @@
       }
       const columns = $('#orderBook .book-columns');
       if (columns) columns.innerHTML = '<span>价格(USDT)</span><span>数量</span><span>累计</span>';
-      document.documentElement.dataset.orderBookStage2 = 'ready';
       window.dispatchEvent(new CustomEvent('atlas:order-book-stage2-render', { detail: { snapshot } }));
     } finally {
       rendering = false;
@@ -180,7 +181,7 @@
     if (!snapshot.options.includes(value)) return snapshot.step;
     writePrefs({ bookAggregation: value });
     lastSignature = '';
-    render(true);
+    if (isMobile()) render(true);
     return value;
   }
 
@@ -188,22 +189,35 @@
     const value = ['all', 'bids', 'asks'].includes(mode) ? mode : 'all';
     writePrefs({ bookMode: value });
     lastSignature = '';
-    render(true);
+    if (isMobile()) render(true);
     return value;
   }
 
+  function stage2OwnsHosts(hosts) {
+    return hosts.every(host => host.children.length > 0
+      && [...host.children].every(child => child.classList.contains('stage2-book-row')));
+  }
+
   function bind() {
-    $('#pricePrecision')?.addEventListener('change', event => setAggregation(event.target.value));
+    $('#pricePrecision')?.addEventListener('change', event => {
+      if (isMobile()) setAggregation(event.target.value);
+    });
     document.addEventListener('click', event => {
+      if (!isMobile()) return;
       const mode = event.target.closest('[data-book-mode]')?.dataset.bookMode;
       if (mode) queueMicrotask(() => setMode(mode));
     });
-    window.addEventListener('resize', () => schedule(true));
+    window.addEventListener('resize', () => {
+      lastSignature = '';
+      if (isMobile()) schedule(true);
+    });
     window.AtlasMarketDataEngine?.subscribe?.(() => schedule());
+
     const hosts = [$('#asksRows'), $('#bidsRows')].filter(Boolean);
     if (hosts.length) {
       const observer = new MutationObserver(() => {
-        if (!rendering) schedule(true);
+        if (!isMobile() || rendering || stage2OwnsHosts(hosts)) return;
+        schedule(true);
       });
       hosts.forEach(host => observer.observe(host, { childList: true }));
     }
@@ -221,6 +235,7 @@
     bind();
     schedule(true);
   }
+
   document.readyState === 'loading'
     ? document.addEventListener('DOMContentLoaded', init, { once: true })
     : init();
