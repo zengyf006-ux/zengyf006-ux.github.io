@@ -101,8 +101,12 @@ try {
     checks.rankingRowsFillPanel = await page.locator('.market-intelligence-list').evaluate(list => {
       const row = list.querySelector('.market-intelligence-row');
       if (!row) return false;
-      const rowWidth = row.getBoundingClientRect().width;
-      return Math.abs(rowWidth - list.clientWidth) <= 2;
+      const listRect = list.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+      const leftAligned = Math.abs(rowRect.left - listRect.left) <= 2;
+      const fillsVisibleContent = rowRect.width >= list.clientWidth - 2;
+      const doesNotOverflowPanel = rowRect.width <= listRect.width + 2;
+      return leftAligned && fillsVisibleContent && doesNotOverflowPanel;
     });
   }
 
