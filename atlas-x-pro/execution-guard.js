@@ -6,6 +6,7 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const STORAGE_KEY = 'atlasX.pro.v1';
+  const EXIT_STORAGE_KEY = 'atlasX.pro.exitStrategies.v1';
   const MIN_NOTIONAL = 5;
   const DUPLICATE_WINDOW_MS = 850;
   let bypassOnce = false;
@@ -22,6 +23,17 @@
       return state && typeof state === 'object' ? state : {};
     } catch {
       return {};
+    }
+  }
+
+  function readExitStore() {
+    try {
+      const store = JSON.parse(localStorage.getItem(EXIT_STORAGE_KEY) || 'null');
+      return store && typeof store === 'object' && Array.isArray(store.strategies)
+        ? store
+        : { strategies: [] };
+    } catch {
+      return { strategies: [] };
     }
   }
 
@@ -51,10 +63,18 @@
       .reduce((sum, position) => sum + numberFrom(position.qty), 0);
   }
 
-  function reservedSellQuantity(state, symbol) {
+  function coreReservedSellQuantity(state, symbol) {
     return (Array.isArray(state.orders) ? state.orders : [])
       .filter(order => order.symbol === symbol && order.side === 'sell')
       .reduce((sum, order) => sum + Math.max(0, numberFrom(order.qty) - numberFrom(order.filled)), 0);
+  }
+
+  function trailingReservedSellQuantity(symbol) {
+    return readExitStore().strategies
+      .filter(strategy => strategy.kind === 'trailing_stop'
+        && strategy.symbol === symbol
+        && ['waiting_activation', 'active'].includes(strategy.status))
+      .reduce((sum, strategy) => sum + Math.max(0, numberFrom(strategy.quantity)), 0);
   }
 
   function accountEquity() {
@@ -73,7 +93,9 @@
     const triggerPrice = numberFrom($('#triggerPrice')?.value);
     const price = orderType === 'market' ? currentPrice() : limitPrice;
     const held = positionQuantity(state, symbol);
-    const reservedSell = reservedSellQuantity(state, symbol);
+    const coreReservedSell = coreReservedSellQuantity(state, symbol);
+    const trailingReservedSell = trailingReservedSellQuantity(symbol);
+    const reservedSell = coreReservedSell + trailingReservedSell;
     const sellAvailable = Math.max(0, held - reservedSell);
     const availableCash = numberFrom($('#ticketAvailable')?.textContent);
     const postOnly = Boolean($('#postOnly')?.checked);
@@ -83,8 +105,8 @@
     const deviation = currentPrice() > 0 && price > 0 ? Math.abs(price / currentPrice() - 1) * 100 : 0;
     return {
       state, symbol, pair, side, orderType, quantity, total, price, limitPrice, triggerPrice,
-      held, reservedSell, sellAvailable, availableCash, postOnly, reduceOnly, bestAsk, bestBid,
-      deviation, equity: accountEquity(),
+      held, coreReservedSell, trailingReservedSell, reservedSell, sellAvailable, availableCash,
+      postOnly, reduceOnly, bestAsk, bestBid, deviation, equity: accountEquity(),
     };
   }
 
@@ -124,7 +146,10 @@
     if (context.reduceOnly && context.side !== 'sell') return { ok: false, level: 'danger', message: '现货只减仓仅允许卖出已有持仓' };
     if (context.side === 'buy' && context.total * 1.001 > context.availableCash) return { ok: false, level: 'danger', message: '可用 USDT 余额不足（已包含冻结委托）' };
     if (context.side === 'sell' && context.quantity > context.sellAvailable + 1e-10) {
-      const reservedCopy = context.reservedSell > 0 ? `，其中 ${context.reservedSell.toFixed(6)} 已被卖单冻结` : '';
+      const reservations = [];
+      if (context.coreReservedSell > 0) reservations.push(`核心卖单冻结 ${context.coreReservedSell.toFixed(6)}`);
+      if (context.trailingReservedSell > 0) reservations.push(`退出策略预留 ${context.trailingReservedSell.toFixed(6)}`);
+      const reservedCopy = reservations.length ? `，其中 ${reservations.join('，')}` : '';
       return { ok: false, level: 'danger', message: `当前最多可卖 ${context.sellAvailable.toFixed(6)}${reservedCopy}` };
     }
     if (context.reduceOnly && context.held <= 0) return { ok: false, level: 'danger', message: '当前交易对没有可减持仓' };
@@ -139,7 +164,12 @@
 
   function executionSummary(context) {
     if (!(context.total > 0)) return '等待输入订单数量';
-    if (context.side === 'sell') return `可卖 ${context.sellAvailable.toFixed(6)} · 已冻结 ${context.reservedSell.toFixed(6)}`;
+    if (context.side === 'sell') {
+      const parts = [`可卖 ${context.sellAvailable.toFixed(6)}`];
+      if (context.coreReservedSell > 0) parts.push(`核心冻结 ${context.coreReservedSell.toFixed(6)}`);
+      if (context.trailingReservedSell > 0) parts.push(`策略预留 ${context.trailingReservedSell.toFixed(6)}`);
+      return parts.join(' · ');
+    }
     if (context.postOnly) return `Post Only · 不主动吃单 · 最优卖价 ${formatPrice(context.bestAsk)}`;
     if (context.reduceOnly) return `只减仓 · 当前持仓 ${context.held.toFixed(6)}`;
     return `${context.orderType === 'market' ? '市价撮合' : context.orderType === 'limit' ? '限价挂单' : '条件触发'} · 最小成交额 ${MIN_NOTIONAL.toFixed(2)} USDT`;
@@ -300,6 +330,10 @@
     });
     const available = $('#ticketAvailable');
     if (available) new MutationObserver(updateExecutionStatus).observe(available, { childList: true, characterData: true, subtree: true });
+    window.addEventListener('storage', event => {
+      if ([STORAGE_KEY, EXIT_STORAGE_KEY].includes(event.key)) updateExecutionStatus();
+    });
+    window.addEventListener('atlas:exit-strategies-updated', updateExecutionStatus);
   }
 
   function init() {
