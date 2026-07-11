@@ -132,6 +132,7 @@
       await loadScript('./core-trading-bridge-stage2.js');
       await loadScript('./pro-order-book-stage2.js');
       await loadScript('./order-entry-stage2.js');
+      await loadScript('./order-entry-stage2-compat.js');
       await loadScript('./mobile-terminal-stage2.js');
       document.documentElement.dataset.mobileTradingStage2 = 'ready';
       document.documentElement.dataset.atlasQuality = 'ready';
