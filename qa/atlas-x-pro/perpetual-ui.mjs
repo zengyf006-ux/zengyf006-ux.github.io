@@ -31,6 +31,24 @@ page.on('pageerror', error => pageErrors.push(String(error)));
 
 const checks = {};
 let fatalError = null;
+let diagnostics = null;
+const readDiagnostics = () => page.evaluate(() => ({
+  perpetual: window.AtlasPerpetual?.getSnapshot?.() || null,
+  marketEngine: window.AtlasMarketDataEngine?.getState?.() || null,
+  ledger: window.AtlasPerpetualLedger?.getState?.() || null,
+  status: document.querySelector('#perpFormStatus')?.textContent || null,
+  statusClass: document.querySelector('#perpFormStatus')?.className || null,
+  form: {
+    symbol: document.querySelector('#perpSymbol')?.value || null,
+    leverage: document.querySelector('#perpLeverage')?.value || null,
+    quantity: document.querySelector('#perpQuantity')?.value || null,
+    notional: document.querySelector('#perpNotional')?.value || null,
+    longDisabled: document.querySelector('[data-perp-submit="long"]')?.disabled ?? null,
+    longDataset: { ...(document.querySelector('[data-perp-submit="long"]')?.dataset || {}) },
+  },
+  documentState: { ...document.documentElement.dataset },
+}));
+
 try {
   await page.goto('http://127.0.0.1:4173/atlas-x-pro/?qa=1&perpetual=1', { waitUntil: 'domcontentloaded', timeout: 20000 });
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/400.css' });
@@ -57,7 +75,12 @@ try {
   await page.locator('[data-perp-order-type="market"]').click();
   await page.locator('#perpQuantity').fill('0.01');
   await page.locator('[data-perp-submit="long"]').click();
-  await page.waitForFunction(() => window.AtlasPerpetual?.getSnapshot?.().positions?.length === 1);
+  try {
+    await page.waitForFunction(() => window.AtlasPerpetual?.getSnapshot?.().positions?.length === 1, null, { timeout: 6500 });
+  } catch (error) {
+    diagnostics = await readDiagnostics();
+    throw new Error(`perpetual position was not created: ${diagnostics.status || String(error)}`);
+  }
 
   checks.longOrderCreatesPosition = await page.locator('[data-perp-position-id]').count() === 1;
   const snapshot = await page.evaluate(() => window.AtlasPerpetual.getSnapshot());
@@ -83,15 +106,17 @@ try {
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
   checks.noConsoleErrors = consoleErrors.length === 0;
   checks.noPageErrors = pageErrors.length === 0;
+  diagnostics = await readDiagnostics();
   await page.screenshot({ path: `qa-artifacts-pro/screenshots/${name}-perpetual-ui.png`, fullPage: false });
 } catch (error) {
   fatalError = String(error);
+  try { diagnostics ||= await readDiagnostics(); } catch {}
   try { await page.screenshot({ path: `qa-artifacts-pro/screenshots/${name}-perpetual-ui-fatal.png`, fullPage: false }); } catch {}
 }
 
 const passed = !fatalError && Object.values(checks).every(Boolean);
 await fs.mkdir('qa-artifacts-pro', { recursive: true });
-await fs.writeFile('qa-artifacts-pro/perpetual-ui-report.json', JSON.stringify({ name, viewport, checks, consoleErrors, pageErrors, fatalError, passed }, null, 2));
+await fs.writeFile('qa-artifacts-pro/perpetual-ui-report.json', JSON.stringify({ name, viewport, checks, consoleErrors, pageErrors, fatalError, diagnostics, passed }, null, 2));
 await context.close();
 await browser.close();
 if (!passed) {
