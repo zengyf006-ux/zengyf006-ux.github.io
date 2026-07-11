@@ -1,0 +1,61 @@
+name: ATLAS X Perpetual UI
+
+on:
+  pull_request:
+    branches: ['atlas-x-pro-terminal']
+    paths:
+      - 'atlas-x-pro/perpetual-*.js'
+      - 'atlas-x-pro/perpetual-*.css'
+      - 'atlas-x-pro/bootstrap.js'
+      - 'qa/atlas-x-pro/perpetual-ui.mjs'
+      - '.github/workflows/atlas-x-perpetual-ui.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  perpetual-ui:
+    name: perpetual-ui-${{ matrix.viewport }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport:
+          - iphone-390x844
+          - iphone-430x932
+          - desktop-1440x900
+          - desktop-1920x1080
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare browser and Chinese font
+        run: |
+          npm init -y
+          npm install --no-save playwright-core@1.55.0 @fontsource/noto-sans-sc
+          test -x /usr/bin/google-chrome
+      - name: Start static server
+        run: |
+          python3 -m http.server 4173 > /tmp/atlas-perp-ui-http.log 2>&1 &
+          sleep 2
+      - name: Verify perpetual trading UI
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/perpetual-ui.mjs
+      - name: Upload perpetual UI report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-x-perpetual-ui-${{ matrix.viewport }}
+          path: |
+            qa-artifacts-pro/perpetual-ui-report.json
+            qa-artifacts-pro/screenshots
+            /tmp/atlas-perp-ui-http.log
+          retention-days: 1
+          if-no-files-found: warn
