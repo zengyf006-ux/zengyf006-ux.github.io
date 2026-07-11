@@ -134,6 +134,7 @@
       await loadScript('./perpetual-funding-engine.js');
       await loadScript('./perpetual-controller.js');
       await loadScript('./perpetual-trading-ui.js');
+      await loadScript('./perpetual-market-readiness.js');
 
       document.documentElement.dataset.atlasQuality = 'ready';
       document.documentElement.dataset.terminalQuality = 'ready';
