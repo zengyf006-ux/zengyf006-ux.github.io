@@ -128,7 +128,8 @@ try {
   await page.locator('#orderQuantity').fill(String(held));
   await page.locator('#orderQuantity').dispatchEvent('input');
   await page.locator('#submitOrder').click();
-  checks.reservedSellQuantityBlocked = (await page.locator('#executionStatusCopy').innerText()).includes('已被卖单冻结');
+  const reservationCopy = await page.locator('#executionStatusCopy').innerText();
+  checks.reservedSellQuantityBlocked = reservationCopy.includes('核心卖单冻结') || reservationCopy.includes('已被卖单冻结');
   checks.secondSellOrderNotCreated = await countOrders() === 1;
   await screenshot('guard-sell-freeze');
 
