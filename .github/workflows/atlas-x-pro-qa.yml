@@ -2,7 +2,7 @@ name: ATLAS X Pro acceptance
 
 on:
   pull_request:
-    branches: ['atlas-x-rebuild-base']
+    branches: ['atlas-x-rebuild-base', 'atlas-x-pro-terminal']
     paths:
       - 'atlas-x-pro/**'
       - 'qa/atlas-x-pro/**'
@@ -16,7 +16,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 27
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -150,6 +150,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/market-data-router.mjs
 
+      - name: Verify realtime market and chart stage
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/realtime-market-chart.mjs
+
       - name: Verify semantic Chinese typography
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -200,6 +206,7 @@ jobs:
             qa-artifacts-pro/market-intelligence-report.json
             qa-artifacts-pro/pro-market-screener-report.json
             qa-artifacts-pro/market-data-router-report.json
+            qa-artifacts-pro/realtime-market-chart-report.json
             qa-artifacts-pro/semantic-typography-report.json
             qa-artifacts-pro/advanced-visual-report.json
             qa-artifacts-pro/mobile-layout-report.json
