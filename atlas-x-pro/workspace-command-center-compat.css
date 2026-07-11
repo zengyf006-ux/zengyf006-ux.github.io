@@ -1,0 +1,4 @@
+/* The global terminal topbar remains operable while workspace overlays are open. */
+@media (min-width: 821px) {
+  .pro-topbar { z-index: 280; }
+}
