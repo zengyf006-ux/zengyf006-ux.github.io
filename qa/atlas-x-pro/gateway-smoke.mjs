@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 const base = String(process.env.ATLAS_MARKET_GATEWAY || 'https://vtcunypvhtudragsittb.supabase.co/functions/v1/atlas-market-gateway').replace(/\/$/, '');
+const marketsBase = String(process.env.ATLAS_MARKET_GATEWAY_MARKETS || 'https://vtcunypvhtudragsittb.supabase.co/functions/v1/atlas-market-gateway-markets').replace(/\/$/, '');
 const checks = {};
 const timings = {};
 let fatalError = null;
@@ -11,8 +12,7 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 15_000) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(new DOMException('Gateway smoke timeout', 'TimeoutError')), timeoutMs);
   try {
-    const response = await fetch(url, { ...options, signal: controller.signal, headers: { Accept: 'application/json', ...(options.headers || {}) } });
-    return response;
+    return await fetch(url, { ...options, signal: controller.signal, headers: { Accept: 'application/json', ...(options.headers || {}) } });
   } finally {
     clearTimeout(timeout);
   }
@@ -26,6 +26,17 @@ async function fetchJson(path) {
   assert.equal(response.status, 200, `${path} returned HTTP ${response.status}: ${body.slice(0, 300)}`);
   const payload = JSON.parse(body);
   assert.equal(payload?.error, undefined, `${path} returned gateway error`);
+  return payload;
+}
+
+async function fetchBatchMarkets() {
+  const started = performance.now();
+  const response = await fetchWithTimeout(`${marketsBase}/markets`);
+  timings.batchMarkets = Math.round(performance.now() - started);
+  const body = await response.text();
+  assert.equal(response.status, 200, `batch markets returned HTTP ${response.status}: ${body.slice(0, 300)}`);
+  const payload = JSON.parse(body);
+  assert.equal(payload?.error, undefined, 'batch markets returned gateway error');
   return payload;
 }
 
@@ -98,6 +109,18 @@ try {
   checks.snapshotAdvanced = Number(second.receivedAt) > Number(first.receivedAt);
   checks.noFixtureProvider = first.provider !== 'fixture' && second.provider !== 'fixture';
 
+  const batch = await fetchBatchMarkets();
+  assert.equal(batch.version, 'atlas.market.v1');
+  assert.ok(['binance', 'okx', 'bybit'].includes(batch.provider));
+  assert.ok(Array.isArray(batch.markets) && batch.markets.length === 12, 'batch gateway did not return 12 markets');
+  assert.ok(batch.markets.every(row => Number(row.price) > 0), 'batch gateway contains invalid price');
+  assert.ok(batch.markets.every(row => Number(row.bid) > 0 && Number(row.ask) >= Number(row.bid)), 'batch gateway contains invalid bid/ask');
+  assert.ok(batch.markets.every(row => Number.isFinite(Number(row.quoteVolume)) && Number(row.quoteVolume) >= 0), 'batch gateway contains invalid turnover');
+  assert.ok(batch.markets.every(row => row.provider === batch.provider && row.provider !== 'fixture'), 'batch gateway provider mismatch');
+  checks.batchMarketContract = true;
+  checks.batchBidAskPresent = true;
+  checks.batchNoFixture = true;
+
   const streamText = await readStream();
   checks.streamStatus = streamText.includes('event: status');
   checks.streamMarketData = streamText.includes('event: snapshot') || streamText.includes('event: ticker');
@@ -111,6 +134,7 @@ try {
 await fs.mkdir('qa-artifacts-pro', { recursive: true });
 await fs.writeFile('qa-artifacts-pro/gateway-smoke-report.json', JSON.stringify({
   base,
+  marketsBase,
   generatedAt: new Date().toISOString(),
   checks,
   timings,
