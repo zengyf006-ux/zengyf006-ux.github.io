@@ -137,16 +137,22 @@
     if (!(max > min) || !(height > 0)) return;
     activeTrailingStrategies().forEach((strategy, index) => {
       const price = numberFrom(strategy.triggerPrice);
-      const y = top + ((max - price) / (max - min)) * height;
-      if (y < top - 2 || y > top + height + 2) return;
+      const rawY = top + ((max - price) / (max - min)) * height;
+      const edgeInset = 12;
+      const y = Math.min(top + height - edgeInset, Math.max(top + edgeInset, rawY));
+      const visibility = rawY < top ? 'above' : rawY > top + height ? 'below' : 'visible';
       const line = document.createElement('div');
-      line.className = 'chart-price-line trailing-stop-line';
+      line.className = `chart-price-line trailing-stop-line${visibility === 'visible' ? '' : ' offscreen'}`;
       line.dataset.reservationCoordinated = 'true';
       line.dataset.exitStrategyId = strategy.id;
       line.dataset.markerPrice = String(price);
+      line.dataset.chartVisibility = visibility;
       line.style.top = `${y}px`;
       line.style.setProperty('--trade-label-shift', `${index * 11}px`);
-      line.innerHTML = `<span>追踪止损 ${formatPrice(price)} · ${formatQuantity(strategy.quantity)} ${baseFromPair()}</span>`;
+      const visibilityCopy = visibility === 'above'
+        ? ' · 高于可视区'
+        : visibility === 'below' ? ' · 低于可视区' : '';
+      line.innerHTML = `<span>追踪止损 ${formatPrice(price)} · ${formatQuantity(strategy.quantity)} ${baseFromPair()}${visibilityCopy}</span>`;
       layer.append(line);
     });
   }
