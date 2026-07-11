@@ -55,6 +55,7 @@
       './market-intelligence.css',
       './market-intelligence-polish.css',
       './pro-market-screener.css',
+      './pro-market-screener-touch.css',
       './mobile-account-tools.css',
       './data-health.css',
       './semantic-typography.css',
@@ -73,6 +74,7 @@
       await loadScript('./trading-advanced.js');
       await loadScript('./advanced-stability.js');
       await loadScript('./data-health.js');
+      await loadScript('./data-health-stage1.js');
       await loadScript('./execution-guard.js');
       await loadScript('./performance-analytics.js');
       await loadScript('./portfolio-risk.js');
@@ -89,7 +91,6 @@
       await loadScript('./order-execution-audit.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./market-intelligence-entry-compat.js');
-      await loadScript('./pro-market-screener-qa-network.js');
       await loadScript('./pro-market-screener.js');
       await loadScript('./mobile-account-tools.js');
       document.documentElement.dataset.atlasQuality = 'ready';
