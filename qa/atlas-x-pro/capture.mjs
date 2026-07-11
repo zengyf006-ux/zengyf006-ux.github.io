@@ -124,7 +124,7 @@ try {
     interactions.orderSheetOpen = await page.locator('body').evaluate(body => body.classList.contains('order-sheet-open'));
     const sheetBox = await page.locator('#orderTicket').boundingBox();
     interactions.orderSheetFits = Boolean(sheetBox && sheetBox.height <= viewport.height * 0.86 && sheetBox.y >= 0);
-    await page.locator('[data-order-type="market"]').click();
+    await page.locator('[data-stage2-order-type="market"]').click();
     await page.locator('#orderTotal').fill('1200');
     interactions.estimateUpdated = Number(await page.locator('#orderQuantity').inputValue()) > 0;
     await shot('order-sheet');
