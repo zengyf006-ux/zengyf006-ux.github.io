@@ -37,6 +37,15 @@
           flex: 0 0 40px !important;
           touch-action: manipulation !important;
         }
+        .positions-table .table-row {
+          display: grid !important;
+        }
+        .positions-table [data-close-position],
+        .positions-table .execution-audit-entry {
+          min-height: 36px !important;
+          height: 36px !important;
+          touch-action: manipulation !important;
+        }
       }
     `;
     document.head.append(style);
