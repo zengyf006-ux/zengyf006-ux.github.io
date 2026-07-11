@@ -50,7 +50,10 @@
         || Math.abs(rect.height - lastHeight) > 1;
       lastWidth = rect.width;
       lastHeight = rect.height;
-      if (changed && innerWidth <= 820) dispatchChartResize();
+      const chartActive = stage.closest('.chart-panel')?.classList.contains('mobile-active');
+      if (changed && innerWidth <= 820 && chartActive && rect.width > 0 && rect.height > 0) {
+        dispatchChartResize();
+      }
     }).observe(stage);
   }
 
