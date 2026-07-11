@@ -24,6 +24,15 @@
     touch-action: manipulation;
   }
 
+  .mobile-market-head > .mobile-alert-button {
+    width: 34px !important;
+    height: 40px !important;
+    min-width: 34px !important;
+    min-height: 40px !important;
+    flex: 0 0 34px !important;
+    touch-action: manipulation;
+  }
+
   .mobile-market-center-button {
     width: 40px !important;
     height: 40px !important;
