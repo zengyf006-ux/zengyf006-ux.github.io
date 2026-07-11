@@ -162,7 +162,7 @@ try {
   const tpPrice = Number((tpCurrent * 1.025).toFixed(2));
   const tpStop = Number((tpCurrent * 0.975).toFixed(2));
   const takingProfit = await createOco(0.02, tpPrice, tpStop, 'gtc');
-  await page.evaluate(({ id, orderId, price, quantity: qty }) => {
+  await page.evaluate(async ({ id, orderId, price, quantity: qty }) => {
     const core = JSON.parse(localStorage.getItem('atlasX.pro.v1') || '{}');
     core.orders = (core.orders || []).filter(order => order.id !== orderId);
     core.history = [{
@@ -182,9 +182,8 @@ try {
     const record = advanced.orders?.find(order => order.id === id);
     if (record) record.status = 'active';
     localStorage.setItem('atlasX.pro.advancedOrders.v1', JSON.stringify(advanced));
+    await window.AtlasAdvancedOco?.evaluateNow?.();
   }, { id: takingProfit.id, orderId: takingProfit.tpOrderId, price: tpPrice, quantity: 0.02 });
-  await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => document.documentElement.dataset.advancedOco === 'ready');
   await page.waitForFunction(id => {
     const stored = JSON.parse(localStorage.getItem('atlasX.pro.advancedOrders.v1') || '{"orders":[]}');
     return stored.orders?.find(order => order.id === id)?.status === 'completed_take_profit';
