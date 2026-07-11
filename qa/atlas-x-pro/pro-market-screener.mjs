@@ -176,9 +176,9 @@ try {
 
   await page.unroute(gatewayRoute);
   await page.route(gatewayRoute, route => route.fulfill({
-    status: 503,
+    status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ error: { code: 'UPSTREAM_UNAVAILABLE', message: 'fixture outage' } }),
+    body: JSON.stringify({ version: 'atlas.market.v1', error: { code: 'UPSTREAM_UNAVAILABLE', message: 'fixture outage' } }),
   }));
   await page.evaluate(() => window.AtlasMarketScreener.refresh({ force: true }));
   await page.waitForFunction(() => document.querySelector('.pro-market-screener')?.dataset.source === 'cache');
