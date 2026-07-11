@@ -59,9 +59,14 @@ page.on('console', message => { if (message.type() === 'error') consoleErrors.pu
 page.on('pageerror', error => pageErrors.push(String(error)));
 
 const readAlerts = () => page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{}'));
+const alertEntrySelector = viewport.mobile ? '.mobile-alert-button' : '.notification-button';
+const alertBadgeSelector = viewport.mobile ? '.mobile-alert-button .alert-center-badge' : '.notification-button .alert-center-badge';
 
 async function openAlertCenter() {
-  await page.locator('.notification-button').click();
+  if (viewport.mobile) {
+    await page.waitForFunction(() => document.documentElement.dataset.mobileAlertEntry === 'ready');
+  }
+  await page.locator(alertEntrySelector).click();
   await page.waitForSelector('#controlPopover', { state: 'visible' });
   await page.waitForSelector('.alert-center-shell', { state: 'visible' });
 }
@@ -84,6 +89,7 @@ try {
   await page.waitForFunction(() => document.documentElement.dataset.alertCenter === 'ready');
 
   checks.alertCenterReady = await page.evaluate(() => document.documentElement.dataset.alertCenter === 'ready');
+  checks.mobileEntryVisible = viewport.mobile ? await page.locator('.mobile-alert-button').isVisible() : true;
   await openAlertCenter();
   checks.reusesControlPopover = await page.locator('#controlPopover').isVisible();
   checks.professionalTitleVisible = (await page.locator('#popoverTitle').innerText()).includes('专业预警中心');
@@ -115,8 +121,8 @@ try {
   }, rule.id);
   const afterTrigger = await readAlerts();
   checks.crossingCreatesUnread = afterTrigger.events.filter(event => event.kind === 'price' && event.ruleId === rule.id).length === 1;
-  checks.unreadBadgeShowsOne = await page.locator('.alert-center-badge').isVisible()
-    && (await page.locator('.alert-center-badge').innerText()).trim() === '1';
+  checks.unreadBadgeShowsOne = await page.locator(alertBadgeSelector).isVisible()
+    && (await page.locator(alertBadgeSelector).innerText()).trim() === '1';
 
   await evaluateAt(threshold + Math.max(20, threshold * 0.003));
   const afterStayedAbove = await readAlerts();
@@ -132,7 +138,7 @@ try {
     const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"events":[]}');
     return (store.events || []).every(event => event.read === true);
   });
-  checks.markAllReadClearsBadge = await page.locator('.alert-center-badge').isHidden();
+  checks.markAllReadClearsBadge = await page.locator(alertBadgeSelector).isHidden();
 
   await page.evaluate(() => {
     const core = JSON.parse(localStorage.getItem('atlasX.pro.v1') || '{}');
@@ -208,6 +214,7 @@ try {
     ? await page.locator('[data-alert-tab="all"]').evaluate(element => element.getBoundingClientRect().height >= 38)
       && await page.locator('#alertRuleCreate').evaluate(element => element.getBoundingClientRect().height >= 38)
       && await page.locator('#alertCenterMarkAllRead').evaluate(element => element.getBoundingClientRect().height >= 38)
+      && await page.locator('.mobile-alert-button').evaluate(element => element.getBoundingClientRect().height >= 27)
     : true;
   checks.noConsoleErrors = consoleErrors.length === 0;
   checks.noPageErrors = pageErrors.length === 0;
