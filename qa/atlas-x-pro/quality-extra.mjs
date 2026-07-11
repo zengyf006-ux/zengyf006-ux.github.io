@@ -34,11 +34,14 @@ page.on('pageerror', error => pageErrors.push(String(error)));
 let passed = false;
 let checks = {};
 let fatalError = null;
+const orderTypeSelector = type => viewport.mobile
+  ? `[data-stage2-order-type="${type}"]`
+  : `[data-order-type="${type}"]`;
 
 async function injectQaFont() {
   await page.addStyleTag({ url: fontCss400, timeout: 6000 });
   await page.addStyleTag({ url: fontCss700, timeout: 6000 });
-  await page.addStyleTag({ content: `html, body, button, input, select { font-family: "Noto Sans SC", sans-serif !important; }` });
+  await page.addStyleTag({ content: 'html, body, button, input, select { font-family: "Noto Sans SC", sans-serif !important; }' });
   await page.waitForTimeout(180);
 }
 
@@ -50,16 +53,31 @@ async function shot(suffix) {
   });
 }
 
+async function activateDrawingTool(tool) {
+  if (viewport.mobile) {
+    await page.locator('[data-stage2-tools-open]').click();
+    await page.waitForSelector('#stage2ChartToolsSheet[data-open="true"]', { state: 'visible' });
+    await page.locator(`[data-stage2-proxy-attribute="data-chart-tool"][data-stage2-proxy-value="${tool}"]`).click();
+    await page.locator('[data-stage2-tools-close]').click();
+    await page.waitForFunction(() => document.querySelector('#stage2ChartToolsSheet')?.dataset.open === 'false');
+  } else {
+    await page.locator(`[data-chart-tool="${tool}"]`).click();
+  }
+}
+
 async function testChartDrawing() {
   checks.chartToolsReady = await page.evaluate(() => document.documentElement.dataset.chartProTools === 'ready');
-  checks.chartToolbarVisible = await page.locator('.chart-drawing-tools').isVisible();
-  await page.locator('[data-chart-tool="hline"]').click();
+  checks.chartToolbarVisible = viewport.mobile
+    ? await page.locator('[data-stage2-tools-open]').isVisible()
+      && await page.evaluate(() => document.documentElement.dataset.mobileChartDrawingStage2 === 'ready')
+    : await page.locator('.chart-drawing-tools').isVisible();
+  await activateDrawingTool('hline');
   const box = await page.locator('#chartCanvas').boundingBox();
   if (!box) throw new Error('Chart canvas has no bounding box');
   await page.mouse.click(box.x + box.width * 0.62, box.y + box.height * 0.43);
   await page.waitForTimeout(120);
   checks.horizontalLineCreated = await page.locator('.chart-price-line.user-line').count() === 1;
-  await page.locator('[data-chart-tool="clear"]').click();
+  await activateDrawingTool('clear');
   checks.horizontalLineCleared = await page.locator('.chart-price-line.user-line').count() === 0;
 }
 
@@ -68,7 +86,8 @@ async function testDepthChart() {
   await page.locator('[data-book-view="depth"]').click();
   await page.waitForFunction(() => document.querySelector('#depthChartCanvas')?.dataset.rendered === 'true', null, { timeout: 6000 });
   checks.depthTabVisible = await page.locator('[data-book-view="depth"]').isVisible();
-  checks.depthChartRendered = await page.locator('#depthChartCanvas').evaluate(canvas => canvas.dataset.rendered === 'true' && canvas.width > 200 && canvas.height > 120);
+  checks.depthChartRendered = await page.locator('#depthChartCanvas').evaluate(canvas => canvas.dataset.rendered === 'true'
+    && canvas.width > 200 && canvas.height > 120);
   if (viewport.mobile) await page.locator('[data-mobile-view="chart"]').click();
   else await page.locator('[data-book-view="book"]').click();
 }
@@ -112,7 +131,7 @@ async function testPriceAlert() {
 }
 
 async function submitMarketOrder(total = '500') {
-  await page.locator('[data-order-type="market"]').click();
+  await page.locator(orderTypeSelector('market')).click();
   await page.locator('#orderTotal').fill(total);
   await page.locator('#submitOrder').click();
   await page.waitForTimeout(180);
@@ -121,7 +140,7 @@ async function submitMarketOrder(total = '500') {
 
 async function submitLimitOrder() {
   const current = Number((await page.locator('#lastPrice').innerText()).replace(/,/g, ''));
-  await page.locator('[data-order-type="limit"]').click();
+  await page.locator(orderTypeSelector('limit')).click();
   await page.locator('#orderPrice').fill(String(current * 0.998));
   await page.locator('#orderTotal').fill('350');
   await page.locator('#submitOrder').click();
@@ -138,7 +157,9 @@ try {
       && document.documentElement.dataset.tradingAdvanced === 'ready'
       && document.documentElement.dataset.alertCenter === 'ready'
       && document.documentElement.dataset.alertEntryConsolidated === 'ready'
-      && (!isMobile || document.documentElement.dataset.mobileAlertEntry === 'ready'),
+      && (!isMobile || (document.documentElement.dataset.mobileAlertEntry === 'ready'
+        && document.documentElement.dataset.orderEntryStage2 === 'ready'
+        && document.documentElement.dataset.mobileChartDrawingStage2 === 'ready')),
     viewport.mobile,
     { timeout: 12000 },
   );
@@ -182,7 +203,8 @@ try {
     const after = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--atlas-market-col').trim());
     checks.keyboardResizeWorks = before !== after;
     await handle.press('Home');
-    checks.resizeSemantics = await handle.evaluate(element => element.getAttribute('role') === 'separator' && element.getAttribute('aria-orientation') === 'vertical');
+    checks.resizeSemantics = await handle.evaluate(element => element.getAttribute('role') === 'separator'
+      && element.getAttribute('aria-orientation') === 'vertical');
 
     await submitLimitOrder();
     await submitMarketOrder('500');
