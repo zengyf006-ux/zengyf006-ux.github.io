@@ -163,15 +163,14 @@ async function activeInterval() {
 
 async function selectedCandleCenterX() {
   return page.evaluate(() => {
-    const chartState = window.AtlasChartExperience?.getState?.();
+    const selection = window.AtlasChartExperience?.getSelection?.();
     const canvas = document.querySelector('#chartCanvas');
-    const selectedIndex = Number(chartState?.selectedIndex);
-    const start = Number(chartState?.start);
+    const selectedIndex = Number(selection?.index);
     const left = Number(canvas?.dataset.left);
     const step = Number(canvas?.dataset.step);
     const width = canvas?.getBoundingClientRect()?.width || 0;
-    if (![selectedIndex, start, left, step].every(Number.isFinite) || !(step > 0)) return null;
-    return Math.max(4, Math.min(width - 4, left + (selectedIndex - start + 0.5) * step));
+    if (![selectedIndex, left, step, width].every(Number.isFinite) || !(step > 0) || !(width > 8)) return null;
+    return Math.max(4, Math.min(width - 4, left + (selectedIndex + 0.5) * step));
   });
 }
 
