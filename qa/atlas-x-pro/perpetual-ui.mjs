@@ -20,6 +20,7 @@ const context = await browser.newContext({ viewport, isMobile: viewport.mobile, 
 await context.addInitScript(() => {
   localStorage.removeItem('atlasX.pro.perpetual.v1');
   localStorage.removeItem('atlasX.pro.perpetual.corruptBackup.v1');
+  localStorage.setItem('atlasX.pro.tradingMode.v1', 'perpetual');
 });
 const page = await context.newPage();
 page.setDefaultTimeout(14000);
@@ -31,7 +32,7 @@ page.on('pageerror', error => pageErrors.push(String(error)));
 const checks = {};
 let fatalError = null;
 try {
-  await page.goto('http://127.0.0.1:4173/atlas-x-pro/?qa=1', { waitUntil: 'domcontentloaded', timeout: 20000 });
+  await page.goto('http://127.0.0.1:4173/atlas-x-pro/?qa=1&perpetual=1', { waitUntil: 'domcontentloaded', timeout: 20000 });
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/400.css' });
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css' });
   await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
