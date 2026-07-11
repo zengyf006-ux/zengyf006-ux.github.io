@@ -81,7 +81,7 @@ try {
   await page.locator('[data-order-type="limit"]').click();
   await page.locator('#postOnly').check();
   const bestAsk = await page.locator('#asksRows [data-book-price]').evaluateAll(rows => Math.min(...rows.map(row => Number(row.dataset.bookPrice)).filter(Number.isFinite)));
-  await page.locator('#orderPrice').fill(String(bestAsk));
+  await page.locator('#orderPrice').fill(String(bestAsk * 1.02));
   await page.locator('#orderTotal').fill('100');
   await page.locator('#submitOrder').click();
   checks.postOnlyCrossBlocked = (await page.locator('#executionStatusCopy').innerText()).includes('不符合 Post Only');
