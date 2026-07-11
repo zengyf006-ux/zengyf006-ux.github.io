@@ -50,6 +50,9 @@ const isUiFont = family => {
     && !normalized.includes('menlo')
     && !normalized.includes('monospace');
 };
+const orderTypeSelector = type => viewport.mobile
+  ? `[data-stage2-order-type="${type}"]`
+  : `[data-order-type="${type}"]`;
 
 try {
   await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 18000 });
@@ -74,7 +77,7 @@ try {
   } else {
     await page.locator('[data-side="buy"]').click();
   }
-  await page.locator('[data-order-type="market"]').click();
+  await page.locator(orderTypeSelector('market')).click();
   await page.locator('#orderTotal').fill('12000');
   await page.locator('#submitOrder').click();
   await page.waitForSelector('#orderConfirmDialog', { state: 'visible' });
