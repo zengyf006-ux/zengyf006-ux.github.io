@@ -139,7 +139,10 @@ try {
   } else {
     checkpoint('desktop:controls');
     await page.locator('#quickSearchButton').click();
-    interactions.quickSearchFocused = await page.locator('#marketSearch').evaluate(element => element === document.activeElement);
+    await page.waitForSelector('#workspaceCommandDialog', { state: 'visible' });
+    interactions.quickSearchFocused = await page.locator('#workspaceCommandInput').evaluate(element => element === document.activeElement);
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('#workspaceCommandDialog', { state: 'hidden' });
 
     const compactBefore = await page.locator('.pro-shell').evaluate(element => element.classList.contains('compact-mode'));
     await page.locator('#layoutButton').click();
