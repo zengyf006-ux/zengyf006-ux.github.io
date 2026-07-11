@@ -1,0 +1,18 @@
+/* Cross-module reservation semantics and active trailing-stop chart line. */
+.chart-trade-layer .trailing-stop-line {
+  border-top-style: dashed;
+  border-top-color: rgba(255, 171, 64, .95);
+  color: var(--amber);
+}
+
+.chart-trade-layer .trailing-stop-line > span {
+  border-color: rgba(255, 171, 64, .38);
+  background: rgba(35, 25, 14, .94);
+  color: #ffc46f;
+}
+
+#ocoAvailableBadge[data-available-quantity="0"] {
+  border-color: rgba(241, 91, 112, .42);
+  background: rgba(241, 91, 112, .08);
+  color: var(--red);
+}
