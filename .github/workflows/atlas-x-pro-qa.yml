@@ -65,7 +65,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 32
+    timeout-minutes: 38
     strategy:
       fail-fast: false
       matrix:
@@ -237,6 +237,24 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/mobile-account-tools.mjs
 
+      - name: Verify Stage 2 aggregated order book
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/order-book-stage2.mjs
+
+      - name: Verify Stage 2 professional order entry
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/order-entry-stage2.mjs
+
+      - name: Verify Stage 2 mobile trading shell
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/mobile-trading-stage2.mjs
+
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -267,6 +285,9 @@ jobs:
             qa-artifacts-pro/advanced-visual-report.json
             qa-artifacts-pro/mobile-layout-report.json
             qa-artifacts-pro/mobile-account-tools-report.json
+            qa-artifacts-pro/order-book-stage2-report.json
+            qa-artifacts-pro/order-entry-stage2-report.json
+            qa-artifacts-pro/mobile-trading-stage2-report.json
             /tmp/atlas-pro-http.log
           retention-days: 1
           if-no-files-found: error
