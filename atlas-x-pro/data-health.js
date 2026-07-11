@@ -166,7 +166,7 @@
       if (event.target.closest('[data-open-data-health]')) {
         event.preventDefault();
         event.stopPropagation();
-        openPanel();
+        queueMicrotask(openPanel);
         return;
       }
       if (event.target.closest('[data-close-data-health]')) {
