@@ -10,6 +10,7 @@
   });
 
   let selection = null;
+  let pointerClear = null;
 
   function intervalMs(interval) {
     const value = INTERVAL_MS[interval];
@@ -83,6 +84,13 @@
   function select(index, reason = 'pointer') {
     const nextIndex = Math.trunc(Number(index));
     if (!Number.isFinite(nextIndex) || nextIndex < 0) return clear('invalid-index');
+    if (pointerClear && pointerClear.index === nextIndex && Date.now() - pointerClear.at < 450) {
+      pointerClear = null;
+      selection = null;
+      notify('clear', 'same-candle');
+      return null;
+    }
+    pointerClear = null;
     if (selection?.index === nextIndex && selection?.locked) return clear('same-candle');
     selection = { index: nextIndex, reason, locked: true, selectedAt: Date.now() };
     notify('select', reason);
@@ -99,6 +107,8 @@
 
   function clear(reason = 'clear') {
     if (!selection) return null;
+    if (reason === 'drag-start') pointerClear = { index: selection.index, at: Date.now() };
+    else pointerClear = null;
     selection = null;
     notify('clear', reason);
     return null;
