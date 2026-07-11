@@ -46,7 +46,7 @@ try {
     && await page.locator('#perpIndexPrice').isVisible()
     && await page.locator('#perpFundingRate').isVisible()
     && await page.locator('#perpFundingCountdown').isVisible();
-  checks.tradeContextVisible = await page.locator('[data-perp-margin-mode]').isVisible()
+  checks.tradeContextVisible = await page.locator('[data-perp-margin-mode]').first().isVisible()
     && await page.locator('#perpLeverage').isVisible()
     && await page.locator('[data-perp-order-type="market"]').isVisible();
   checks.estimatePanelVisible = await page.locator('#perpEstimate').isVisible();
