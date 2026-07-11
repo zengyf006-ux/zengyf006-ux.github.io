@@ -120,19 +120,22 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('.chart-trade-layer .trailing-stop-line').length === 1);
   const trailingLine = page.locator('.chart-trade-layer .trailing-stop-line');
   checks.trailingChartLineVisible = await trailingLine.evaluate(element => {
-    const style = getComputedStyle(element);
-    const rect = element.getBoundingClientRect();
-    const stage = document.querySelector('#chartStage')?.getBoundingClientRect();
+    const lineStyle = getComputedStyle(element);
     const label = element.querySelector('span,b,em,small') || element;
+    const labelStyle = getComputedStyle(label);
     const labelRect = label.getBoundingClientRect();
-    const intersectsStage = !stage || (rect.right >= stage.left && rect.left <= stage.right && rect.bottom >= stage.top && rect.top <= stage.bottom);
-    return style.display !== 'none'
-      && style.visibility !== 'hidden'
-      && Number(style.opacity || 1) > 0
-      && rect.width > 0
+    return lineStyle.display !== 'none'
+      && lineStyle.visibility !== 'hidden'
+      && Number(lineStyle.opacity || 1) > 0
+      && labelStyle.display !== 'none'
+      && labelStyle.visibility !== 'hidden'
+      && Number(labelStyle.opacity || 1) > 0
       && labelRect.width > 0
       && labelRect.height > 0
-      && intersectsStage;
+      && labelRect.right >= 0
+      && labelRect.bottom >= 0
+      && labelRect.left <= innerWidth
+      && labelRect.top <= innerHeight;
   });
   const lineText = await trailingLine.innerText();
   checks.trailingChartLabelDetailed = lineText.includes('追踪止损') && lineText.includes('0.1');
