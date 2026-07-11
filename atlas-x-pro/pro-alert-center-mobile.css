@@ -6,9 +6,13 @@
   .mobile-market-head > .mobile-alert-button {
     position: relative;
     display: grid;
-    width: 30px;
-    height: 30px;
-    flex: 0 0 30px;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    flex: 0 0 40px !important;
+    place-items: center;
+    touch-action: manipulation;
   }
   .mobile-alert-button.has-alerts {
     border-color: rgba(241,91,112,.32);
@@ -16,28 +20,37 @@
     color: var(--text-2);
   }
   .mobile-alert-button .alert-center-badge {
-    top: -6px;
-    right: -6px;
+    top: -5px;
+    right: -5px;
   }
-  .alert-center-tabs button { min-height: 44px; }
-  .alert-center-toolbar > div button { min-height: 42px; }
-  .alert-center-rule-inputs select,
-  .alert-center-rule-inputs input { min-height: 42px; }
-  .alert-center-rule-inputs button { min-height: 44px; }
-  .alert-center-price-shortcuts button { min-height: 40px; }
+
+  .alert-center-tabs button,
+  #alertCenterMarkAllRead,
+  #alertCenterClearRead,
+  #alertRuleCreate,
+  .alert-center-price-shortcuts button,
   .alert-center-rule > [data-alert-rule-toggle],
-  .alert-center-rule > [data-alert-rule-delete] { min-height: 40px; }
+  .alert-center-rule > [data-alert-rule-delete] {
+    height: 44px !important;
+    min-height: 44px !important;
+    touch-action: manipulation;
+  }
+
+  .alert-center-rule-inputs select,
+  .alert-center-rule-inputs input {
+    height: 44px !important;
+    min-height: 44px !important;
+  }
 }
 
-@media (max-width: 390px) {
+@media (max-width: 430px) {
   .mobile-market-head {
-    gap: 7px;
-    padding-inline: 9px;
+    gap: 6px;
+    padding-inline: 8px;
   }
-  .mobile-market-head > .mobile-alert-button,
   .mobile-market-head > #mobileFavorite {
-    width: 29px;
-    height: 29px;
-    flex-basis: 29px;
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
   }
 }
