@@ -33,6 +33,7 @@
     './data-health.css',
     './semantic-typography.css',
     './continuous-hardening.css',
+    './perpetual-trading.css',
   ];
 
   const ensureStyle = href => new Promise((resolve, reject) => {
@@ -70,7 +71,8 @@
   const loadScript = src => new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[src="${src}"]`);
     if (existing) {
-      resolve();
+      if (existing.dataset.loaded === 'true' || existing.readyState === 'complete') resolve();
+      else existing.addEventListener('load', resolve, { once: true });
       return;
     }
     const script = document.createElement('script');
@@ -126,6 +128,14 @@
       await loadScript('./pro-market-screener.js');
       await loadScript('./pro-market-screener-search-stability.js');
       await loadScript('./mobile-account-tools.js');
+
+      await loadScript('./perpetual-ledger.js');
+      await loadScript('./perpetual-risk-engine.js');
+      await loadScript('./perpetual-order-engine.js');
+      await loadScript('./perpetual-funding-engine.js');
+      await loadScript('./perpetual-controller.js');
+      await loadScript('./perpetual-trading-ui.js');
+
       document.documentElement.dataset.atlasQuality = 'ready';
       document.documentElement.dataset.terminalQuality = 'ready';
     } catch (error) {
