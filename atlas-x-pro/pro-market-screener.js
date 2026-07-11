@@ -16,7 +16,6 @@
   let source = 'pending';
   let inFlight = null;
   let lastFetchAt = 0;
-  let observer = null;
   let ui = readJson(UI_KEY, { query: '', filter: 'all', sort: 'turnover', direction: 'desc', selected: [] });
 
   function readJson(key, fallback) {
@@ -42,16 +41,35 @@
     return Number.isFinite(parsed) ? parsed : null;
   }
 
-  function activeSymbol() {
-    return String($('#activePair')?.textContent || 'BTC/USDT').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-  }
-
   function pairFor(symbol) {
     return symbol.endsWith('USDT') ? `${symbol.slice(0, -4)}/USDT` : symbol;
   }
 
   function baseFor(symbol) {
     return symbol.endsWith('USDT') ? symbol.slice(0, -4) : symbol;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
+    })[character]);
+  }
+
+  function normalizeUi() {
+    ui = {
+      query: String(ui.query || ''),
+      filter: ['all', 'range', 'spread'].includes(ui.filter) ? ui.filter : 'all',
+      sort: ['turnover', 'change', 'range', 'spread', 'price'].includes(ui.sort) ? ui.sort : 'turnover',
+      direction: ui.direction === 'asc' ? 'asc' : 'desc',
+      selected: Array.isArray(ui.selected)
+        ? [...new Set(ui.selected.map(String).filter(symbol => SYMBOLS.includes(symbol)))].slice(0, 4)
+        : [],
+    };
+  }
+
+  function saveUi() {
+    normalizeUi();
+    writeJson(UI_KEY, ui);
   }
 
   function readFavorites() {
@@ -69,28 +87,13 @@
     render();
   }
 
-  function normalizeUi() {
-    ui = {
-      query: String(ui.query || ''),
-      filter: ['all', 'range', 'spread'].includes(ui.filter) ? ui.filter : 'all',
-      sort: ['turnover', 'change', 'range', 'spread', 'price'].includes(ui.sort) ? ui.sort : 'turnover',
-      direction: ui.direction === 'asc' ? 'asc' : 'desc',
-      selected: Array.isArray(ui.selected) ? [...new Set(ui.selected.map(String).filter(symbol => SYMBOLS.includes(symbol)))].slice(0, 4) : [],
-    };
-  }
-
-  function saveUi() {
-    normalizeUi();
-    writeJson(UI_KEY, ui);
-  }
-
   function compact(value) {
     if (value === null || value === undefined || !Number.isFinite(Number(value))) return '--';
     const number = Number(value);
-    const abs = Math.abs(number);
-    if (abs >= 1e9) return `${(number / 1e9).toFixed(2)}B`;
-    if (abs >= 1e6) return `${(number / 1e6).toFixed(2)}M`;
-    if (abs >= 1e3) return `${(number / 1e3).toFixed(2)}K`;
+    const absolute = Math.abs(number);
+    if (absolute >= 1e9) return `${(number / 1e9).toFixed(2)}B`;
+    if (absolute >= 1e6) return `${(number / 1e6).toFixed(2)}M`;
+    if (absolute >= 1e3) return `${(number / 1e3).toFixed(2)}K`;
     return number.toLocaleString('en-US', { maximumFractionDigits: 2 });
   }
 
@@ -112,11 +115,11 @@
   }
 
   function parseLive(tickerPayload, bookPayload) {
-    const tickerMap = new Map((Array.isArray(tickerPayload) ? tickerPayload : []).map(item => [String(item.symbol || ''), item]));
-    const bookMap = new Map((Array.isArray(bookPayload) ? bookPayload : []).map(item => [String(item.symbol || ''), item]));
+    const tickers = new Map((Array.isArray(tickerPayload) ? tickerPayload : []).map(item => [String(item.symbol || ''), item]));
+    const books = new Map((Array.isArray(bookPayload) ? bookPayload : []).map(item => [String(item.symbol || ''), item]));
     return SYMBOLS.map(symbol => {
-      const ticker = tickerMap.get(symbol);
-      const book = bookMap.get(symbol);
+      const ticker = tickers.get(symbol);
+      const book = books.get(symbol);
       const price = nullable(ticker?.lastPrice);
       const high = nullable(ticker?.highPrice);
       const low = nullable(ticker?.lowPrice);
@@ -141,7 +144,10 @@
       const symbol = String(element.dataset.symbol || '').toUpperCase();
       const price = finite($('.price-cell', element)?.textContent?.replace(/,/g, ''), 0);
       const change = finite($('.change-cell', element)?.textContent, 0);
-      return [symbol, { symbol, pair: pairFor(symbol), base: baseFor(symbol), price, change, turnover: null, trades: null, range: null, spread: null }];
+      return [symbol, {
+        symbol, pair: pairFor(symbol), base: baseFor(symbol), price, change,
+        turnover: null, trades: null, range: null, spread: null,
+      }];
     }));
     return SYMBOLS.map(symbol => visible.get(symbol) || {
       symbol, pair: pairFor(symbol), base: baseFor(symbol), price: 0, change: 0,
@@ -149,7 +155,7 @@
     });
   }
 
-  function timeoutSignal(milliseconds = 8000) {
+  function createTimeout(milliseconds = 8000) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(new DOMException('Market screener request timed out', 'TimeoutError')), milliseconds);
     return { signal: controller.signal, clear: () => clearTimeout(timer) };
@@ -162,7 +168,7 @@
   }
 
   async function fetchLive() {
-    const timeout = timeoutSignal();
+    const timeout = createTimeout();
     try {
       const [ticker, book] = await Promise.all([
         fetchJson('https://api.binance.com/api/v3/ticker/24hr', timeout.signal),
@@ -170,8 +176,7 @@
       ]);
       const normalized = parseLive(ticker, book);
       if (normalized.length !== SYMBOLS.length) throw new Error('Market screener response incomplete');
-      const cache = { version: 1, updatedAt: Date.now(), rows: normalized };
-      writeJson(CACHE_KEY, cache);
+      writeJson(CACHE_KEY, { version: 1, updatedAt: Date.now(), rows: normalized });
       return { rows: normalized, source: 'live' };
     } finally {
       timeout.clear();
@@ -180,39 +185,22 @@
 
   function cachedResult() {
     const cache = readJson(CACHE_KEY, {});
-    const validRows = Array.isArray(cache.rows) && cache.rows.length === SYMBOLS.length;
-    if (validRows && Date.now() - finite(cache.updatedAt) <= CACHE_MAX_AGE) {
+    const complete = Array.isArray(cache.rows) && cache.rows.length === SYMBOLS.length;
+    if (complete && Date.now() - finite(cache.updatedAt) <= CACHE_MAX_AGE) {
       return { rows: cache.rows, source: 'cache' };
     }
     return { rows: fallbackRows(), source: 'partial' };
   }
 
-  async function refresh({ force = false } = {}) {
-    const now = Date.now();
-    if (!force && inFlight) return inFlight;
-    if (!force && rows.length && now - lastFetchAt < REQUEST_DEDUPE_MS) {
-      mountCurrentOverlay();
-      render();
-      return { rows, source };
-    }
-    lastFetchAt = now;
-    inFlight = (async () => {
-      try {
-        const result = await fetchLive();
-        rows = result.rows;
-        source = result.source;
-      } catch {
-        const result = cachedResult();
-        rows = result.rows;
-        source = result.source;
-      } finally {
-        inFlight = null;
-      }
-      mountCurrentOverlay();
-      render();
-      return { rows, source };
-    })();
-    return inFlight;
+  function sourceLabel() {
+    return ({ live: '公开行情', cache: '有效缓存', partial: '部分数据', pending: '加载中' })[source] || '数据状态';
+  }
+
+  function statusLabel() {
+    if (source === 'cache') return '公开端点暂不可用，当前显示 10 分钟内的有效缓存。';
+    if (source === 'partial') return '公开端点与有效缓存均不可用；缺失指标明确显示为 --。';
+    if (source === 'live') return '数据已更新；筛选与排序仅用于观察，不会自动提交订单。';
+    return '正在准备市场数据。';
   }
 
   function screenerMarkup() {
@@ -237,32 +225,15 @@
     </section>`;
   }
 
-  function sourceLabel() {
-    return ({ live: '公开行情', cache: '有效缓存', partial: '部分数据', pending: '加载中' })[source] || '数据状态';
-  }
-
-  function statusLabel() {
-    if (source === 'cache') return '公开端点暂不可用，当前显示 10 分钟内的有效缓存。';
-    if (source === 'partial') return '公开端点与有效缓存均不可用；缺失指标明确显示为 --。';
-    if (source === 'live') return '数据已更新；筛选与排序仅用于观察，不会自动提交订单。';
-    return '正在准备市场数据。';
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, character => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
-    })[character]);
-  }
-
   function mountCurrentOverlay() {
     const overlay = $('.module-overlay[data-module="markets"]');
     if (!overlay) return null;
-    let screener = $('.pro-market-screener', overlay);
-    if (screener) return screener;
+    const existing = $('.pro-market-screener', overlay);
+    if (existing) return existing;
     const oldRanking = $$('.module-panel', overlay).find(panel => panel.textContent.includes('市场排行榜'));
     const wrapper = document.createElement('div');
     wrapper.innerHTML = screenerMarkup();
-    screener = wrapper.firstElementChild;
+    const screener = wrapper.firstElementChild;
     if (oldRanking) oldRanking.replaceWith(screener);
     else {
       const grid = $('.module-grid', overlay);
@@ -333,16 +304,42 @@
     const direction = $('#marketScreenerDirection', root);
     if (direction) direction.value = ui.direction;
     $$('[data-screener-filter]', root).forEach(button => button.classList.toggle('active', button.dataset.screenerFilter === ui.filter));
-    const order = [...rows].sort((a, b) => {
+    const ordered = [...rows].sort((a, b) => {
       const delta = sortValue(a) - sortValue(b);
       return (ui.direction === 'asc' ? delta : -delta) || a.symbol.localeCompare(b.symbol);
     });
-    const favorites = readFavorites();
     const container = $('#marketScreenerRows', root);
-    if (container) container.innerHTML = order.map(row => rowMarkup(row, favorites)).join('');
+    if (container) container.innerHTML = ordered.map(row => rowMarkup(row, readFavorites())).join('');
     const compare = $('#marketScreenerCompare', root);
     if (compare) compare.innerHTML = compareMarkup();
     saveUi();
+  }
+
+  async function refresh({ force = false } = {}) {
+    const now = Date.now();
+    if (!force && inFlight) return inFlight;
+    if (!force && rows.length && now - lastFetchAt < REQUEST_DEDUPE_MS) {
+      const root = mountCurrentOverlay();
+      if (root && !$('#marketScreenerRows', root)?.children.length) render();
+      return { rows, source };
+    }
+    lastFetchAt = now;
+    inFlight = (async () => {
+      try {
+        const result = await fetchLive();
+        rows = result.rows;
+        source = result.source;
+      } catch {
+        const result = cachedResult();
+        rows = result.rows;
+        source = result.source;
+      } finally {
+        inFlight = null;
+      }
+      render();
+      return { rows, source };
+    })();
+    return inFlight;
   }
 
   function setStatus(message) {
@@ -416,11 +413,6 @@
     button.className = 'mobile-market-center-button';
     button.setAttribute('aria-label', '打开专业市场筛选器');
     button.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg>';
-    button.addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
-      $('[data-main-nav="markets"]')?.click();
-    });
     if (favorite?.parentElement === head) head.insertBefore(button, favorite);
     else head.append(button);
   }
@@ -428,7 +420,7 @@
   function inspect() {
     createMobileEntry();
     const overlay = $('.module-overlay[data-module="markets"]');
-    if (!overlay) return;
+    if (!overlay || $('.pro-market-screener', overlay)) return;
     mountCurrentOverlay();
     refresh();
   }
@@ -439,8 +431,7 @@
     source = 'pending';
     createMobileEntry();
     const shell = $('.pro-shell');
-    observer = new MutationObserver(inspect);
-    if (shell) observer.observe(shell, { childList: true, subtree: true });
+    if (shell) new MutationObserver(inspect).observe(shell, { childList: true, subtree: true });
     document.documentElement.dataset.marketScreener = 'ready';
     inspect();
   }
