@@ -6,9 +6,9 @@
   .mobile-market-head > .mobile-alert-button {
     position: relative;
     display: grid;
-    width: 28px;
-    height: 28px;
-    flex: 0 0 28px;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
   }
   .mobile-alert-button.has-alerts {
     border-color: rgba(241,91,112,.32);
@@ -19,6 +19,14 @@
     top: -6px;
     right: -6px;
   }
+  .alert-center-tabs button { min-height: 44px; }
+  .alert-center-toolbar > div button { min-height: 42px; }
+  .alert-center-rule-inputs select,
+  .alert-center-rule-inputs input { min-height: 42px; }
+  .alert-center-rule-inputs button { min-height: 44px; }
+  .alert-center-price-shortcuts button { min-height: 40px; }
+  .alert-center-rule > [data-alert-rule-toggle],
+  .alert-center-rule > [data-alert-rule-delete] { min-height: 40px; }
 }
 
 @media (max-width: 390px) {
@@ -28,8 +36,8 @@
   }
   .mobile-market-head > .mobile-alert-button,
   .mobile-market-head > #mobileFavorite {
-    width: 27px;
-    height: 27px;
-    flex-basis: 27px;
+    width: 29px;
+    height: 29px;
+    flex-basis: 29px;
   }
 }
