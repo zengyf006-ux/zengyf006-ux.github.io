@@ -119,7 +119,9 @@
         const payment = position.side === 'short' ? -rawAmount : rawAmount;
         const offlineCatchUp = at - dueAt >= FUNDING_INTERVAL_MS;
         const nextAt = nextBoundary(at);
-        nextFundingOverrides.set(normalizeContractSymbol(position.symbol), nextAt);
+        const normalizedSymbol = normalizeContractSymbol(position.symbol);
+        nextFundingOverrides.set(normalizedSymbol, nextAt);
+        contextCache.set(normalizedSymbol, { ...context, nextFundingAt: nextAt });
 
         draft.account.fundingPaid = finite(draft.account.fundingPaid) + payment;
         position.realizedPnl = finite(position.realizedPnl) - payment;
@@ -129,7 +131,7 @@
         const fundingEvent = {
           id: ledger.nextId('funding'),
           positionId: position.id,
-          symbol: normalizeContractSymbol(position.symbol),
+          symbol: normalizedSymbol,
           side: position.side === 'short' ? 'short' : 'long',
           quantity: positive(position.quantity),
           markPrice,
@@ -166,11 +168,28 @@
 
   const getCountdown = (timestamp = Date.now(), symbol) => {
     const at = finite(timestamp, Date.now());
-    let context;
-    if (symbol) context = getMarketContext(symbol);
-    else if (contextCache.size) context = [...contextCache.values()].sort((a, b) => a.nextFundingAt - b.nextFundingAt)[0];
-    else context = getMarketContext('BTC-USDT-SWAP');
-    return Math.max(0, finite(context.nextFundingAt) - at);
+    if (symbol) {
+      const normalizedSymbol = normalizeContractSymbol(symbol);
+      const override = finite(nextFundingOverrides.get(normalizedSymbol));
+      if (override > at) return override - at;
+      const context = getMarketContext(normalizedSymbol);
+      const nextAt = finite(context.nextFundingAt);
+      return Math.max(0, (nextAt > at ? nextAt : nextBoundary(at)) - at);
+    }
+
+    const futureOverrides = [...nextFundingOverrides.values()]
+      .map(value => finite(value))
+      .filter(value => value > at);
+    if (futureOverrides.length) return Math.min(...futureOverrides) - at;
+
+    const cached = [...contextCache.values()]
+      .map(context => finite(context.nextFundingAt))
+      .filter(value => value > at);
+    if (cached.length) return Math.min(...cached) - at;
+
+    const context = getMarketContext('BTC-USDT-SWAP');
+    const nextAt = finite(context.nextFundingAt);
+    return Math.max(0, (nextAt > at ? nextAt : nextBoundary(at)) - at);
   };
 
   window.addEventListener('atlas:perpetual-ledger', event => {
