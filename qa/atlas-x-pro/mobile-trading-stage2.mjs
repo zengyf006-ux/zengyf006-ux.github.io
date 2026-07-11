@@ -133,24 +133,41 @@ try {
       const index = Math.max(0, (state?.candles?.length || 1) - 4);
       window.AtlasChartExperience?.select?.(index, 'stage2-shell-qa');
     });
-    await page.waitForFunction(() => document.querySelector('.stage2-candle-strip')?.dataset.open === 'true');
-    await page.evaluate(() => {
-      const values = {
-        detailTime: '2026/07/11 13:00', detailInterval: '1H', detailOpen: '64,000.00', detailHigh: '64,500.00',
-        detailLow: '63,800.00', detailClose: '64,300.00', detailChangePercent: '+0.47%', detailVolume: '1.23K',
+    await page.waitForFunction(() => {
+      const detail = document.querySelector('#chartCandleDetail');
+      const strip = document.querySelector('.stage2-candle-strip');
+      if (!detail || strip?.dataset.open !== 'true') return false;
+      const mapping = {
+        open: '#detailOpen', high: '#detailHigh', low: '#detailLow', close: '#detailClose',
+        time: '#detailTime', change: '#detailChangePercent', volume: '#detailVolume', interval: '#detailInterval',
       };
-      Object.entries(values).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if (element) element.textContent = value;
+      return Object.entries(mapping).every(([key, selector]) => {
+        const detailValue = document.querySelector(selector)?.textContent?.trim() || '';
+        const stripValue = strip.querySelector(`[data-stage2-candle="${key}"]`)?.textContent?.trim() || '';
+        return detailValue && detailValue !== '--' && stripValue === detailValue;
       });
     });
-    await page.waitForFunction(() => {
-      const text = document.querySelector('.stage2-candle-strip')?.textContent || '';
-      return text.includes('64,000.00') && text.includes('+0.47%');
+    const compactCandle = await page.evaluate(() => {
+      const detail = document.querySelector('#chartCandleDetail');
+      const strip = document.querySelector('.stage2-candle-strip');
+      const mapping = {
+        open: '#detailOpen', high: '#detailHigh', low: '#detailLow', close: '#detailClose',
+        time: '#detailTime', change: '#detailChangePercent', volume: '#detailVolume', interval: '#detailInterval',
+      };
+      const values = Object.fromEntries(Object.entries(mapping).map(([key, selector]) => {
+        const detailValue = document.querySelector(selector)?.textContent?.trim() || '';
+        const stripValue = strip?.querySelector(`[data-stage2-candle="${key}"]`)?.textContent?.trim() || '';
+        return [key, { detail: detailValue, strip: stripValue }];
+      }));
+      return {
+        values,
+        allComplete: Object.values(values).every(value => value.detail && value.detail !== '--' && value.strip === value.detail),
+        detailCollapsed: getComputedStyle(detail).display === 'none'
+          && !document.body.classList.contains('stage2-candle-detail-open'),
+      };
     });
-    checks.compactCandleWorks = (await page.locator('.stage2-candle-strip').innerText()).includes('64,000.00')
-      && (await page.locator('.stage2-candle-strip').innerText()).includes('+0.47%')
-      && await page.locator('#chartCandleDetail').isHidden();
+    evidence.compactCandle = compactCandle;
+    checks.compactCandleWorks = compactCandle.allComplete && compactCandle.detailCollapsed;
     await page.locator('[data-stage2-candle-more]').click();
     await page.waitForFunction(() => document.body.classList.contains('stage2-candle-detail-open'));
     checks.detailOnDemandWorks = await page.locator('#chartCandleDetail').isVisible()
