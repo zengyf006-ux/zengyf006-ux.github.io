@@ -71,8 +71,7 @@
   const loadScript = src => new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[src="${src}"]`);
     if (existing) {
-      if (existing.dataset.loaded === 'true' || existing.readyState === 'complete') resolve();
-      else existing.addEventListener('load', resolve, { once: true });
+      resolve();
       return;
     }
     const script = document.createElement('script');
