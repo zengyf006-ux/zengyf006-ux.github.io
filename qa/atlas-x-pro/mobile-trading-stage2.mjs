@@ -69,7 +69,9 @@ try {
     checks.fullscreenWorks = true;
     checks.fullscreenRestores = true;
     checks.compactCandleWorks = true;
+    checks.candleLayoutStable = true;
     checks.detailOnDemandWorks = true;
+    checks.detailLayoutStable = true;
     checks.contextNavigationWorks = true;
     checks.primaryTouchTargets = true;
     checks.tradeBarClear = true;
@@ -167,6 +169,8 @@ try {
     const compactCandle = await page.evaluate(() => {
       const detail = document.querySelector('#chartCandleDetail');
       const strip = document.querySelector('.stage2-candle-strip');
+      const stage = document.querySelector('#chartStage');
+      const canvas = document.querySelector('#chartCanvas');
       const mapping = {
         open: '#detailOpen', high: '#detailHigh', low: '#detailLow', close: '#detailClose',
         time: '#detailTime', change: '#detailChangePercent', volume: '#detailVolume', interval: '#detailInterval',
@@ -176,19 +180,54 @@ try {
         const stripValue = strip?.querySelector(`[data-stage2-candle="${key}"]`)?.textContent?.trim() || '';
         return [key, { detail: detailValue, strip: stripValue }];
       }));
+      const stripRect = strip?.getBoundingClientRect();
+      const stageRect = stage?.getBoundingClientRect();
+      const canvasRect = canvas?.getBoundingClientRect();
       return {
         values,
         allComplete: Object.values(values).every(value => value.detail && value.detail !== '--' && value.strip === value.detail),
         detailCollapsed: getComputedStyle(detail).display === 'none'
           && !document.body.classList.contains('stage2-candle-detail-open'),
+        geometry: {
+          strip: stripRect ? { top: stripRect.top, bottom: stripRect.bottom, height: stripRect.height } : null,
+          stage: stageRect ? { top: stageRect.top, bottom: stageRect.bottom, width: stageRect.width, height: stageRect.height } : null,
+          canvas: canvasRect ? { top: canvasRect.top, bottom: canvasRect.bottom, width: canvasRect.width, height: canvasRect.height } : null,
+        },
+        layoutStable: Boolean(stripRect && stageRect && canvasRect
+          && Math.abs(stageRect.top - stripRect.bottom) <= 2
+          && stageRect.height >= 250
+          && Math.abs(canvasRect.top - stageRect.top) <= 1
+          && Math.abs(canvasRect.width - stageRect.width) <= 2
+          && Math.abs(canvasRect.height - stageRect.height) <= 2),
       };
     });
     evidence.compactCandle = compactCandle;
     checks.compactCandleWorks = compactCandle.allComplete && compactCandle.detailCollapsed;
+    checks.candleLayoutStable = compactCandle.layoutStable;
     await page.locator('[data-stage2-candle-more]').click();
     await page.waitForFunction(() => document.body.classList.contains('stage2-candle-detail-open'));
+    const detailState = await page.evaluate(() => {
+      const strip = document.querySelector('.stage2-candle-strip')?.getBoundingClientRect();
+      const stage = document.querySelector('#chartStage')?.getBoundingClientRect();
+      const canvas = document.querySelector('#chartCanvas')?.getBoundingClientRect();
+      return {
+        geometry: {
+          strip: strip ? { top: strip.top, bottom: strip.bottom, height: strip.height } : null,
+          stage: stage ? { top: stage.top, bottom: stage.bottom, width: stage.width, height: stage.height } : null,
+          canvas: canvas ? { top: canvas.top, bottom: canvas.bottom, width: canvas.width, height: canvas.height } : null,
+        },
+        layoutStable: Boolean(strip && stage && canvas
+          && Math.abs(stage.top - strip.bottom) <= 2
+          && stage.height >= 250
+          && Math.abs(canvas.top - stage.top) <= 1
+          && Math.abs(canvas.width - stage.width) <= 2
+          && Math.abs(canvas.height - stage.height) <= 2),
+      };
+    });
+    evidence.detailLayout = detailState;
     checks.detailOnDemandWorks = await page.locator('#chartCandleDetail').isVisible()
       && await page.locator('#chartCandleDetail [data-clear-candle-selection]').isVisible();
+    checks.detailLayoutStable = detailState.layoutStable;
     await page.screenshot({ path: `qa-artifacts-pro/screenshots/${name}-mobile-stage2-candle-detail.png`, fullPage: false, timeout: 12000 });
     await page.locator('#chartCandleDetail [data-clear-candle-selection]').click();
     await page.waitForFunction(() => !document.body.classList.contains('stage2-candle-detail-open'));
