@@ -16,7 +16,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 14
+    timeout-minutes: 16
     strategy:
       fail-fast: false
       matrix:
@@ -84,6 +84,12 @@ jobs:
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/risk-position-sizing.mjs
 
+      - name: Verify chart trading layer
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/chart-trading-layer.mjs
+
       - name: Verify live market intelligence
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -135,6 +141,7 @@ jobs:
             qa-artifacts-pro/performance-analytics-report.json
             qa-artifacts-pro/portfolio-risk-report.json
             qa-artifacts-pro/risk-position-sizing-report.json
+            qa-artifacts-pro/chart-trading-layer-report.json
             qa-artifacts-pro/market-intelligence-report.json
             qa-artifacts-pro/market-data-router-report.json
             qa-artifacts-pro/semantic-typography-report.json
