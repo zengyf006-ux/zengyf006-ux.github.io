@@ -49,6 +49,7 @@
       './reservation-coordinator.css',
       './workspace-command-center.css',
       './workspace-command-center-compat.css',
+      './pro-alert-center.css',
       './market-intelligence.css',
       './market-intelligence-polish.css',
       './mobile-account-tools.css',
@@ -75,6 +76,7 @@
       await loadScript('./reservation-coordinator.js');
       await loadScript('./workspace-command-center.js');
       await loadScript('./workspace-command-center-compat.js');
+      await loadScript('./pro-alert-center.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./mobile-account-tools.js');
       await loadScript('./data-health.js');
