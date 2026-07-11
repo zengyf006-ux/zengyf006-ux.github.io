@@ -8,6 +8,8 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   let syncTimer = 0;
+  let observedOcoBadge = null;
+  let ocoBadgeObserver = null;
 
   function numberFrom(value) {
     const parsed = Number(String(value ?? '').replace(/[^0-9.-]/g, ''));
@@ -77,9 +79,21 @@
     const badge = $('#ocoAvailableBadge');
     if (!badge) return;
     const reservation = snapshot();
-    badge.textContent = `可用 ${formatQuantity(reservation.available)} ${baseFromPair()}`;
-    badge.dataset.availableQuantity = String(reservation.available);
-    badge.title = reservationCopy(reservation);
+    const desiredText = `可用 ${formatQuantity(reservation.available)} ${baseFromPair()}`;
+    const desiredAvailable = String(reservation.available);
+    const desiredTitle = reservationCopy(reservation);
+    if (badge.textContent !== desiredText) badge.textContent = desiredText;
+    if (badge.dataset.availableQuantity !== desiredAvailable) badge.dataset.availableQuantity = desiredAvailable;
+    if (badge.title !== desiredTitle) badge.title = desiredTitle;
+  }
+
+  function ensureOcoBadgeObserver() {
+    const badge = $('#ocoAvailableBadge');
+    if (!badge || badge === observedOcoBadge) return;
+    ocoBadgeObserver?.disconnect();
+    observedOcoBadge = badge;
+    ocoBadgeObserver = new MutationObserver(() => queueMicrotask(syncOcoAvailability));
+    ocoBadgeObserver.observe(badge, { childList: true, characterData: true, subtree: true });
   }
 
   function syncRiskSizingSell() {
@@ -158,6 +172,7 @@
   }
 
   function syncAll() {
+    ensureOcoBadgeObserver();
     syncOcoAvailability();
     syncRiskSizingSell();
     syncTrailingChartLines();
@@ -183,6 +198,7 @@
       status.textContent = `当前最多可用 ${formatQuantity(reservation.available)} ${baseFromPair()}${detail ? `（${detail}）` : ''}`;
       status.className = 'advanced-oco-status danger';
     }
+    syncOcoAvailability();
   }
 
   function prepareRiskApply(event) {
