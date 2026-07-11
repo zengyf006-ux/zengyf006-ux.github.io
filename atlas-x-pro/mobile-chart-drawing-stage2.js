@@ -7,24 +7,44 @@
     crosshair: '十字光标',
     hline: '水平线',
     clear: '清除绘图',
+    'order-price': '选择委托价',
+    'plan-stop': '选择止损价',
+    'plan-target': '选择目标价',
   };
   let mounted = false;
+
+  function originalFor(value) {
+    const escaped = CSS.escape(value);
+    return document.querySelector(`.chart-drawing-tools [data-chart-tool="${escaped}"], .chart-tools [data-chart-tool="${escaped}"]`);
+  }
 
   function sync() {
     document.querySelectorAll('[data-stage2-proxy-attribute="data-chart-tool"]')
       .forEach(proxy => {
         const value = proxy.dataset.stage2ProxyValue;
-        const original = document.querySelector(`.chart-drawing-tools [data-chart-tool="${CSS.escape(value)}"]`);
-        const active = original?.classList.contains('active') || false;
+        const original = originalFor(value);
+        const active = original?.classList.contains('active')
+          || original?.getAttribute('aria-pressed') === 'true'
+          || false;
         proxy.classList.toggle('active', active);
         proxy.setAttribute('aria-pressed', String(active));
       });
   }
 
+  function collectOriginals() {
+    const byValue = new Map();
+    document.querySelectorAll('.chart-drawing-tools [data-chart-tool], .chart-tools [data-chart-tool]')
+      .forEach(original => {
+        const value = original.dataset.chartTool;
+        if (value && !byValue.has(value)) byValue.set(value, original);
+      });
+    return [...byValue.values()];
+  }
+
   function mount() {
     if (mounted) return true;
     const group = document.querySelector('[data-stage2-tools-group="drawing"]');
-    const originals = [...document.querySelectorAll('.chart-drawing-tools [data-chart-tool]')];
+    const originals = collectOriginals();
     if (!group || !originals.length) return false;
 
     const existingActions = [...group.children];
@@ -42,7 +62,10 @@
     existingActions.forEach(button => group.append(button));
 
     const observer = new MutationObserver(sync);
-    originals.forEach(original => observer.observe(original, { attributes: true, attributeFilter: ['class', 'aria-pressed'] }));
+    originals.forEach(original => observer.observe(original, {
+      attributes: true,
+      attributeFilter: ['class', 'aria-pressed'],
+    }));
     mounted = true;
     sync();
     document.documentElement.dataset.mobileChartDrawingStage2 = 'ready';
