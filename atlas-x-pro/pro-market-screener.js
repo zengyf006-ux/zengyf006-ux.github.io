@@ -9,13 +9,18 @@
   const CACHE_MAX_AGE = 10 * 60 * 1000;
   const REQUEST_DEDUPE_MS = 30 * 1000;
   const SYMBOLS = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','DOGEUSDT','ADAUSDT','AVAXUSDT','LINKUSDT','DOTUSDT','LTCUSDT','TRXUSDT'];
+  const GATEWAY = window.AtlasMarketDataEngine?.gatewayBase
+    || 'https://vtcunypvhtudragsittb.supabase.co/functions/v1/atlas-market-gateway';
+  const nativeFetch = window.__ATLAS_NATIVE_NETWORK__?.fetch || window.fetch.bind(window);
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
   let rows = [];
   let source = 'pending';
+  let provider = '';
   let inFlight = null;
   let lastFetchAt = 0;
+  let statusOverride = '';
   let ui = readJson(UI_KEY, { query: '', filter: 'all', sort: 'turnover', direction: 'desc', selected: [] });
 
   function readJson(key, fallback) {
@@ -37,6 +42,7 @@
   }
 
   function nullable(value) {
+    if (value === null || value === undefined || value === '') return null;
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
   }
@@ -84,6 +90,7 @@
     else favorites.add(symbol);
     core.favorites = [...favorites].filter(item => SYMBOLS.includes(item));
     writeJson(CORE_KEY, core);
+    window.dispatchEvent(new CustomEvent('atlas:favorites-changed', { detail: { symbol, favorites: core.favorites } }));
     render();
   }
 
@@ -98,7 +105,8 @@
   }
 
   function priceText(value) {
-    const number = finite(value);
+    if (!Number.isFinite(Number(value))) return '--';
+    const number = Number(value);
     const digits = number >= 1000 ? 2 : number >= 1 ? 4 : 6;
     return number.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
   }
@@ -114,31 +122,6 @@
     return `${Number(value).toFixed(2)}${suffix}`;
   }
 
-  function parseLive(tickerPayload, bookPayload) {
-    const tickers = new Map((Array.isArray(tickerPayload) ? tickerPayload : []).map(item => [String(item.symbol || ''), item]));
-    const books = new Map((Array.isArray(bookPayload) ? bookPayload : []).map(item => [String(item.symbol || ''), item]));
-    return SYMBOLS.map(symbol => {
-      const ticker = tickers.get(symbol);
-      const book = books.get(symbol);
-      const price = nullable(ticker?.lastPrice);
-      const high = nullable(ticker?.highPrice);
-      const low = nullable(ticker?.lowPrice);
-      const bid = nullable(book?.bidPrice);
-      const ask = nullable(book?.askPrice);
-      return {
-        symbol,
-        pair: pairFor(symbol),
-        base: baseFor(symbol),
-        price,
-        change: nullable(ticker?.priceChangePercent),
-        turnover: nullable(ticker?.quoteVolume),
-        trades: nullable(ticker?.count),
-        range: price > 0 && high !== null && low !== null ? (high - low) / price * 100 : null,
-        spread: price > 0 && bid !== null && ask !== null ? (ask - bid) / price * 10000 : null,
-      };
-    }).filter(item => item.price !== null && item.price > 0);
-  }
-
   function fallbackRows() {
     const visible = new Map($$('#marketList [data-symbol]').map(element => {
       const symbol = String(element.dataset.symbol || '').toUpperCase();
@@ -146,13 +129,42 @@
       const change = finite($('.change-cell', element)?.textContent, 0);
       return [symbol, {
         symbol, pair: pairFor(symbol), base: baseFor(symbol), price, change,
-        turnover: null, trades: null, range: null, spread: null,
+        turnover: null, trades: null, range: null, spread: null, provider: '', serverTime: null,
       }];
     }));
     return SYMBOLS.map(symbol => visible.get(symbol) || {
       symbol, pair: pairFor(symbol), base: baseFor(symbol), price: 0, change: 0,
-      turnover: null, trades: null, range: null, spread: null,
+      turnover: null, trades: null, range: null, spread: null, provider: '', serverTime: null,
     });
+  }
+
+  function normalizeGateway(payload) {
+    const input = new Map((Array.isArray(payload?.markets) ? payload.markets : [])
+      .map(item => [String(item?.symbol || '').toUpperCase(), item]));
+    return SYMBOLS.map(symbol => {
+      const item = input.get(symbol);
+      if (!item) return null;
+      const price = nullable(item.price);
+      const open = nullable(item.open);
+      const high = nullable(item.high);
+      const low = nullable(item.low);
+      const bid = nullable(item.bid);
+      const ask = nullable(item.ask);
+      const midpoint = bid !== null && ask !== null ? (bid + ask) / 2 : 0;
+      return {
+        symbol,
+        pair: pairFor(symbol),
+        base: baseFor(symbol),
+        price,
+        change: nullable(item.change),
+        turnover: nullable(item.quoteVolume),
+        trades: nullable(item.trades),
+        range: open !== null && open !== 0 && high !== null && low !== null ? (high - low) / Math.abs(open) * 100 : null,
+        spread: midpoint > 0 && ask !== null && bid !== null && ask >= bid ? (ask - bid) / midpoint * 10000 : null,
+        provider: String(item.provider || payload?.provider || ''),
+        serverTime: nullable(item.serverTime || payload?.serverTime),
+      };
+    }).filter(item => item && item.price !== null && item.price > 0);
   }
 
   function createTimeout(milliseconds = 8000) {
@@ -161,23 +173,25 @@
     return { signal: controller.signal, clear: () => clearTimeout(timer) };
   }
 
-  async function fetchJson(url, signal) {
-    const response = await fetch(url, { signal, headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error(`Market screener HTTP ${response.status}`);
-    return response.json();
-  }
-
   async function fetchLive() {
     const timeout = createTimeout();
     try {
-      const [ticker, book] = await Promise.all([
-        fetchJson('https://api.binance.com/api/v3/ticker/24hr', timeout.signal),
-        fetchJson('https://api.binance.com/api/v3/ticker/bookTicker', timeout.signal),
-      ]);
-      const normalized = parseLive(ticker, book);
-      if (normalized.length !== SYMBOLS.length) throw new Error('Market screener response incomplete');
-      writeJson(CACHE_KEY, { version: 1, updatedAt: Date.now(), rows: normalized });
-      return { rows: normalized, source: 'live' };
+      const response = await nativeFetch(`${GATEWAY}/markets`, {
+        signal: timeout.signal,
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok) throw new Error(`Market gateway HTTP ${response.status}`);
+      const payload = await response.json();
+      if (payload?.error) throw new Error(payload.error.message || 'Market gateway error');
+      const normalized = normalizeGateway(payload);
+      if (normalized.length !== SYMBOLS.length) throw new Error('Market gateway response incomplete');
+      writeJson(CACHE_KEY, {
+        version: 2,
+        updatedAt: Date.now(),
+        provider: String(payload.provider || normalized[0]?.provider || ''),
+        rows: normalized,
+      });
+      return { rows: normalized, source: 'live', provider: String(payload.provider || normalized[0]?.provider || '') };
     } finally {
       timeout.clear();
     }
@@ -187,19 +201,21 @@
     const cache = readJson(CACHE_KEY, {});
     const complete = Array.isArray(cache.rows) && cache.rows.length === SYMBOLS.length;
     if (complete && Date.now() - finite(cache.updatedAt) <= CACHE_MAX_AGE) {
-      return { rows: cache.rows, source: 'cache' };
+      return { rows: cache.rows, source: 'cache', provider: String(cache.provider || 'cache') };
     }
-    return { rows: fallbackRows(), source: 'partial' };
+    return { rows: fallbackRows(), source: 'partial', provider: '' };
   }
 
   function sourceLabel() {
-    return ({ live: '公开行情', cache: '有效缓存', partial: '部分数据', pending: '加载中' })[source] || '数据状态';
+    if (source === 'live') return provider ? `${provider.toUpperCase()} 实时` : '统一实时行情';
+    return ({ cache: '有效缓存', partial: '部分数据', pending: '加载中' })[source] || '数据状态';
   }
 
   function statusLabel() {
-    if (source === 'cache') return '公开端点暂不可用，当前显示 10 分钟内的有效缓存。';
-    if (source === 'partial') return '公开端点与有效缓存均不可用；缺失指标明确显示为 --。';
-    if (source === 'live') return '数据已更新；筛选与排序仅用于观察，不会自动提交订单。';
+    if (statusOverride) return statusOverride;
+    if (source === 'cache') return '统一行情网关暂不可用，当前显示 10 分钟内的有效缓存。';
+    if (source === 'partial') return '统一行情网关与有效缓存均不可用；缺失指标明确显示为 --。';
+    if (source === 'live') return '统一公共行情已更新；筛选与排序仅用于观察，不会自动提交订单。';
     return '正在准备市场数据。';
   }
 
@@ -207,7 +223,7 @@
     normalizeUi();
     return `<section class="pro-market-screener" data-ready="true" data-source="${source}">
       <header class="pro-market-screener-head">
-        <div><strong>专业市场筛选器</strong><small>公开行情 · 多维排序 · 最多四市场对比</small></div>
+        <div><strong>专业市场筛选器</strong><small>统一公共行情 · 多维排序 · 最多四市场对比</small></div>
         <span id="marketScreenerSource">${sourceLabel()}</span>
       </header>
       <div class="pro-market-screener-controls">
@@ -216,7 +232,7 @@
         <label><span>方向</span><select id="marketScreenerDirection"><option value="desc">从高到低</option><option value="asc">从低到高</option></select></label>
         <nav aria-label="市场筛选"><button type="button" data-screener-filter="all">全部</button><button type="button" data-screener-filter="range">高振幅</button><button type="button" data-screener-filter="spread">低点差</button></nav>
       </div>
-      <p id="marketScreenerStatus" class="pro-market-screener-status">${statusLabel()}</p>
+      <p id="marketScreenerStatus" class="pro-market-screener-status">${escapeHtml(statusLabel())}</p>
       <div class="pro-market-compare" id="marketScreenerCompare"></div>
       <div class="pro-market-table">
         <div class="pro-market-table-head"><span>市场</span><span>最新价</span><span>24h</span><span>成交额</span><span>振幅</span><span>点差</span><span>操作</span></div>
@@ -298,7 +314,7 @@
     const status = $('#marketScreenerStatus', root);
     if (status) status.textContent = statusLabel();
     const search = $('#marketScreenerSearch', root);
-    if (search && search.value !== ui.query) search.value = ui.query;
+    if (search && document.activeElement !== search && search.value !== ui.query) search.value = ui.query;
     const sort = $('#marketScreenerSort', root);
     if (sort) sort.value = ui.sort;
     const direction = $('#marketScreenerDirection', root);
@@ -324,16 +340,21 @@
       return { rows, source };
     }
     lastFetchAt = now;
+    statusOverride = '正在刷新统一公共行情。';
+    render();
     inFlight = (async () => {
       try {
         const result = await fetchLive();
         rows = result.rows;
         source = result.source;
+        provider = result.provider;
       } catch {
         const result = cachedResult();
         rows = result.rows;
         source = result.source;
+        provider = result.provider;
       } finally {
+        statusOverride = '';
         inFlight = null;
       }
       render();
@@ -343,6 +364,7 @@
   }
 
   function setStatus(message) {
+    statusOverride = message;
     const status = $('#marketScreenerStatus');
     if (status) status.textContent = message;
   }
@@ -353,32 +375,36 @@
       setStatus('最多同时对比 4 个市场。');
       return;
     } else ui.selected.push(symbol);
+    statusOverride = '';
     saveUi();
     render();
   }
 
   function openTrade(symbol) {
-    const marketRow = $(`#marketList [data-symbol="${symbol}"]`) || $(`[data-symbol="${symbol}"]`);
+    const marketRow = $(`#marketList [data-symbol="${CSS.escape(symbol)}"]`) || $(`[data-symbol="${CSS.escape(symbol)}"]`);
     marketRow?.click();
-    $('.module-overlay[data-module="markets"] .module-close')?.click();
+    requestAnimationFrame(() => $('.module-overlay[data-module="markets"] .module-close')?.click());
   }
 
   function bindScreener(root) {
     root.addEventListener('input', event => {
       if (event.target.id !== 'marketScreenerSearch') return;
       ui.query = event.target.value;
+      statusOverride = '';
       render();
       $('#marketScreenerSearch')?.focus();
     });
     root.addEventListener('change', event => {
       if (event.target.id === 'marketScreenerSort') ui.sort = event.target.value;
       if (event.target.id === 'marketScreenerDirection') ui.direction = event.target.value;
+      statusOverride = '';
       render();
     });
     root.addEventListener('click', event => {
       const filter = event.target.closest('[data-screener-filter]')?.dataset.screenerFilter;
       if (filter) {
         ui.filter = filter;
+        statusOverride = '';
         render();
         return;
       }
@@ -395,6 +421,7 @@
       const remove = event.target.closest('[data-remove-compare]')?.dataset.removeCompare;
       if (remove) {
         ui.selected = ui.selected.filter(item => item !== remove);
+        statusOverride = '';
         render();
         return;
       }
@@ -432,13 +459,15 @@
     createMobileEntry();
     const shell = $('.pro-shell');
     if (shell) new MutationObserver(inspect).observe(shell, { childList: true, subtree: true });
+    window.addEventListener('atlas:favorites-changed', render);
     document.documentElement.dataset.marketScreener = 'ready';
     inspect();
   }
 
   window.AtlasMarketScreener = Object.freeze({
     refresh,
-    getState: () => ({ source, rows: structuredClone(rows), ui: structuredClone(ui) }),
+    getState: () => ({ source, provider, rows: structuredClone(rows), ui: structuredClone(ui) }),
+    gateway: GATEWAY,
   });
 
   document.readyState === 'loading'
