@@ -13,21 +13,11 @@ if (!viewport) throw new Error(`Unknown viewport: ${name}`);
 
 const now = Date.now();
 const seedState = {
-  activeSymbol: 'BTCUSDT',
-  timeframe: '1h',
-  indicator: 'ema',
-  side: 'buy',
-  orderType: 'market',
-  accountTab: 'positions',
-  mobileView: 'chart',
-  marketFilter: 'all',
-  bookMode: 'all',
-  favorites: ['BTCUSDT'],
+  activeSymbol: 'BTCUSDT', timeframe: '1h', indicator: 'ema', side: 'buy', orderType: 'market',
+  accountTab: 'positions', mobileView: 'chart', marketFilter: 'all', bookMode: 'all', favorites: ['BTCUSDT'],
   cash: 50000,
   positions: [{ id: 'alert-position', symbol: 'BTCUSDT', qty: 0.5, entry: 60000, fees: 24, createdAt: now - 600000 }],
-  orders: [],
-  history: [],
-  nextId: 500,
+  orders: [], history: [], nextId: 500,
 };
 
 const browser = await chromium.launch({
@@ -51,11 +41,10 @@ const page = await context.newPage();
 page.setDefaultTimeout(12000);
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
 const checks = {};
+const touchMetrics = {};
 const consoleErrors = [];
 const pageErrors = [];
 let fatalError = null;
-let mobileEntryHeightBeforeOpen = 0;
-
 page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
 page.on('pageerror', error => pageErrors.push(String(error)));
 
@@ -65,9 +54,10 @@ const alertBadgeSelector = viewport.mobile ? '.mobile-alert-button .alert-center
 
 async function openAlertCenter() {
   if (viewport.mobile) {
-    await page.waitForFunction(() => document.documentElement.dataset.mobileAlertEntry === 'ready');
-    await page.waitForSelector('.mobile-alert-button', { state: 'visible' });
+    await page.waitForFunction(() => document.documentElement.dataset.mobileAlertEntry === 'ready'
+      && document.documentElement.dataset.alertTouchHardening === 'ready');
   }
+  await page.waitForSelector(alertEntrySelector, { state: 'visible' });
   await page.locator(alertEntrySelector).click();
   await page.waitForSelector('#controlPopover', { state: 'visible' });
   await page.waitForSelector('.alert-center-shell', { state: 'visible' });
@@ -82,33 +72,34 @@ async function evaluateAt(price) {
   await page.waitForTimeout(90);
 }
 
+async function activateTab(tab) {
+  await page.locator(`[data-alert-tab="${tab}"]`).click();
+  await page.waitForFunction(value => document.querySelector(`[data-alert-tab="${value}"]`)?.classList.contains('active'), tab);
+}
+
 try {
   await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 18000 });
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/400.css', timeout: 6000 });
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css', timeout: 6000 });
   await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
   await page.waitForSelector('.pro-shell', { state: 'visible' });
-  await page.waitForFunction(() => document.documentElement.dataset.alertCenter === 'ready');
+  await page.waitForFunction(() => document.documentElement.dataset.alertCenter === 'ready'
+    && document.documentElement.dataset.terminalQuality === 'ready');
+
   if (viewport.mobile) {
-    await page.waitForSelector('.mobile-alert-button', { state: 'visible' });
-    await page.waitForFunction(() => {
-      const entry = document.querySelector('.mobile-alert-button');
-      if (!entry) return false;
-      const rect = entry.getBoundingClientRect();
-      const style = getComputedStyle(entry);
-      return style.display !== 'none' && style.visibility !== 'hidden' && rect.width >= 27 && rect.height >= 27;
-    });
-    mobileEntryHeightBeforeOpen = await page.locator('.mobile-alert-button').evaluate(element => element.getBoundingClientRect().height);
+    await page.waitForFunction(() => document.documentElement.dataset.mobileAlertEntry === 'ready'
+      && document.documentElement.dataset.alertTouchHardening === 'ready');
+    touchMetrics.entry = await page.locator('.mobile-alert-button').evaluate(element => element.getBoundingClientRect().height);
   }
 
   checks.alertCenterReady = await page.evaluate(() => document.documentElement.dataset.alertCenter === 'ready');
-  checks.mobileEntryVisible = viewport.mobile ? mobileEntryHeightBeforeOpen >= 27 : true;
+  checks.mobileEntryVisible = viewport.mobile ? touchMetrics.entry >= 40 : true;
   await openAlertCenter();
   checks.reusesControlPopover = await page.locator('#controlPopover').isVisible();
   checks.professionalTitleVisible = (await page.locator('#popoverTitle').innerText()).includes('专业预警中心');
   checks.oldStaticNotificationsReplaced = !(await page.locator('#popoverBody').innerText()).includes('模拟交易环境运行正常');
 
-  await page.locator('[data-alert-tab="rules"]').click();
+  await activateTab('rules');
   const current = Number((await page.locator('#lastPrice').innerText()).replace(/,/g, ''));
   const threshold = Number((current * 1.01).toFixed(2));
   await page.locator('#alertRuleDirection').selectOption('price_above');
@@ -124,7 +115,7 @@ try {
   const rule = afterCreate.rules.find(item => item.symbol === 'BTCUSDT'
     && item.type === 'price_above'
     && Math.abs(Number(item.threshold) - threshold) < 0.02);
-  checks.priceRulePersisted = Boolean(rule?.id) && rule?.enabled === true;
+  checks.priceRulePersisted = Boolean(rule?.id) && rule.enabled === true;
   checks.ruleCardVisible = await page.locator(`[data-alert-rule-id="${rule.id}"]`).isVisible();
 
   await evaluateAt(threshold - Math.max(10, threshold * 0.002));
@@ -139,14 +130,12 @@ try {
     && (await page.locator(alertBadgeSelector).innerText()).trim() === '1';
 
   await evaluateAt(threshold + Math.max(20, threshold * 0.003));
-  const afterStayedAbove = await readAlerts();
-  checks.stayingAboveDoesNotDuplicate = afterStayedAbove.events.filter(event => event.kind === 'price' && event.ruleId === rule.id).length === 1;
-
+  checks.stayingAboveDoesNotDuplicate = (await readAlerts()).events.filter(event => event.kind === 'price' && event.ruleId === rule.id).length === 1;
   await evaluateAt(threshold - Math.max(20, threshold * 0.003));
   await evaluateAt(threshold + Math.max(20, threshold * 0.003));
-  const afterCooldownCross = await readAlerts();
-  checks.cooldownPreventsDuplicate = afterCooldownCross.events.filter(event => event.kind === 'price' && event.ruleId === rule.id).length === 1;
+  checks.cooldownPreventsDuplicate = (await readAlerts()).events.filter(event => event.kind === 'price' && event.ruleId === rule.id).length === 1;
 
+  await activateTab('all');
   await page.locator('#alertCenterMarkAllRead').click();
   await page.waitForFunction(() => {
     const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"events":[]}');
@@ -156,10 +145,8 @@ try {
 
   await page.evaluate(() => {
     const core = JSON.parse(localStorage.getItem('atlasX.pro.v1') || '{}');
-    core.history = [{
-      id: 'alert-fill-1', symbol: 'BTCUSDT', side: 'buy', price: 64000, qty: 0.02,
-      fee: 1.024, status: '已成交', createdAt: Date.now(),
-    }, ...(core.history || [])];
+    core.history = [{ id: 'alert-fill-1', symbol: 'BTCUSDT', side: 'buy', price: 64000, qty: 0.02,
+      fee: 1.024, status: '已成交', createdAt: Date.now() }, ...(core.history || [])];
     localStorage.setItem('atlasX.pro.v1', JSON.stringify(core));
     window.AtlasAlertCenter?.evaluateNow?.();
   });
@@ -168,24 +155,17 @@ try {
     return store.events?.some(event => event.sourceKey === 'core-fill:alert-fill-1');
   });
   await page.evaluate(() => window.AtlasAlertCenter?.evaluateNow?.());
-  const afterFill = await readAlerts();
-  checks.coreFillCapturedOnce = afterFill.events.filter(event => event.sourceKey === 'core-fill:alert-fill-1').length === 1;
+  checks.coreFillCapturedOnce = (await readAlerts()).events.filter(event => event.sourceKey === 'core-fill:alert-fill-1').length === 1;
 
   await page.evaluate(() => {
-    localStorage.setItem('atlasX.pro.advancedOrders.v1', JSON.stringify({
-      version: 1,
-      orders: [{
-        id: 'alert-oco-1', symbol: 'BTCUSDT', quantity: 0.03, takeProfit: 68000,
-        stopTrigger: 62000, status: 'completed_stop', createdAt: Date.now() - 1000, completedAt: Date.now(),
-      }],
-    }));
-    localStorage.setItem('atlasX.pro.exitStrategies.v1', JSON.stringify({
-      version: 1,
-      strategies: [{
-        id: 'alert-exit-1', kind: 'trailing_stop', symbol: 'BTCUSDT', quantity: 0.04,
-        trailPercent: 2, triggerPrice: 62500, status: 'completed', createdAt: Date.now() - 1200, completedAt: Date.now(),
-      }],
-    }));
+    localStorage.setItem('atlasX.pro.advancedOrders.v1', JSON.stringify({ version: 1, orders: [{
+      id: 'alert-oco-1', symbol: 'BTCUSDT', quantity: 0.03, takeProfit: 68000,
+      stopTrigger: 62000, status: 'completed_stop', createdAt: Date.now() - 1000, completedAt: Date.now(),
+    }] }));
+    localStorage.setItem('atlasX.pro.exitStrategies.v1', JSON.stringify({ version: 1, strategies: [{
+      id: 'alert-exit-1', kind: 'trailing_stop', symbol: 'BTCUSDT', quantity: 0.04,
+      trailPercent: 2, triggerPrice: 62500, status: 'completed', createdAt: Date.now() - 1200, completedAt: Date.now(),
+    }] }));
     window.AtlasAlertCenter?.evaluateNow?.();
   });
   await page.waitForFunction(() => {
@@ -194,57 +174,49 @@ try {
       && store.events?.some(event => event.sourceKey === 'exit:alert-exit-1:completed');
   });
   const afterStrategies = await readAlerts();
-  const ocoEvent = afterStrategies.events.find(event => event.sourceKey === 'oco:alert-oco-1:completed_stop');
-  const exitEvent = afterStrategies.events.find(event => event.sourceKey === 'exit:alert-exit-1:completed');
-  checks.ocoStopCapturedCritical = ocoEvent?.severity === 'critical';
-  checks.trailingCompletionCapturedCritical = exitEvent?.severity === 'critical';
+  checks.ocoStopCapturedCritical = afterStrategies.events.find(event => event.sourceKey === 'oco:alert-oco-1:completed_stop')?.severity === 'critical';
+  checks.trailingCompletionCapturedCritical = afterStrategies.events.find(event => event.sourceKey === 'exit:alert-exit-1:completed')?.severity === 'critical';
 
-  await page.locator('[data-alert-tab="rules"]').click();
-  const ruleCard = page.locator(`[data-alert-rule-id="${rule.id}"]`);
-  await ruleCard.locator('[data-alert-rule-toggle]').click();
-  await page.waitForFunction(id => {
-    const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}');
-    return store.rules?.find(rule => rule.id === id)?.enabled === false;
-  }, rule.id);
+  await activateTab('rules');
+  await page.locator(`[data-alert-rule-id="${rule.id}"] [data-alert-rule-toggle]`).click();
+  await page.waitForFunction(id => JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}')
+    .rules?.find(rule => rule.id === id)?.enabled === false, rule.id);
   checks.ruleCanBeDisabled = (await readAlerts()).rules.find(item => item.id === rule.id)?.enabled === false;
 
-  await ruleCard.locator('[data-alert-rule-toggle]').click();
-  await page.waitForFunction(id => {
-    const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}');
-    return store.rules?.find(rule => rule.id === id)?.enabled === true;
-  }, rule.id);
+  await page.locator(`[data-alert-rule-id="${rule.id}"] [data-alert-rule-toggle]`).click();
+  await page.waitForFunction(id => JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}')
+    .rules?.find(rule => rule.id === id)?.enabled === true, rule.id);
   checks.ruleCanBeReenabled = (await readAlerts()).rules.find(item => item.id === rule.id)?.enabled === true;
 
-  await ruleCard.locator('[data-alert-rule-delete]').click();
-  await page.waitForFunction(id => {
-    const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}');
-    return !store.rules?.some(rule => rule.id === id);
-  }, rule.id);
+  await page.locator(`[data-alert-rule-id="${rule.id}"] [data-alert-rule-delete]`).click();
+  await page.waitForFunction(id => !JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"rules":[]}')
+    .rules?.some(rule => rule.id === id), rule.id);
   checks.ruleCanBeDeleted = !(await readAlerts()).rules.some(item => item.id === rule.id);
 
-  checks.boundedStorage = (await readAlerts()).events.length <= 100 && (await readAlerts()).rules.length <= 30;
+  const bounded = await readAlerts();
+  checks.boundedStorage = bounded.events.length <= 100 && bounded.rules.length <= 30;
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
+
   if (viewport.mobile) {
-    await page.waitForFunction(() => {
-      const all = document.querySelector('[data-alert-tab="all"]')?.getBoundingClientRect().height || 0;
-      const create = document.querySelector('#alertRuleCreate')?.getBoundingClientRect().height || 0;
-      return all >= 38 && create >= 38;
-    });
-    const rulesTabHeight = await page.locator('[data-alert-tab="all"]').evaluate(element => element.getBoundingClientRect().height);
-    const ruleCreateHeight = await page.locator('#alertRuleCreate').evaluate(element => element.getBoundingClientRect().height);
-    await page.locator('[data-alert-tab="all"]').click();
-    await page.waitForFunction(() => (document.querySelector('#alertCenterMarkAllRead')?.getBoundingClientRect().height || 0) >= 38);
-    const markAllReadHeight = await page.locator('#alertCenterMarkAllRead').evaluate(element => element.getBoundingClientRect().height);
-    checks.mobileTouchTargets = rulesTabHeight >= 38
-      && ruleCreateHeight >= 38
-      && markAllReadHeight >= 38
-      && mobileEntryHeightBeforeOpen >= 27;
+    await activateTab('rules');
+    await page.waitForSelector('#alertRuleCreate', { state: 'visible' });
+    Object.assign(touchMetrics, await page.evaluate(() => ({
+      rulesTab: document.querySelector('[data-alert-tab="rules"]')?.getBoundingClientRect().height || 0,
+      create: document.querySelector('#alertRuleCreate')?.getBoundingClientRect().height || 0,
+    })));
+    await activateTab('all');
+    await page.waitForSelector('#alertCenterMarkAllRead', { state: 'visible' });
+    touchMetrics.markAllRead = await page.locator('#alertCenterMarkAllRead').evaluate(element => element.getBoundingClientRect().height);
+    checks.mobileTouchTargets = touchMetrics.entry >= 40
+      && touchMetrics.rulesTab >= 40
+      && touchMetrics.create >= 40
+      && touchMetrics.markAllRead >= 40;
   } else {
     checks.mobileTouchTargets = true;
   }
+
   checks.noConsoleErrors = consoleErrors.length === 0;
   checks.noPageErrors = pageErrors.length === 0;
-
   await page.screenshot({
     path: `qa-artifacts-pro/screenshots/${name}-professional-alert-center.png`,
     fullPage: false,
@@ -253,23 +225,13 @@ try {
 } catch (error) {
   fatalError = String(error);
   try {
-    await page.screenshot({
-      path: `qa-artifacts-pro/screenshots/${name}-professional-alert-center-fatal.png`,
-      fullPage: false,
-      timeout: 12000,
-    });
+    await page.screenshot({ path: `qa-artifacts-pro/screenshots/${name}-professional-alert-center-fatal.png`, fullPage: false, timeout: 12000 });
   } catch {}
 }
 
 const passed = !fatalError && Object.values(checks).every(Boolean);
 await fs.writeFile('qa-artifacts-pro/pro-alert-center-report.json', JSON.stringify({
-  target,
-  viewport,
-  checks,
-  consoleErrors,
-  pageErrors,
-  fatalError,
-  passed,
+  target, viewport, checks, touchMetrics, consoleErrors, pageErrors, fatalError, passed,
   generatedAt: new Date().toISOString(),
 }, null, 2));
 await context.close().catch(() => {});
