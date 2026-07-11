@@ -92,6 +92,7 @@
       await loadScript('./pro-alert-touch-hardening.js');
       await loadScript('./alert-center-legacy-consolidation.js');
       await loadScript('./order-execution-audit.js');
+      await loadScript('./order-execution-audit-mobile-critical.js');
       await loadScript('./market-intelligence.js');
       await loadScript('./market-intelligence-entry-compat.js');
       await loadScript('./pro-market-screener.js');
