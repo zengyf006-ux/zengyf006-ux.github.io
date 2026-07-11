@@ -173,6 +173,12 @@
     return Math.max(0, finite(context.nextFundingAt) - at);
   };
 
+  window.addEventListener('atlas:perpetual-ledger', event => {
+    if (event?.detail?.label !== 'reset') return;
+    nextFundingOverrides.clear();
+    contextCache.clear();
+  });
+
   window.AtlasPerpetualFunding = Object.freeze({
     FUNDING_INTERVAL_MS,
     getMarketContext,
