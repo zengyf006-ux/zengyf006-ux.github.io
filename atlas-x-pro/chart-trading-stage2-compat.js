@@ -3,6 +3,17 @@
   if (window.__ATLAS_CHART_TRADING_STAGE2_COMPAT__) return;
   window.__ATLAS_CHART_TRADING_STAGE2_COMPAT__ = true;
 
+  let chartResizeFrame = 0;
+
+  function dispatchChartResize() {
+    cancelAnimationFrame(chartResizeFrame);
+    chartResizeFrame = requestAnimationFrame(() => {
+      chartResizeFrame = 0;
+      window.dispatchEvent(new Event('resize'));
+      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+    });
+  }
+
   function syncFullscreenClose() {
     const close = document.querySelector('[data-stage2-fullscreen-close]');
     if (!close) return;
@@ -29,6 +40,20 @@
     return true;
   }
 
+  function observeChartStageGeometry(stage) {
+    let lastWidth = 0;
+    let lastHeight = 0;
+    new ResizeObserver(entries => {
+      const rect = entries[0]?.contentRect;
+      if (!rect) return;
+      const changed = Math.abs(rect.width - lastWidth) > 1
+        || Math.abs(rect.height - lastHeight) > 1;
+      lastWidth = rect.width;
+      lastHeight = rect.height;
+      if (changed && innerWidth <= 820) dispatchChartResize();
+    }).observe(stage);
+  }
+
   function synchronize() {
     if (innerWidth > 820) return;
     const stage = document.querySelector('#chartStage');
@@ -45,6 +70,7 @@
     }
     const stage = document.querySelector('#chartStage');
     if (!stage) return;
+    observeChartStageGeometry(stage);
     new MutationObserver(synchronize).observe(stage, {
       attributes: true,
       attributeFilter: ['data-last-pick-mode', 'data-last-pick-price'],
