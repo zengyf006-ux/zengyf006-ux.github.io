@@ -1,4 +1,17 @@
-/* Final cascade for cross-module mobile touch safety. */
+/* Final cascade for cross-module interaction and visibility safety. */
+.chart-trade-layer .trailing-stop-line[data-reservation-coordinated="true"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 1px !important;
+}
+
+.chart-trade-layer .trailing-stop-line[data-reservation-coordinated="true"] > span {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 @media (max-width: 820px) {
   .account-tabs button[data-account-tab="audit"] {
     min-height: 46px !important;
