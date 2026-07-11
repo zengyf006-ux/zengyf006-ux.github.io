@@ -7,6 +7,7 @@ on:
       - 'atlas-x-pro/**'
       - 'qa/atlas-x-pro/**'
       - 'supabase/functions/atlas-market-gateway/**'
+      - 'supabase/functions/atlas-market-gateway-markets/**'
       - '.github/workflows/atlas-x-pro-qa.yml'
   workflow_dispatch:
 
@@ -42,6 +43,7 @@ jobs:
     timeout-minutes: 8
     env:
       ATLAS_MARKET_GATEWAY: https://vtcunypvhtudragsittb.supabase.co/functions/v1/atlas-market-gateway
+      ATLAS_MARKET_GATEWAY_MARKETS: https://vtcunypvhtudragsittb.supabase.co/functions/v1/atlas-market-gateway-markets
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,7 +51,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify deployed public market gateway
+      - name: Verify deployed public market gateways
         run: node qa/atlas-x-pro/gateway-smoke.mjs
       - name: Upload gateway smoke report
         if: always()
@@ -63,7 +65,7 @@ jobs:
   acceptance:
     name: acceptance-${{ matrix.viewport }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 32
     strategy:
       fail-fast: false
       matrix:
@@ -106,6 +108,12 @@ jobs:
           CHROME_BIN: /usr/bin/google-chrome
           ATLAS_VIEWPORT: ${{ matrix.viewport }}
         run: node qa/atlas-x-pro/realtime-market-chart.mjs
+
+      - name: Verify professional interval persistence
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ATLAS_VIEWPORT: ${{ matrix.viewport }}
+        run: node qa/atlas-x-pro/interval-persistence.mjs
 
       - name: Verify professional workspace quality
         env:
@@ -238,6 +246,7 @@ jobs:
             qa-artifacts-pro/screenshots
             qa-artifacts-pro/report.json
             qa-artifacts-pro/realtime-market-chart-report.json
+            qa-artifacts-pro/interval-persistence-report.json
             qa-artifacts-pro/quality-report.json
             qa-artifacts-pro/execution-guard-report.json
             qa-artifacts-pro/performance-analytics-report.json
