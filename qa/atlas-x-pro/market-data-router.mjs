@@ -22,7 +22,7 @@ const context = await browser.newContext({
   hasTouch: viewport.mobile,
 });
 const page = await context.newPage();
-page.setDefaultTimeout(9000);
+page.setDefaultTimeout(10000);
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
 const checks = {};
 const consoleErrors = [];
@@ -36,52 +36,87 @@ try {
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/400.css', timeout: 6000 });
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css', timeout: 6000 });
   await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
+
   await page.waitForFunction(() => document.documentElement.dataset.dataHealth === 'ready', null, { timeout: 12000 });
+  await page.waitForFunction(() => document.documentElement.dataset.stage1DataHealth === 'ready', null, { timeout: 12000 });
   await page.waitForFunction(() => {
-    const router = window.__ATLAS_DATA_ROUTER__;
-    const snapshot = router?.snapshot?.();
-    return snapshot?.rest?.status === 'qa-demo' && snapshot?.websocket?.status === 'qa-offline';
+    const state = window.AtlasMarketDataEngine?.getState?.();
+    return document.documentElement.dataset.marketDataEngine === 'ready'
+      && state?.connectionState === 'live'
+      && state?.source === 'fixture'
+      && state?.provider === 'fixture'
+      && state?.ticker?.price > 0
+      && state?.book?.bids?.length > 0
+      && state?.book?.asks?.length > 0
+      && state?.trades?.length > 0
+      && state?.candles?.length >= 20;
   }, null, { timeout: 12000 });
 
-  const routerResult = await page.evaluate(async () => {
+  const result = await page.evaluate(async () => {
     const router = window.__ATLAS_DATA_ROUTER__;
+    const engine = window.AtlasMarketDataEngine;
+    const state = engine?.getState?.();
+    const spacing = state?.candles?.length > 1 ? state.candles[1].time - state.candles[0].time : 0;
     return {
+      stageRouter: document.documentElement.dataset.marketRouter || '',
       qaMode: router?.qaMode,
       restHosts: router?.restHosts,
       websocketHosts: router?.websocketHosts,
       selfTest: await router?.selfTest?.(),
-      snapshot: router?.snapshot?.(),
       wsCandidates: router?.websocketCandidates?.('wss://stream.binance.com:443/stream?streams=btcusdt@ticker'),
+      state,
+      spacing,
+      expectedSpacing: engine?.intervalMs?.(state?.interval),
     };
   });
 
-  checks.qaModeDeclared = routerResult.qaMode === true;
-  checks.sevenOfficialRestHosts = Array.isArray(routerResult.restHosts)
-    && routerResult.restHosts.length === 7
-    && routerResult.restHosts[0] === 'https://data-api.binance.vision'
-    && routerResult.restHosts.includes('https://api-gcp.binance.com')
-    && routerResult.restHosts.includes('https://api4.binance.com');
-  checks.twoOfficialWebSocketPorts = Array.isArray(routerResult.websocketHosts)
-    && routerResult.websocketHosts.length === 2
-    && routerResult.websocketHosts[0] === 'wss://stream.binance.com:9443'
-    && routerResult.websocketHosts[1] === 'wss://stream.binance.com:443';
-  checks.websocketPathPreserved = Array.isArray(routerResult.wsCandidates)
-    && routerResult.wsCandidates.every(value => value.endsWith('/stream?streams=btcusdt@ticker'));
-  checks.routerSelfTestPassed = Boolean(routerResult.selfTest?.restHostsOfficial
-    && routerResult.selfTest?.websocketPortsOfficial
-    && routerResult.selfTest?.deterministicFailover);
-  checks.qaRestRouteRecorded = routerResult.snapshot?.rest?.status === 'qa-demo';
-  checks.qaWebSocketRouteRecorded = routerResult.snapshot?.websocket?.status === 'qa-offline';
+  checks.stageRouterActive = result.stageRouter === 'stage1';
+  checks.qaModeDeclared = result.qaMode === true;
+  checks.engineSessionUnified = Boolean(result.state?.sessionId
+    && result.state?.requestGeneration >= 1
+    && result.state?.source === 'fixture'
+    && result.state?.provider === 'fixture'
+    && result.state?.ticker?.price > 0
+    && result.state?.book?.bids?.length
+    && result.state?.book?.asks?.length
+    && result.state?.trades?.length
+    && result.state?.candles?.length >= 20);
+  checks.engineTimestampsPresent = Number(result.state?.lastServerTime) > 0
+    && Number(result.state?.lastReceivedAt) >= Number(result.state?.lastServerTime);
+  checks.engineIntervalCorrect = Number(result.spacing) > 0
+    && Number(result.spacing) === Number(result.expectedSpacing);
+  checks.engineFreshnessDeclared = result.state?.connectionState === 'live'
+    && Number.isFinite(Number(result.state?.latencyMs))
+    && Number(result.state?.staleForMs) >= 0;
+
+  checks.rollbackRestHostsPreserved = Array.isArray(result.restHosts)
+    && result.restHosts.length === 7
+    && result.restHosts[0] === 'https://data-api.binance.vision'
+    && result.restHosts.includes('https://api-gcp.binance.com')
+    && result.restHosts.includes('https://api4.binance.com');
+  checks.rollbackWebSocketHostsPreserved = Array.isArray(result.websocketHosts)
+    && result.websocketHosts.length === 2
+    && result.websocketHosts[0] === 'wss://stream.binance.com:9443'
+    && result.websocketHosts[1] === 'wss://stream.binance.com:443';
+  checks.websocketPathPreserved = Array.isArray(result.wsCandidates)
+    && result.wsCandidates.every(value => value.endsWith('/stream?streams=btcusdt@ticker'));
+  checks.rollbackRouterSelfTestPassed = Boolean(result.selfTest?.restHostsOfficial
+    && result.selfTest?.websocketPortsOfficial
+    && result.selfTest?.deterministicFailover);
 
   const scope = viewport.mobile ? 'mobile' : 'desktop';
   const openButton = page.locator(`[data-open-data-health="${scope}"]`);
   checks.healthButtonVisible = await openButton.isVisible();
   await openButton.click();
+  await page.waitForSelector('#dataHealthPanel', { state: 'visible' });
   checks.healthPanelVisible = await page.locator('#dataHealthPanel').isVisible();
   const panelText = await page.locator('#dataHealthPanel').innerText();
+  checks.stageEngineDisclosed = panelText.includes('统一行情内核') || panelText.includes('统一实时流');
   checks.demoSourceDisclosed = panelText.includes('演示行情') && panelText.includes('本地可重复演示源');
   checks.noKeyDisclosurePresent = panelText.includes('不使用API密钥') && panelText.includes('不读取真实账户');
   checks.panelHasSeparateRoutes = panelText.includes('REST') && panelText.includes('WS');
+  checks.providerAndIntervalVisible = panelText.includes(String(result.state?.provider || '').toUpperCase())
+    && panelText.includes(String(result.state?.interval || ''));
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
   checks.noConsoleErrors = consoleErrors.length === 0;
   checks.noPageErrors = pageErrors.length === 0;
