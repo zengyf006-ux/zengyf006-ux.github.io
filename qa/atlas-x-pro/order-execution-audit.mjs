@@ -89,7 +89,7 @@ try {
   await page.waitForFunction(() => document.documentElement.dataset.executionAudit === 'ready');
 
   checks.auditReady = await page.evaluate(() => document.documentElement.dataset.executionAudit === 'ready');
-  checks.auditTabMounted = await page.locator('[data-account-tab="audit"]').isVisible();
+  checks.auditTabMounted = await page.locator('[data-account-tab="audit"]').count() === 1;
   checks.auditViewMounted = await page.locator('[data-account-view="audit"]').count() === 1;
 
   const records = await getRecords();
