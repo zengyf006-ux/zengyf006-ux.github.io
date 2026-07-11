@@ -5,6 +5,8 @@
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  let updateFrame = 0;
+  let updateTimer = 0;
 
   function engineState() {
     return window.AtlasMarketDataEngine?.getState?.() || null;
@@ -76,13 +78,33 @@
     if (title) title.textContent = '统一行情内核、公开数据路由与自动降级';
   }
 
-  function init() {
-    window.AtlasMarketDataEngine?.subscribe?.(() => update());
-    window.addEventListener('atlas:data-route', update);
-    document.addEventListener('click', event => {
-      if (event.target.closest('[data-open-data-health]')) queueMicrotask(update);
+  function scheduleUpdate() {
+    queueMicrotask(update);
+    if (updateFrame) cancelAnimationFrame(updateFrame);
+    updateFrame = requestAnimationFrame(() => {
+      updateFrame = 0;
+      update();
+      clearTimeout(updateTimer);
+      updateTimer = setTimeout(update, 60);
     });
-    update();
+  }
+
+  function panelWasMounted(records) {
+    return records.some(record => [...record.addedNodes].some(node => node.nodeType === 1
+      && (node.id === 'dataHealthPanel' || node.querySelector?.('#dataHealthPanel'))));
+  }
+
+  function init() {
+    window.AtlasMarketDataEngine?.subscribe?.(scheduleUpdate);
+    window.addEventListener('atlas:data-route', scheduleUpdate);
+    document.addEventListener('click', event => {
+      if (event.target.closest('[data-open-data-health]')) scheduleUpdate();
+    }, true);
+    const observer = new MutationObserver(records => {
+      if (panelWasMounted(records)) scheduleUpdate();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    scheduleUpdate();
   }
 
   document.readyState === 'loading'
