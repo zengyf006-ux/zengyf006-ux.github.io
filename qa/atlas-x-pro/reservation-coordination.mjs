@@ -64,7 +64,8 @@ try {
   await page.addStyleTag({ url: 'http://127.0.0.1:4173/node_modules/@fontsource/noto-sans-sc/700.css', timeout: 6000 });
   await page.addStyleTag({ content: 'html,body,button,input,select{font-family:"Noto Sans SC",sans-serif!important}' });
   await page.waitForFunction(() => document.documentElement.dataset.exitStrategies === 'ready'
-    && document.documentElement.dataset.reservationCoordinator === 'ready', null, { timeout: 12000 });
+    && document.documentElement.dataset.reservationCoordinator === 'ready'
+    && document.documentElement.dataset.atlasQualityStyles === 'ready', null, { timeout: 12000 });
 
   await openOrderSheet('sell');
   await openPanel('.advanced-exit-toggle', '.advanced-exit-body');
@@ -126,39 +127,50 @@ try {
         || rect.top >= innerHeight - 1;
     }, null, { timeout: 2000 });
     await page.locator('#chartStage').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(120);
   }
 
-  await page.waitForFunction(() => document.querySelectorAll('.chart-trade-layer .trailing-stop-line').length === 1);
-  const trailingLine = page.locator('.chart-trade-layer .trailing-stop-line');
-  geometry.trailing = await trailingLine.evaluate(element => {
+  const visibilityHandle = await page.waitForFunction(() => {
+    const element = document.querySelector('.chart-trade-layer .trailing-stop-line');
+    if (!element) return false;
     const label = element.querySelector('span,b,em,small') || element;
+    const lineStyle = getComputedStyle(element);
+    const labelStyle = getComputedStyle(label);
     const lineRect = element.getBoundingClientRect();
     const labelRect = label.getBoundingClientRect();
-    return {
-      line: { left: lineRect.left, top: lineRect.top, width: lineRect.width, height: lineRect.height },
-      label: { left: labelRect.left, top: labelRect.top, width: labelRect.width, height: labelRect.height },
-      viewport: { width: innerWidth, height: innerHeight },
-    };
-  });
-  checks.trailingChartLineVisible = await trailingLine.evaluate(element => {
-    const lineStyle = getComputedStyle(element);
-    const label = element.querySelector('span,b,em,small') || element;
-    const labelStyle = getComputedStyle(label);
-    const labelRect = label.getBoundingClientRect();
-    return lineStyle.display !== 'none'
+    const visible = lineStyle.display !== 'none'
       && lineStyle.visibility !== 'hidden'
       && Number(lineStyle.opacity || 1) > 0
       && labelStyle.display !== 'none'
       && labelStyle.visibility !== 'hidden'
       && Number(labelStyle.opacity || 1) > 0
+      && lineRect.width > 0
+      && lineRect.height > 0
       && labelRect.width > 0
       && labelRect.height > 0
       && labelRect.right >= 0
       && labelRect.bottom >= 0
       && labelRect.left <= innerWidth
       && labelRect.top <= innerHeight;
-  });
+    if (!visible) return false;
+    return {
+      visible,
+      line: { left: lineRect.left, top: lineRect.top, width: lineRect.width, height: lineRect.height },
+      label: { left: labelRect.left, top: labelRect.top, width: labelRect.width, height: labelRect.height },
+      styles: {
+        lineDisplay: lineStyle.display,
+        lineVisibility: lineStyle.visibility,
+        lineOpacity: lineStyle.opacity,
+        labelDisplay: labelStyle.display,
+        labelVisibility: labelStyle.visibility,
+        labelOpacity: labelStyle.opacity,
+      },
+      viewport: { width: innerWidth, height: innerHeight },
+    };
+  }, null, { timeout: 5000, polling: 50 });
+  geometry.trailing = await visibilityHandle.jsonValue();
+  checks.trailingChartLineVisible = geometry.trailing?.visible === true;
+
+  const trailingLine = page.locator('.chart-trade-layer .trailing-stop-line');
   const lineText = await trailingLine.innerText();
   checks.trailingChartLabelDetailed = lineText.includes('追踪止损') && lineText.includes('0.1');
   const chartVisibility = await trailingLine.getAttribute('data-chart-visibility');
