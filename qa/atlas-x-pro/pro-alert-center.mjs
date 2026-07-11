@@ -52,15 +52,48 @@ const readAlerts = () => page.evaluate(() => JSON.parse(localStorage.getItem('at
 const alertEntrySelector = viewport.mobile ? '.mobile-alert-button' : '.notification-button';
 const alertBadgeSelector = viewport.mobile ? '.mobile-alert-button .alert-center-badge' : '.notification-button .alert-center-badge';
 
+async function visibleTouchMetric(selector, minimum = 40) {
+  await page.waitForFunction(({ targetSelector, minHeight }) => {
+    const visible = [...document.querySelectorAll(targetSelector)].filter(element => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return style.display !== 'none'
+        && style.visibility !== 'hidden'
+        && Number(style.opacity || 1) > 0
+        && rect.width > 0
+        && rect.height >= minHeight;
+    });
+    return visible.length === 1;
+  }, { targetSelector: selector, minHeight: minimum }, { timeout: 12000 });
+
+  const metrics = await page.locator(selector).evaluateAll(elements => elements
+    .map(element => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return {
+        height: rect.height,
+        width: rect.width,
+        visible: style.display !== 'none'
+          && style.visibility !== 'hidden'
+          && Number(style.opacity || 1) > 0
+          && rect.width > 0
+          && rect.height > 0,
+      };
+    })
+    .filter(item => item.visible));
+
+  return { height: metrics[0]?.height || 0, visibleCount: metrics.length };
+}
+
 async function openAlertCenter() {
   if (viewport.mobile) {
     await page.waitForFunction(() => document.documentElement.dataset.mobileAlertEntry === 'ready'
       && document.documentElement.dataset.alertTouchHardening === 'ready');
   }
   await page.waitForSelector(alertEntrySelector, { state: 'visible' });
-  await page.locator(alertEntrySelector).click();
-  await page.waitForSelector('#controlPopover', { state: 'visible' });
-  await page.waitForSelector('.alert-center-shell', { state: 'visible' });
+  await page.locator(`${alertEntrySelector}:visible`).click();
+  await page.waitForSelector('#controlPopover.alert-center-popover', { state: 'visible' });
+  await page.waitForSelector('#controlPopover.alert-center-popover .alert-center-shell', { state: 'visible' });
 }
 
 async function evaluateAt(price) {
@@ -73,8 +106,17 @@ async function evaluateAt(price) {
 }
 
 async function activateTab(tab) {
-  await page.locator(`[data-alert-tab="${tab}"]`).click();
-  await page.waitForFunction(value => document.querySelector(`[data-alert-tab="${value}"]`)?.classList.contains('active'), tab);
+  const selector = `#controlPopover.alert-center-popover [data-alert-tab="${tab}"]`;
+  await page.locator(`${selector}:visible`).click();
+  await page.waitForFunction(value => {
+    const active = [...document.querySelectorAll('#controlPopover.alert-center-popover [data-alert-tab].active')]
+      .find(element => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      });
+    return active?.dataset.alertTab === value;
+  }, tab);
 }
 
 try {
@@ -89,13 +131,15 @@ try {
   if (viewport.mobile) {
     await page.waitForFunction(() => document.documentElement.dataset.mobileAlertEntry === 'ready'
       && document.documentElement.dataset.alertTouchHardening === 'ready');
-    touchMetrics.entry = await page.locator('.mobile-alert-button').evaluate(element => element.getBoundingClientRect().height);
+    const entryMetric = await visibleTouchMetric('.mobile-alert-button', 40);
+    touchMetrics.entry = entryMetric.height;
+    touchMetrics.entryVisibleCount = entryMetric.visibleCount;
   }
 
   checks.alertCenterReady = await page.evaluate(() => document.documentElement.dataset.alertCenter === 'ready');
-  checks.mobileEntryVisible = viewport.mobile ? touchMetrics.entry >= 40 : true;
+  checks.mobileEntryVisible = viewport.mobile ? touchMetrics.entry >= 40 && touchMetrics.entryVisibleCount === 1 : true;
   await openAlertCenter();
-  checks.reusesControlPopover = await page.locator('#controlPopover').isVisible();
+  checks.reusesControlPopover = await page.locator('#controlPopover.alert-center-popover').isVisible();
   checks.professionalTitleVisible = (await page.locator('#popoverTitle').innerText()).includes('专业预警中心');
   checks.oldStaticNotificationsReplaced = !(await page.locator('#popoverBody').innerText()).includes('模拟交易环境运行正常');
 
@@ -136,7 +180,7 @@ try {
   checks.cooldownPreventsDuplicate = (await readAlerts()).events.filter(event => event.kind === 'price' && event.ruleId === rule.id).length === 1;
 
   await activateTab('all');
-  await page.locator('#alertCenterMarkAllRead').click();
+  await page.locator('#controlPopover.alert-center-popover #alertCenterMarkAllRead:visible').click();
   await page.waitForFunction(() => {
     const store = JSON.parse(localStorage.getItem('atlasX.pro.alertCenter.v1') || '{"events":[]}');
     return (store.events || []).every(event => event.read === true);
@@ -199,18 +243,26 @@ try {
 
   if (viewport.mobile) {
     await activateTab('rules');
-    await page.waitForSelector('#alertRuleCreate', { state: 'visible' });
-    Object.assign(touchMetrics, await page.evaluate(() => ({
-      rulesTab: document.querySelector('[data-alert-tab="rules"]')?.getBoundingClientRect().height || 0,
-      create: document.querySelector('#alertRuleCreate')?.getBoundingClientRect().height || 0,
-    })));
+    const rulesTabMetric = await visibleTouchMetric('#controlPopover.alert-center-popover [data-alert-tab="rules"]', 40);
+    const createMetric = await visibleTouchMetric('#controlPopover.alert-center-popover #alertRuleCreate', 40);
+    touchMetrics.rulesTab = rulesTabMetric.height;
+    touchMetrics.rulesTabVisibleCount = rulesTabMetric.visibleCount;
+    touchMetrics.create = createMetric.height;
+    touchMetrics.createVisibleCount = createMetric.visibleCount;
+
     await activateTab('all');
-    await page.waitForSelector('#alertCenterMarkAllRead', { state: 'visible' });
-    touchMetrics.markAllRead = await page.locator('#alertCenterMarkAllRead').evaluate(element => element.getBoundingClientRect().height);
+    const markAllReadMetric = await visibleTouchMetric('#controlPopover.alert-center-popover #alertCenterMarkAllRead', 40);
+    touchMetrics.markAllRead = markAllReadMetric.height;
+    touchMetrics.markAllReadVisibleCount = markAllReadMetric.visibleCount;
+
     checks.mobileTouchTargets = touchMetrics.entry >= 40
       && touchMetrics.rulesTab >= 40
       && touchMetrics.create >= 40
-      && touchMetrics.markAllRead >= 40;
+      && touchMetrics.markAllRead >= 40
+      && touchMetrics.entryVisibleCount === 1
+      && touchMetrics.rulesTabVisibleCount === 1
+      && touchMetrics.createVisibleCount === 1
+      && touchMetrics.markAllReadVisibleCount === 1;
   } else {
     checks.mobileTouchTargets = true;
   }
