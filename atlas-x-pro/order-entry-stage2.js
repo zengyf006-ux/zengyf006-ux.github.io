@@ -6,10 +6,12 @@
   const PREF_KEY = 'atlasX.pro.mobileStage2.v1';
   const CORE_KEY = 'atlasX.pro.v1';
   const FEE_RATE = 0.0008;
+  const MOBILE_BREAKPOINT = 820;
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const numberFrom = value => Number(String(value ?? '').replace(/[^0-9.-]/g, '')) || 0;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const isMobile = () => innerWidth <= MOBILE_BREAKPOINT;
   let selectedType = 'market';
   let unitMode = 'quantity';
   let systemSubmitting = false;
@@ -20,17 +22,21 @@
   function readPrefs() {
     try { return JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); } catch { return {}; }
   }
+
   function writePrefs(patch) {
     const next = { ...readPrefs(), ...patch };
     try { localStorage.setItem(PREF_KEY, JSON.stringify(next)); } catch {}
     return next;
   }
+
   function readCore() {
     try { return JSON.parse(localStorage.getItem(CORE_KEY) || '{}'); } catch { return {}; }
   }
+
   function writeCore(core) {
     try { localStorage.setItem(CORE_KEY, JSON.stringify(core)); } catch {}
   }
+
   function showToast(message) {
     const toast = $('#toast');
     if (!toast) return;
@@ -39,21 +45,23 @@
     clearTimeout(showToast.timer);
     showToast.timer = setTimeout(() => toast.classList.remove('show'), 2300);
   }
+
   function side() {
     return window.AtlasCoreTrading?.getSide?.() || (readCore().side === 'sell' ? 'sell' : 'buy');
   }
+
   function activeSymbol() {
     return String(readCore().activeSymbol || window.AtlasMarketDataEngine?.getState?.().symbol || 'BTCUSDT').toUpperCase();
   }
+
   function marketPrice() {
     return numberFrom(window.AtlasMarketDataEngine?.getState?.().ticker?.price || $('#lastPrice')?.textContent);
   }
-  function baseAsset() {
-    return ($('#activePair')?.textContent || 'BTC/USDT').split('/')[0];
-  }
+
   function quantityDigits() {
     return marketPrice() >= 1000 ? 6 : marketPrice() >= 1 ? 4 : 2;
   }
+
   function format(value, digits = 2) {
     return Number(value || 0).toLocaleString('en-US', {
       minimumFractionDigits: digits,
@@ -66,7 +74,8 @@
       const price = Array.isArray(level) ? Number(level[0]) : Number(level?.price);
       const quantity = Array.isArray(level) ? Number(level[1]) : Number(level?.quantity ?? level?.qty ?? level?.size);
       return { price, quantity };
-    }).filter(level => Number.isFinite(level.price) && level.price > 0 && Number.isFinite(level.quantity) && level.quantity > 0);
+    }).filter(level => Number.isFinite(level.price) && level.price > 0
+      && Number.isFinite(level.quantity) && level.quantity > 0);
   }
 
   function walkDepth(requestedQuantity, orderSide = side(), book = window.AtlasMarketDataEngine?.getState?.().book || {}) {
@@ -89,7 +98,9 @@
       ? (orderSide === 'buy' ? (vwap - referencePrice) : (referencePrice - vwap)) / referencePrice * 10000
       : null;
     const slippageCost = vwap && referencePrice
-      ? Math.max(0, orderSide === 'buy' ? (vwap - referencePrice) * filledQuantity : (referencePrice - vwap) * filledQuantity)
+      ? Math.max(0, orderSide === 'buy'
+        ? (vwap - referencePrice) * filledQuantity
+        : (referencePrice - vwap) * filledQuantity)
       : null;
     return {
       requestedQuantity: requested,
@@ -106,11 +117,21 @@
     };
   }
 
+  function initializePreferences() {
+    const prefs = readPrefs();
+    selectedType = ['market', 'limit', 'stop_market', 'stop_limit'].includes(prefs.orderType)
+      ? prefs.orderType
+      : 'market';
+    unitMode = ['quantity', 'total'].includes(prefs.unitMode) ? prefs.unitMode : 'quantity';
+  }
+
   function mount() {
+    if (!isMobile()) return false;
     const legacyTabs = $('.order-type-tabs');
     const ticket = $('#orderTicket');
     const submit = $('#submitOrder');
-    if (!legacyTabs || !ticket || !submit || $('.stage2-entry-controls')) return;
+    if (!legacyTabs || !ticket || !submit) return false;
+    if ($('.stage2-entry-controls')) return true;
 
     const controls = document.createElement('section');
     controls.className = 'stage2-entry-controls';
@@ -136,18 +157,15 @@
       <div class="coverage"><span>盘口覆盖率</span><b data-stage2-estimate="coverage">--</b></div>
       <div class="wide condition"><span>订单生效条件</span><small data-stage2-estimate="condition">--</small></div>`;
     submit.before(estimate);
-
-    const prefs = readPrefs();
-    selectedType = ['market', 'limit', 'stop_market', 'stop_limit'].includes(prefs.orderType) ? prefs.orderType : 'market';
-    unitMode = ['quantity', 'total'].includes(prefs.unitMode) ? prefs.unitMode : 'quantity';
-    applyUi();
+    return true;
   }
 
-  function applyUi() {
+  function applyUi({ syncCore = true } = {}) {
     const ticket = $('#orderTicket');
-    if (!ticket) return;
-    ticket.dataset.stage2Type = selectedType;
-    ticket.dataset.stage2Unit = unitMode;
+    if (ticket) {
+      ticket.dataset.stage2Type = selectedType;
+      ticket.dataset.stage2Unit = unitMode;
+    }
     $$('[data-stage2-order-type]').forEach(button => {
       const active = button.dataset.stage2OrderType === selectedType;
       button.classList.toggle('active', active);
@@ -158,21 +176,21 @@
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
     });
-    window.AtlasCoreTrading?.setOrderType?.(selectedType);
-    scheduleEstimate();
+    if (syncCore) window.AtlasCoreTrading?.setOrderType?.(selectedType);
+    if (isMobile()) scheduleEstimate();
   }
 
   function setOrderType(type) {
     selectedType = ['market', 'limit', 'stop_market', 'stop_limit'].includes(type) ? type : 'market';
     writePrefs({ orderType: selectedType });
-    applyUi();
+    applyUi({ syncCore: true });
     return selectedType;
   }
 
   function setUnitMode(mode) {
     unitMode = mode === 'total' ? 'total' : 'quantity';
     writePrefs({ unitMode });
-    applyUi();
+    applyUi({ syncCore: false });
     return unitMode;
   }
 
@@ -214,31 +232,42 @@
 
   function renderEstimate() {
     const panel = $('.stage2-estimate-panel');
-    if (!panel) return;
+    if (!panel || !isMobile()) return;
     const value = estimate();
     lastEstimate = value;
     const set = (key, text) => {
       const element = $(`[data-stage2-estimate="${key}"]`, panel);
       if (element) element.textContent = text;
     };
-    set('vwap', value.vwap ? `${format(value.vwap, Math.max(2, String(value.vwap).split('.')[1]?.length || 2))} USDT` : '--');
+    set('vwap', value.vwap
+      ? `${format(value.vwap, Math.max(2, String(value.vwap).split('.')[1]?.length || 2))} USDT`
+      : '--');
     set('fee', value.requestedQuantity > 0 ? `${format(value.fee, 4)} USDT` : '--');
     set('slippage', value.slippageBps == null ? '--' : `${format(value.slippageBps, 2)} bps`);
     set('coverage', value.coverage == null ? '等待成交' : `${format(value.coverage * 100, 1)}%`);
     const condition = ({
-      market: value.coverage < 1 && value.requestedQuantity > 0 ? `当前盘口仅覆盖 ${format(value.coverage * 100, 1)}%，未覆盖部分不会被描述为已成交。` : '按当前盘口模拟市价执行。',
+      market: value.coverage < 1 && value.requestedQuantity > 0
+        ? `当前盘口仅覆盖 ${format(value.coverage * 100, 1)}%，未覆盖部分不会被描述为已成交。`
+        : '按当前盘口模拟市价执行。',
       limit: '价格达到限价条件后执行；不估算真实撮合队列。',
       stop_market: '触发价达到后按市场价执行；当前深度仅供触发时参考。',
       stop_limit: '先达到触发价，再按限价条件等待执行。',
     })[selectedType];
     set('condition', condition);
-    const level = value.coverage == null || !value.requestedQuantity ? '' : value.coverage < .75 ? 'critical' : value.coverage < 1 ? 'warning' : '';
+    const level = value.coverage == null || !value.requestedQuantity
+      ? ''
+      : value.coverage < .75
+        ? 'critical'
+        : value.coverage < 1
+          ? 'warning'
+          : '';
     panel.dataset.level = level;
     panel.dataset.coverage = value.coverage == null ? '' : String(value.coverage);
-    panel.dataset.orderType = selectedType;
+    panel.dataset.stage2EstimateType = selectedType;
   }
 
   function scheduleEstimate() {
+    if (!isMobile()) return;
     cancelAnimationFrame(estimateFrame);
     estimateFrame = requestAnimationFrame(() => {
       estimateFrame = 0;
@@ -293,7 +322,8 @@
 
     queueMicrotask(() => {
       const core = readCore();
-      const created = newestOrder(core, order => !before.has(order.id) && (order.type === 'stop' || order.type === 'stop_market'));
+      const created = newestOrder(core, order => !before.has(order.id)
+        && (order.type === 'stop' || order.type === 'stop_market'));
       if (!created) {
         showToast('止损限价创建失败，请检查订单字段');
         return;
@@ -305,7 +335,9 @@
       created.originalTriggerPrice = trigger;
       writeCore(core);
       showToast('模拟止损限价单已提交');
-      window.dispatchEvent(new CustomEvent('atlas:stage2-stop-limit-created', { detail: { orderId: created.id } }));
+      window.dispatchEvent(new CustomEvent('atlas:stage2-stop-limit-created', {
+        detail: { orderId: created.id },
+      }));
     });
   }
 
@@ -359,7 +391,7 @@
       const backdrop = $('#sheetBackdrop');
       if (backdrop) backdrop.hidden = false;
     }
-    applyUi();
+    if (isMobile()) applyUi({ syncCore: false });
     showToast(`止损限价已触发，限价单等待执行（${format(price, 2)}）`);
     return Boolean(child);
   }
@@ -371,7 +403,8 @@
       const core = readCore();
       const price = marketPrice();
       if (!(price > 0)) return;
-      const pending = (core.orders || []).filter(order => order.stage2Type === 'stop_limit' && order.status === 'waiting_trigger');
+      const pending = (core.orders || [])
+        .filter(order => order.stage2Type === 'stop_limit' && order.status === 'waiting_trigger');
       for (const order of pending) {
         const trigger = Number(order.stage2TriggerPrice);
         const reached = order.side === 'buy' ? price >= trigger : price <= trigger;
@@ -392,19 +425,19 @@
   function bind() {
     document.addEventListener('click', event => {
       const type = event.target.closest('[data-stage2-order-type]')?.dataset.stage2OrderType;
-      if (type) {
+      if (type && isMobile()) {
         event.preventDefault();
         setOrderType(type);
         return;
       }
       const unit = event.target.closest('[data-entry-unit]')?.dataset.entryUnit;
-      if (unit) {
+      if (unit && isMobile()) {
         event.preventDefault();
         setUnitMode(unit);
         return;
       }
       const percent = event.target.closest('[data-percent]')?.dataset.percent;
-      if (percent !== undefined && side() === 'sell') {
+      if (isMobile() && percent !== undefined && side() === 'sell') {
         event.preventDefault();
         event.stopImmediatePropagation();
         const ratio = clamp(Number(percent) || 0, 0, 100) / 100;
@@ -417,7 +450,7 @@
         return;
       }
       const bookPrice = event.target.closest('[data-book-price]')?.dataset.bookPrice;
-      if (bookPrice && innerWidth <= 820) {
+      if (bookPrice && isMobile()) {
         queueMicrotask(() => {
           setOrderType('limit');
           window.AtlasCoreTrading?.setField?.('#orderPrice', bookPrice);
@@ -433,7 +466,7 @@
     }, true);
 
     $('#submitOrder')?.addEventListener('click', event => {
-      if (systemSubmitting) return;
+      if (!isMobile() || systemSubmitting) return;
       if (selectedType === 'stop_limit') {
         submitStopLimit(event);
         return;
@@ -446,13 +479,21 @@
       $(selector)?.addEventListener('input', scheduleEstimate);
     });
     document.addEventListener('click', event => {
-      if (event.target.closest('[data-side]') || event.target.closest('[data-mobile-side]')) scheduleEstimate();
+      if (isMobile() && (event.target.closest('[data-side]') || event.target.closest('[data-mobile-side]'))) {
+        scheduleEstimate();
+      }
     });
     window.AtlasMarketDataEngine?.subscribe?.(() => {
       scheduleEstimate();
       processStopLimits();
     });
     window.addEventListener('atlas:order-book-stage2-render', scheduleEstimate);
+    window.addEventListener('resize', () => {
+      if (isMobile()) {
+        mount();
+        applyUi({ syncCore: false });
+      }
+    });
   }
 
   window.AtlasOrderEntryStage2 = Object.freeze({
@@ -464,9 +505,12 @@
   });
 
   function init() {
-    mount();
+    initializePreferences();
     bind();
-    applyUi();
+    if (isMobile()) {
+      mount();
+      applyUi({ syncCore: true });
+    }
     document.documentElement.dataset.orderEntryStage2 = 'ready';
   }
 
