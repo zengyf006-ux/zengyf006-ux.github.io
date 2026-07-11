@@ -1,0 +1,26 @@
+/* Final cascade for cross-module mobile touch safety. */
+@media (max-width: 820px) {
+  .account-tabs button[data-account-tab="audit"] {
+    min-height: 46px !important;
+    height: 46px !important;
+    padding-block: 0 !important;
+    touch-action: manipulation;
+  }
+
+  .execution-audit-filters button {
+    min-height: 44px !important;
+    height: 44px !important;
+    touch-action: manipulation;
+  }
+
+  .execution-audit-row[data-audit-record-id] {
+    min-height: 100px !important;
+    touch-action: manipulation;
+  }
+
+  .execution-audit-entry,
+  [data-audit-detail-close] {
+    min-height: 44px !important;
+    touch-action: manipulation;
+  }
+}
