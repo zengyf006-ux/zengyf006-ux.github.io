@@ -98,11 +98,12 @@ try {
   if (viewport.mobile) {
     checks.rankingRowsFillPanel = true;
   } else {
-    const [listBox, rowBox] = await Promise.all([
-      page.locator('.market-intelligence-list').boundingBox(),
-      page.locator('.market-intelligence-row').first().boundingBox(),
-    ]);
-    checks.rankingRowsFillPanel = Boolean(listBox && rowBox && rowBox.width >= listBox.width - 2);
+    checks.rankingRowsFillPanel = await page.locator('.market-intelligence-list').evaluate(list => {
+      const row = list.querySelector('.market-intelligence-row');
+      if (!row) return false;
+      const rowWidth = row.getBoundingClientRect().width;
+      return Math.abs(rowWidth - list.clientWidth) <= 2;
+    });
   }
 
   await page.locator('[data-market-intelligence-filter="decliners"]').click();
