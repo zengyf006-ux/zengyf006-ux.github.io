@@ -42,7 +42,9 @@
     selectedType = requestedType;
     root.dataset.stage2BridgeOrderType = requestedType;
     try {
-      click(`[data-order-type="${legacyType(requestedType)}"]`);
+      if (requestedType !== 'stop_limit') {
+        click(`[data-order-type="${legacyType(requestedType)}"]`);
+      }
     } finally {
       delete root.dataset.stage2BridgeOrderType;
     }
