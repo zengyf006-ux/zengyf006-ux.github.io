@@ -36,6 +36,7 @@
       './terminal-quality.css',
       './mobile-final.css',
       './chart-pro-tools.css',
+      './chart-trading-layer.css',
       './trading-advanced.css',
       './advanced-visual-final.css',
       './execution-guard.css',
@@ -57,6 +58,7 @@
       await loadScript('./module-upgrades.js');
       await loadScript('./terminal-quality.js');
       await loadScript('./chart-pro-tools.js');
+      await loadScript('./chart-trading-layer.js');
       await loadScript('./trading-advanced.js');
       await loadScript('./advanced-stability.js');
       await loadScript('./execution-guard.js');
