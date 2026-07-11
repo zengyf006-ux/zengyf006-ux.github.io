@@ -89,6 +89,7 @@
       await loadScript('./pro-alert-create-stability.js');
       await loadScript('./pro-alert-tab-stability.js');
       await loadScript('./pro-alert-center-mobile.js');
+      await loadScript('./pro-alert-touch-hardening.js');
       await loadScript('./alert-center-legacy-consolidation.js');
       await loadScript('./order-execution-audit.js');
       await loadScript('./market-intelligence.js');
