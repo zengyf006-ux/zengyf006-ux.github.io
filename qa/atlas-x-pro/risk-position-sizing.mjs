@@ -135,7 +135,16 @@ try {
   await page.waitForFunction(() => document.querySelector('.risk-sizing-panel')?.dataset.valid === 'true');
   await page.evaluate(() => document.querySelector('#marketList [data-symbol="ETHUSDT"]')?.click());
   await page.waitForFunction(() => document.querySelector('#activePair')?.textContent?.includes('ETH/USDT'));
-  checks.planIsolatedBySymbol = (await page.locator('#riskStopPrice').inputValue()) !== String(stop);
+  await page.waitForFunction(expectedStop => {
+    const panel = document.querySelector('.risk-sizing-panel');
+    const stopInput = document.querySelector('#riskStopPrice');
+    return panel?.dataset.symbol === 'ETHUSDT' && stopInput?.value !== expectedStop;
+  }, String(stop));
+  checks.planIsolatedBySymbol = await page.evaluate(expectedStop => {
+    const panel = document.querySelector('.risk-sizing-panel');
+    const stopInput = document.querySelector('#riskStopPrice');
+    return panel?.dataset.symbol === 'ETHUSDT' && stopInput?.value !== expectedStop;
+  }, String(stop));
 
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
   if (viewport.mobile) {
