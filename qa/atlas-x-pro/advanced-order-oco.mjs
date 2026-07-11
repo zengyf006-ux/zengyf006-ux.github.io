@@ -76,14 +76,43 @@ async function fillOco(quantity, takeProfit, stopTrigger, tif = 'gtc') {
   await page.locator('#ocoStopTrigger').dispatchEvent('input');
 }
 
+async function waitForNewActiveOco(previousIds) {
+  await page.waitForFunction(ids => {
+    const stored = JSON.parse(localStorage.getItem('atlasX.pro.advancedOrders.v1') || '{"orders":[]}');
+    return stored.orders?.some(order => order.status === 'active' && !ids.includes(order.id));
+  }, previousIds);
+  return (await readAdvanced()).orders.find(order => order.status === 'active' && !previousIds.includes(order.id));
+}
+
 async function createOco(quantity, takeProfit, stopTrigger, tif = 'gtc') {
+  const previousIds = (await readAdvanced()).orders.map(order => order.id);
   await fillOco(quantity, takeProfit, stopTrigger, tif);
   await page.locator('#createOcoOrder').click();
-  await page.waitForFunction(() => {
-    const stored = JSON.parse(localStorage.getItem('atlasX.pro.advancedOrders.v1') || '{"orders":[]}');
-    return stored.orders?.some(order => order.status === 'active');
-  });
-  return (await readAdvanced()).orders.find(order => order.status === 'active');
+  return waitForNewActiveOco(previousIds);
+}
+
+async function createRelativeOco(quantity, takeProfitMultiplier, stopMultiplier, tif = 'gtc') {
+  const previousIds = (await readAdvanced()).orders.map(order => order.id);
+  await openOcoPanel();
+  const draft = await page.evaluate(({ quantity: qty, takeProfitMultiplier: tpMultiplier, stopMultiplier: slMultiplier, tifValue }) => {
+    const current = Number((document.querySelector('#lastPrice')?.textContent || '').replace(/,/g, ''));
+    const takeProfit = Number((current * tpMultiplier).toFixed(2));
+    const stopTrigger = Number((current * slMultiplier).toFixed(2));
+    const setValue = (selector, value, eventName = 'input') => {
+      const input = document.querySelector(selector);
+      if (!input) throw new Error(`Missing OCO field: ${selector}`);
+      input.value = String(value);
+      input.dispatchEvent(new Event(eventName, { bubbles: true }));
+    };
+    setValue('#ocoQuantity', qty);
+    setValue('#ocoTakeProfit', takeProfit);
+    setValue('#ocoStopTrigger', stopTrigger);
+    setValue('#ocoTif', tifValue, 'change');
+    return { current, takeProfit, stopTrigger };
+  }, { quantity, takeProfitMultiplier, stopMultiplier, tifValue: tif });
+  await page.locator('#createOcoOrder').click();
+  const order = await waitForNewActiveOco(previousIds);
+  return { order, ...draft };
 }
 
 try {
@@ -140,10 +169,10 @@ try {
   checks.stopReducesPosition = Math.abs(Number(afterStopCore.positions?.find(position => position.symbol === 'BTCUSDT')?.qty) - 0.45) < 1e-8;
   checks.stopStatusAudited = stopped?.status === 'completed_stop' && Number(stopped.completedAt) > Number(stopped.createdAt);
 
-  const currentAfterStop = Number((await page.locator('#lastPrice').innerText()).replace(/,/g, ''));
-  const expiryTp = Number((currentAfterStop * 1.03).toFixed(2));
-  const expiryStop = Number((currentAfterStop * 0.97).toFixed(2));
-  const expiring = await createOco(0.03, expiryTp, expiryStop, '15m');
+  const expiringDraft = await createRelativeOco(0.03, 1.03, 0.97, '15m');
+  const expiring = expiringDraft.order;
+  checks.expiryDraftValidAtSubmit = expiringDraft.takeProfit > expiringDraft.current
+    && expiringDraft.stopTrigger < expiringDraft.current;
   await page.evaluate(id => {
     const stored = JSON.parse(localStorage.getItem('atlasX.pro.advancedOrders.v1') || '{"orders":[]}');
     const order = stored.orders?.find(item => item.id === id);
@@ -158,10 +187,9 @@ try {
   const afterExpiryCore = await readCore();
   checks.expiryCancelsCoreLeg = !afterExpiryCore.orders?.some(order => order.id === expiring.tpOrderId);
 
-  const tpCurrent = Number((await page.locator('#lastPrice').innerText()).replace(/,/g, ''));
-  const tpPrice = Number((tpCurrent * 1.025).toFixed(2));
-  const tpStop = Number((tpCurrent * 0.975).toFixed(2));
-  const takingProfit = await createOco(0.02, tpPrice, tpStop, 'gtc');
+  const takingProfitDraft = await createRelativeOco(0.02, 1.025, 0.975, 'gtc');
+  const takingProfit = takingProfitDraft.order;
+  const tpPrice = takingProfitDraft.takeProfit;
   await page.evaluate(async ({ id, orderId, price, quantity: qty }) => {
     const core = JSON.parse(localStorage.getItem('atlasX.pro.v1') || '{}');
     core.orders = (core.orders || []).filter(order => order.id !== orderId);
