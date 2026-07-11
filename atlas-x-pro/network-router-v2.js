@@ -101,6 +101,7 @@
     './market-data-engine.js',
     './chart-experience.js',
     './realtime-market-integration.js',
+    './interval-persistence-compat.js',
   ];
 
   if (document.readyState === 'loading') {
