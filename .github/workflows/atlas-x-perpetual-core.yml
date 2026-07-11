@@ -31,7 +31,10 @@ jobs:
       - name: Verify perpetual order engine
         run: node qa/atlas-x-pro/perpetual-order-engine.mjs
       - name: Verify perpetual funding engine
-        run: node qa/atlas-x-pro/perpetual-funding.mjs
+        shell: bash
+        run: |
+          set -o pipefail
+          node qa/atlas-x-pro/perpetual-funding.mjs 2>&1 | tee qa-artifacts-pro/perpetual-funding.log
       - name: Upload perpetual core reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -42,5 +45,6 @@ jobs:
             qa-artifacts-pro/perpetual-risk-report.json
             qa-artifacts-pro/perpetual-order-report.json
             qa-artifacts-pro/perpetual-funding-report.json
+            qa-artifacts-pro/perpetual-funding.log
           retention-days: 1
           if-no-files-found: warn
