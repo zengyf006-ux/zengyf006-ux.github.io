@@ -38,10 +38,16 @@
 
   function setOrderType(type) {
     const requestedType = normalizeType(type);
+    const root = document.documentElement;
     selectedType = requestedType;
-    click(`[data-order-type="${legacyType(requestedType)}"]`);
+    root.dataset.stage2BridgeOrderType = requestedType;
+    try {
+      click(`[data-order-type="${legacyType(requestedType)}"]`);
+    } finally {
+      delete root.dataset.stage2BridgeOrderType;
+    }
     selectedType = requestedType;
-    document.documentElement.dataset.stage2OrderType = requestedType;
+    root.dataset.stage2OrderType = requestedType;
     return requestedType;
   }
 
