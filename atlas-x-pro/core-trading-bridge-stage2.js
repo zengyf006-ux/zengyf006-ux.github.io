@@ -37,10 +37,12 @@
   }
 
   function setOrderType(type) {
-    selectedType = normalizeType(type);
-    click(`[data-order-type="${legacyType(selectedType)}"]`);
-    document.documentElement.dataset.stage2OrderType = selectedType;
-    return selectedType;
+    const requestedType = normalizeType(type);
+    selectedType = requestedType;
+    click(`[data-order-type="${legacyType(requestedType)}"]`);
+    selectedType = requestedType;
+    document.documentElement.dataset.stage2OrderType = requestedType;
+    return requestedType;
   }
 
   function setField(selector, value, eventName = 'input') {
