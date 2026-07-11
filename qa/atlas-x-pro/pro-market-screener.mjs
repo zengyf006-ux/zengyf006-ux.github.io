@@ -34,6 +34,21 @@ const bookRows = symbols.map((symbol, index) => {
   const half = last * spreadBps / 20000;
   return { symbol, bidPrice: String(last - half), askPrice: String(last + half) };
 });
+const gatewayMarkets = tickerRows.map((ticker, index) => ({
+  symbol: ticker.symbol,
+  provider: 'fixture',
+  price: Number(ticker.lastPrice),
+  open: Number(ticker.openPrice),
+  high: Number(ticker.highPrice),
+  low: Number(ticker.lowPrice),
+  volume: 0,
+  quoteVolume: Number(ticker.quoteVolume),
+  change: Number(ticker.priceChangePercent),
+  bid: Number(bookRows[index].bidPrice),
+  ask: Number(bookRows[index].askPrice),
+  trades: Number(ticker.count),
+  serverTime: Date.now(),
+}));
 
 const browser = await chromium.launch({
   headless: true,
@@ -56,15 +71,17 @@ await context.addInitScript(() => {
 
 const page = await context.newPage();
 page.setDefaultTimeout(14000);
-await page.route('**/api/v3/ticker/24hr*', route => route.fulfill({
+const gatewayRoute = '**/functions/v1/atlas-market-gateway/markets*';
+await page.route(gatewayRoute, route => route.fulfill({
   status: 200,
   contentType: 'application/json',
-  body: JSON.stringify(tickerRows),
-}));
-await page.route('**/api/v3/ticker/bookTicker*', route => route.fulfill({
-  status: 200,
-  contentType: 'application/json',
-  body: JSON.stringify(bookRows),
+  body: JSON.stringify({
+    version: 'atlas.market.v1',
+    provider: 'fixture',
+    serverTime: Date.now(),
+    receivedAt: Date.now(),
+    markets: gatewayMarkets,
+  }),
 }));
 
 const target = 'http://127.0.0.1:4173/atlas-x-pro/?qa=1';
@@ -103,6 +120,7 @@ try {
   checks.screenerReady = await page.locator('.pro-market-screener').isVisible();
   checks.liveSourceDeclared = (await page.locator('.pro-market-screener').getAttribute('data-source')) === 'live';
   checks.allMarketsRendered = await page.locator('.pro-market-row').count() === 12;
+  checks.gatewayBacked = await page.evaluate(() => window.AtlasMarketScreener?.gateway?.includes('atlas-market-gateway'));
 
   const btc = page.locator('.pro-market-row[data-screener-symbol="BTCUSDT"]');
   checks.metricsDerivedCorrectly = (await btc.locator('[data-metric="turnover"]').innerText()).includes('5.00B')
@@ -122,12 +140,12 @@ try {
 
   await page.locator('[data-screener-filter="range"]').click();
   await page.waitForTimeout(80);
-  const rangeSymbols = await page.locator('.pro-market-row:not([hidden])').evaluateAll(rows => rows.map(row => row.dataset.screenerSymbol));
+  const rangeSymbols = await page.locator('.pro-market-row:not([hidden])').evaluateAll(items => items.map(row => row.dataset.screenerSymbol));
   checks.highRangeFilterCorrect = rangeSymbols.includes('AVAXUSDT') && rangeSymbols.includes('DOGEUSDT') && !rangeSymbols.includes('TRXUSDT');
 
   await page.locator('[data-screener-filter="spread"]').click();
   await page.waitForTimeout(80);
-  const spreadSymbols = await page.locator('.pro-market-row:not([hidden])').evaluateAll(rows => rows.map(row => row.dataset.screenerSymbol));
+  const spreadSymbols = await page.locator('.pro-market-row:not([hidden])').evaluateAll(items => items.map(row => row.dataset.screenerSymbol));
   checks.lowSpreadFilterCorrect = spreadSymbols.includes('BTCUSDT') && spreadSymbols.includes('ETHUSDT') && !spreadSymbols.includes('DOGEUSDT');
 
   await page.locator('[data-screener-filter="all"]').click();
@@ -152,10 +170,8 @@ try {
   await openMarkets();
   checks.comparePersistsAfterReload = await page.locator('.pro-market-compare-card').count() === 4;
 
-  await page.unroute('**/api/v3/ticker/24hr*');
-  await page.unroute('**/api/v3/ticker/bookTicker*');
-  await page.route('**/api/v3/ticker/24hr*', route => route.abort());
-  await page.route('**/api/v3/ticker/bookTicker*', route => route.abort());
+  await page.unroute(gatewayRoute);
+  await page.route(gatewayRoute, route => route.abort());
   await page.evaluate(() => window.AtlasMarketScreener.refresh({ force: true }));
   await page.waitForFunction(() => document.querySelector('.pro-market-screener')?.dataset.source === 'cache');
   checks.validCacheUsedOnFailure = (await page.locator('.pro-market-screener').getAttribute('data-source')) === 'cache';
