@@ -65,23 +65,35 @@ let fatalError = null;
 page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
 page.on('pageerror', error => pageErrors.push(String(error)));
 
-function expectedPrice(metrics, ratio) {
-  return metrics.max - ratio * (metrics.max - metrics.min);
-}
-
-async function clickChartAtRatio(ratio) {
+async function clickChartAtRatio(ratio, mode) {
   const canvas = page.locator('#chartCanvas');
   const metrics = await canvas.evaluate(element => ({
-    max: Number(element.dataset.max),
-    min: Number(element.dataset.min),
     top: Number(element.dataset.top),
     height: Number(element.dataset.priceHeight),
   }));
   const box = await canvas.boundingBox();
   if (!box) throw new Error('Chart canvas has no bounding box');
+  await page.locator('#chartStage').evaluate(element => {
+    delete element.dataset.lastPickMode;
+    delete element.dataset.lastPickPrice;
+  });
   const localY = metrics.top + metrics.height * ratio;
   await page.mouse.click(box.x + box.width * 0.55, box.y + localY);
-  return { metrics, price: expectedPrice(metrics, ratio) };
+  await page.waitForFunction(expectedMode => document.querySelector('#chartStage')?.dataset.lastPickMode === expectedMode, mode);
+  return page.locator('#chartStage').evaluate(element => {
+    const snapshot = {
+      mode: element.dataset.lastPickMode || '',
+      price: Number(element.dataset.lastPickPrice),
+      ratio: Number(element.dataset.lastPickRatio),
+      max: Number(element.dataset.lastPickMax),
+      min: Number(element.dataset.lastPickMin),
+    };
+    snapshot.expectedPrice = snapshot.max - snapshot.ratio * (snapshot.max - snapshot.min);
+    snapshot.mathCorrect = Number.isFinite(snapshot.price)
+      && Number.isFinite(snapshot.expectedPrice)
+      && Math.abs(snapshot.price - snapshot.expectedPrice) < 1e-7;
+    return snapshot;
+  });
 }
 
 async function ensureRiskPlanOpen() {
@@ -142,28 +154,31 @@ try {
   checks.threePickToolsPresent = await page.locator('[data-chart-tool="order-price"], [data-chart-tool="plan-stop"], [data-chart-tool="plan-target"]').count() === 3;
 
   await page.locator('[data-chart-tool="order-price"]').click();
-  const orderPick = await clickChartAtRatio(0.56);
+  const orderPick = await clickChartAtRatio(0.56, 'order-price');
   if (viewport.mobile) await page.waitForFunction(() => document.body.classList.contains('order-sheet-open'));
   await page.waitForFunction(() => document.querySelector('[data-order-type="limit"]')?.classList.contains('active'));
   const pickedOrderPrice = Number(await page.locator('#orderPrice').inputValue());
-  checks.orderPricePickerWorks = Math.abs(pickedOrderPrice - orderPick.price) < (orderPick.metrics.max - orderPick.metrics.min) * 0.004;
+  checks.orderPickMathCorrect = orderPick.mathCorrect;
+  checks.orderPricePickerWorks = Math.abs(pickedOrderPrice - orderPick.price) < 0.011;
   checks.orderPickerDoesNotSubmit = await page.locator('#historyBody [data-label="状态"]').count() === 0;
   await closeMobileSheet();
 
   await page.locator('[data-chart-tool="plan-stop"]').click();
-  const stopPick = await clickChartAtRatio(0.78);
+  const stopPick = await clickChartAtRatio(0.78, 'plan-stop');
   if (viewport.mobile) await page.waitForFunction(() => document.body.classList.contains('order-sheet-open'));
   await page.waitForSelector('.risk-sizing-body', { state: 'visible' });
   const pickedStop = Number(await page.locator('#riskStopPrice').inputValue());
-  checks.stopPickerWorks = Math.abs(pickedStop - stopPick.price) < (stopPick.metrics.max - stopPick.metrics.min) * 0.004;
+  checks.stopPickMathCorrect = stopPick.mathCorrect;
+  checks.stopPickerWorks = Math.abs(pickedStop - stopPick.price) < 0.011;
   await closeMobileSheet();
 
   await page.locator('[data-chart-tool="plan-target"]').click();
-  const targetPick = await clickChartAtRatio(0.22);
+  const targetPick = await clickChartAtRatio(0.22, 'plan-target');
   if (viewport.mobile) await page.waitForFunction(() => document.body.classList.contains('order-sheet-open'));
   await page.waitForSelector('.risk-sizing-body', { state: 'visible' });
   const pickedTarget = Number(await page.locator('#riskTargetPrice').inputValue());
-  checks.targetPickerWorks = Math.abs(pickedTarget - targetPick.price) < (targetPick.metrics.max - targetPick.metrics.min) * 0.004;
+  checks.targetPickMathCorrect = targetPick.mathCorrect;
+  checks.targetPickerWorks = Math.abs(pickedTarget - targetPick.price) < 0.011;
   const storedPlans = await page.evaluate(() => JSON.parse(localStorage.getItem('atlasX.pro.riskPlans.v1') || '{}'));
   checks.planPickerPersists = Math.abs(Number(storedPlans.BTCUSDT?.stopPrice) - pickedStop) < 0.02
     && Math.abs(Number(storedPlans.BTCUSDT?.targetPrice) - pickedTarget) < 0.02;
@@ -171,7 +186,7 @@ try {
 
   await page.evaluate(() => document.querySelector('#marketList [data-symbol="ETHUSDT"]')?.click());
   await page.waitForFunction(() => document.querySelector('#activePair')?.textContent?.includes('ETH/USDT'));
-  await page.waitForFunction(() => document.querySelector('.chart-trade-layer')?.dataset.symbol === 'ETHUSDT');
+  await page.waitForFunction(() => document.querySelector('.chart-trade-layer')?.dataset.chartSymbol === 'ETHUSDT');
   checks.symbolIsolation = await page.locator('.chart-trade-layer .position-line, .chart-trade-layer .buy-order-line, .chart-trade-layer .sell-order-line, .chart-trade-layer .plan-stop-line, .chart-trade-layer .plan-target-line').count() === 0;
 
   checks.noHorizontalOverflow = await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1);
