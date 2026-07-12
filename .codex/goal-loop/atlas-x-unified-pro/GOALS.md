@@ -6,8 +6,8 @@ Status values: `ready`, `running`, `rejected`, `done`.
 |---|---|---|---|
 | G0 | Establish durable goal-loop state and baseline evidence | — | done |
 | G1 | Foundation rework: complete contracts, decimal format, truthfulness, risk model, docs and CI paths | G0 | done |
-| G2 | Monorepo/package boundaries for contracts, domain, market data, paper trading, UI and web app | G1 | running |
-| G3 | Deterministic market adapters, connection state machine, cache/offline truthfulness | G2 | ready |
+| G2 | Monorepo/package boundaries for contracts, domain, market data, paper trading, UI and web app | G1 | done |
+| G3 | Deterministic market adapters, connection state machine, cache/offline truthfulness | G2 | running |
 | G4 | Event-sourced paper ledger with IndexedDB persistence and reset confirmation | G2 | ready |
 | G5 | Professional Web terminal, markets, watchlist, assets, orders, fills, alerts, settings and data health | G3,G4 | ready |
 | G6 | PWA installability, offline shell, recovery and update flow | G5 | ready |

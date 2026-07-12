@@ -35,11 +35,30 @@ Evidence:
 - Complete requested domain schemas and stable DomainErrorCode enum.
 - Fee-aware spot-long risk assessment separates equity and available cash, supports optional target, reward/risk outputs and conservative quantity caps.
 - Original risk API and original vectors remain executable; vectors expanded from 38 to 44: normal 20, boundary 9, error 15.
-- Local compatibility reconstruction: 9 test files, 89 tests, generated drift/typecheck/audit all passed.
 - Exact verified Head: `e874c3275f69e3f1e35ba763ae97250f983c05d5`.
-- GitHub Actions: `ATLAS X Unified Verify`, Run `29192009639`, success; locked install, deterministic rebuild, zero generated drift and full verify all passed.
-- Final workflow token permissions are read-only.
+- GitHub Actions Run `29192009639` succeeded with locked install, deterministic rebuild, zero generated drift and read-only permissions.
+
+## G2 — Workspace boundaries
+
+Commits:
+
+- `345f9e5` — add failing workspace dependency and source-boundary tests.
+- `2935702` — establish contracts, domain, market-data, paper-trading, UI and web workspaces with one-way dependencies.
+- `c7e7de3` — Actions generated package-lock workspace registrations.
+- `51e9d1b` — restore final read-only workspace verification.
+
+Evidence:
+
+- Dependency direction is fixed and tested: contracts → domain → market-data/paper-trading → web; UI depends only on contracts.
+- Root compatibility facade preserves all G1 behavior while packages expose focused typed entrypoints.
+- Market data and paper trading are represented by ports, not DOM actions or global browser state.
+- Paper trading event storage uses a typed event union rather than `unknown` records.
+- Architecture tests cover every workspace and reject localStorage/sessionStorage business truth, global window state, and fetch/WebSocket monkey patches.
+- Local clean `npm ci` and `npm run verify`: 10 test files, 94 tests, all six workspace typechecks, audit 0.
+- Exact verified Head: `51e9d1b754701e2b890de0ee572b6a359869a576`.
+- GitHub Actions Run `29192393389`: success; locked install, deterministic rebuild, zero lock/generated drift and full workspace verification.
+- Final workflow permissions are read-only.
 
 ## Current work
 
-G2 is running. The next batch establishes explicit package and application boundaries while preserving all G1 behavior and evidence.
+G3 is running: deterministic fixture and public Coinbase feed parsing, connection transitions, reconnection backoff, cache/offline truthfulness and source visibility.

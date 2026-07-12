@@ -6,21 +6,19 @@ The project may request final review only when all 15 completion conditions from
 
 ## G1 foundation rework — accepted
 
-The starting foundation rejection was resolved on exact verified Head `e874c3275f69e3f1e35ba763ae97250f983c05d5` with Actions Run `29192009639` successful.
+Accepted on Head `e874c3275f69e3f1e35ba763ae97250f983c05d5`, Actions Run `29192009639`.
 
-Accepted evidence:
+## G2 workspace boundaries — accepted
 
-1. Required OpenAPI domain schemas are present.
-2. OrderStatus and MarketConnection state sets match the required values; `cancelled` is rejected.
-3. SchemaVersion is fixed to `atlas.unified.v1`.
-4. `atlas-decimal-34` is executed by AJV and TypeScript; number, exponent, negative zero, noncanonical and 35-digit values are rejected.
-5. DataSource is a strict discriminated union and cached-real time requirements are enforced.
-6. Domain errors use stable codes.
-7. Risk assessment includes equity, available cash, independent fees, target/reward/risk ratio and conservative caps.
-8. Workflow listens to both unified source and its own workflow file.
-9. OpenAPI is reviewable multiline YAML and contract/evidence/legacy disposition docs exist.
-10. Generated types/vectors are deterministic, full audit passes and CI is read-only.
+Accepted on Head `51e9d1b754701e2b890de0ee572b6a359869a576`, Actions Run `29192393389`.
 
-## G2 acceptance — running
+- Required workspace manifests and source entrypoints exist.
+- Package dependency graph is one-way and tested.
+- All workspaces pass strict TypeScript independently.
+- Contracts/domain remain browser and UI independent.
+- No workspace may store business truth in localStorage/sessionStorage or replace global fetch/WebSocket.
+- Clean npm ci, generated drift, full tests and audit pass.
 
-Required next evidence: workspace dependency graph, package-boundary tests, strict builds for each package, no circular domain/UI/network dependencies, and preservation of all G1 gates.
+## G3 acceptance — running
+
+Required evidence: deterministic fixture mode, public real-feed parser/adapter, explicit truthfulness on every snapshot/event, complete connection-state transitions, sequence-gap/staleness handling, bounded reconnect backoff, cache fallback that never becomes `real`, and network-loss/recovery tests.
