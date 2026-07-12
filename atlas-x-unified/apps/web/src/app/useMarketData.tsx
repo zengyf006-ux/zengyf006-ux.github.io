@@ -12,7 +12,6 @@ import {
   type MarketCachePort,
   type MarketDataSnapshot,
   type SchedulerLike,
-  type WebSocketEventLike,
   type WebSocketFactory,
   type WebSocketLike,
 } from '@atlas-x/market-data';
@@ -74,6 +73,24 @@ function createCache(): { readonly cache: MarketCachePort; readonly close: () =>
     storeName: 'snapshots',
   });
   return { cache, close: () => cache.close() };
+}
+
+function MarketRuntimeBanner({ value }: { readonly value: MarketDataContextValue }) {
+  const ticker = value.presentation.ticker;
+  return (
+    <section className={`market-runtime-banner tone-${value.presentation.tone}`} aria-live="polite" aria-label="公共行情状态">
+      <div className="market-runtime-primary">
+        <span className="market-runtime-label">{value.presentation.label}</span>
+        <b>{ticker?.symbol ?? '公共行情'}</b>
+        <strong>{ticker?.last ?? '—'}</strong>
+      </div>
+      <div className="market-runtime-detail">
+        <span>{value.presentation.connectionLabel}</span>
+        <span>{value.presentation.detail}</span>
+        {value.fallbackReason === null ? null : <span className="market-runtime-error">{value.fallbackReason}</span>}
+      </div>
+    </section>
+  );
 }
 
 export function MarketDataProvider({ children }: PropsWithChildren) {
@@ -140,7 +157,7 @@ export function MarketDataProvider({ children }: PropsWithChildren) {
     };
     globalThis.addEventListener('online', online);
     globalThis.addEventListener('offline', offline);
-    if (globalThis.navigator?.onLine === false) adapter.setOnline(false);
+    if (globalThis.navigator.onLine === false) adapter.setOnline(false);
 
     const poll = globalThis.setInterval(() => void publishSnapshot(), 1_000);
     void publishSnapshot();
@@ -158,7 +175,12 @@ export function MarketDataProvider({ children }: PropsWithChildren) {
 
   const presentation = useMemo(() => presentMarketSnapshot(snapshot), [snapshot]);
   const value = useMemo<MarketDataContextValue>(() => ({ snapshot, presentation, fallbackReason }), [snapshot, presentation, fallbackReason]);
-  return <MarketDataContext.Provider value={value}>{children}</MarketDataContext.Provider>;
+  return (
+    <MarketDataContext.Provider value={value}>
+      <MarketRuntimeBanner value={value} />
+      {children}
+    </MarketDataContext.Provider>
+  );
 }
 
 export function useMarketData(): MarketDataContextValue {
@@ -166,5 +188,3 @@ export function useMarketData(): MarketDataContextValue {
   if (context === null) throw new Error('useMarketData must be used within MarketDataProvider');
   return context;
 }
-
-export type { WebSocketEventLike };
