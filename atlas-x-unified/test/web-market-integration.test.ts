@@ -70,18 +70,18 @@ describe('truthful Web market integration', () => {
     expect(real.detail).toContain('Coinbase');
     expect(real.detail).toContain('50 ms');
 
+    const { latencyMs: _latency, ...connectionWithoutLatency } = realSnapshot().connection;
     const cached = presentMarketSnapshot({
       ...realSnapshot(),
       truthfulness: 'cachedReal',
       connection: {
-        ...realSnapshot().connection,
+        ...connectionWithoutLatency,
         state: 'offline',
         source: {
           truthfulness: 'cachedReal',
           provider: 'coinbase',
           cacheTime: '2026-07-12T14:59:00.000Z',
         },
-        latencyMs: undefined,
       },
       tickers: realSnapshot().tickers.map((ticker) => ({
         ...ticker,
