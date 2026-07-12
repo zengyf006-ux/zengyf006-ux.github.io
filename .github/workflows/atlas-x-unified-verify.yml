@@ -43,5 +43,22 @@ jobs:
       - name: Reject generated drift
         working-directory: .
         run: git diff --exit-code -- atlas-x-unified/openapi atlas-x-unified/src/generated atlas-x-unified/vectors atlas-x-unified/test/contracts.test.ts atlas-x-unified/test/golden-vectors.test.ts atlas-x-unified/package-lock.json
-      - name: Verify unified workspaces
+      - name: Verify deterministic unified workspaces
         run: npm run verify
+
+  public-market-smoke:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    defaults:
+      run:
+        working-directory: atlas-x-unified
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify Coinbase public market chain
+        run: npm run smoke:public
