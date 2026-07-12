@@ -66,13 +66,27 @@ Exact verified implementation Head `1ac0bb07ef94010712569237846a9fe52592140b`, R
 - Web build Artifact ID `8262186843`, digest `sha256:cc0f4465e1c853430e82cc3531d5a81f761c06c7035a403c0565f4b91041b7de`.
 - CI diagnostics Artifact ID `8262186688`, digest `sha256:13b1610de9b3e1b6501829ca657b4517ff49c5b09e63988148f5f08c31512df7`.
 
-## G7 quality gates — running
+## G7 quality gates — accepted
+
+Exact verified implementation Head `3cf2c80aee74337c5571154b6e1c392bf765b563`, Run `29201636493`.
+
+- All 25 Vitest files / 168 tests, generated drift, strict workspace typechecks, production build, PWA artifact gate, audit and independent Coinbase public smoke passed.
+- Browser E2E submitted a paper buy, observed the position across pages and restored the exact position after a full IndexedDB-backed reload.
+- The production service worker controlled the preview, rendered the application shell while offline and surfaced recovery after network restoration.
+- Accessibility checks found no unnamed visible controls, unlabeled inputs, duplicate IDs, missing image alternatives or unnamed interactive accessibility-tree nodes.
+- Keyboard traversal reached 18 unique controls and every sampled stop had a visible focus indicator.
+- Performance evidence: FCP `532 ms`, load event `295.1 ms`, transfer `102,575 B`, JavaScript `96,879 B`, CSS `4,366 B`, DOM `256`, CLS `0.000527`, long tasks `300 ms`; all remained below deterministic budgets.
+- Four screenshot viewports passed without horizontal overflow: 1440×900, 1024×768, 768×1024 and 390×844.
+- Console errors and unhandled page errors were both zero.
+- Browser quality Artifact ID `8262563434`, digest `sha256:8be42c52637dca17f633a499e675ed6f68ef925b0541ac225e69e3cf9e2a9e25`.
+- Web build Artifact ID `8262557566`, digest `sha256:c7e254c003e840416975b878b216646629cf9b9fd8a70eac11fb25a49f5f95c9`.
+- CI diagnostics Artifact ID `8262557472`, digest `sha256:5bc9762d657a0dd4e0c9fd1ee14904bca9ba45c19765159ea1873d256dc14873`.
+
+## G8 visual iteration 1 — running
 
 Required before acceptance:
 
-- Retain all existing unit, contract, vector, state, ledger, persistence and reconnect coverage.
-- Add browser E2E for shared paper-trading state, reload persistence and offline/recovery behavior.
-- Add accessibility-tree and keyboard checks.
-- Add deterministic performance budgets.
-- Capture and publish four required viewport screenshots and a machine-readable quality report.
-- Exact-Head strict typecheck, tests, production build, PWA gate, audit, public smoke and browser-quality job must all pass.
+- Use the exact G7 four-viewport screenshots as design evidence rather than relying on subjective memory.
+- Improve terminal information hierarchy, desktop/laptop panel balance and tablet/mobile task clarity without removing functionality.
+- Produce readable CJK screenshot evidence in CI.
+- Preserve all G7 behavioral, accessibility, performance and four-viewport gates on the exact implementation Head.
