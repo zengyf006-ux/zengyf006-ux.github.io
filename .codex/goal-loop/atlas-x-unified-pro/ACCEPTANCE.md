@@ -82,11 +82,26 @@ Exact verified implementation Head `3cf2c80aee74337c5571154b6e1c392bf765b563`, R
 - Web build Artifact ID `8262557566`, digest `sha256:c7e254c003e840416975b878b216646629cf9b9fd8a70eac11fb25a49f5f95c9`.
 - CI diagnostics Artifact ID `8262557472`, digest `sha256:5bc9762d657a0dd4e0c9fd1ee14904bca9ba45c19765159ea1873d256dc14873`.
 
-## G8 visual iteration 1 — running
+## G8 visual iteration 1 — accepted
+
+Exact verified implementation Head `dbf2b24d6db2ff0364aa85dc76a63adb6e237448`, Run `29201931971`.
+
+- The exact G7 screenshots were used to restructure the terminal rather than treating a passing functional gate as visual completion.
+- Desktop now presents a chart-led primary workspace, a dedicated order-book/trades rail and a persistent full-height paper ticket.
+- Laptop keeps chart and ticket in the first viewport; order book and trades continue below without horizontal overflow.
+- Tablet and mobile expose explicit chart/book/order/trades task panes, and the browser gate verifies that the order pane remains reachable before returning to the chart screenshot.
+- Noto CJK is installed in the screenshot job, producing readable Chinese evidence instead of missing-glyph boxes.
+- All 25 Vitest files / 168 tests, strict typechecks, production build, PWA gate, audit, live public smoke, paper-flow E2E, reload persistence, offline recovery, accessibility, keyboard and four-viewports remained green.
+- Performance evidence improved or stayed far under budget: FCP `412 ms`, load `119.9 ms`, transfer `103,062 B`, JavaScript `96,879 B`, CSS `5,583 B`, DOM `256`, CLS `0.000781`, long tasks `175 ms`.
+- Four readable screenshots passed without horizontal overflow at 1440×900, 1024×768, 768×1024 and 390×844; console and page errors remained zero.
+- Browser quality Artifact ID `8262648834`, digest `sha256:5b1f7eaea508c6e569d2d94f094f6033455c002f8e147658cc6ed03c8fc0b7c9`.
+- Web build Artifact ID `8262641527`, digest `sha256:971ef1aaabf938c488e9552ad6b88cc3217f9bb6f042437630fe2be4ed3681e4`.
+- CI diagnostics Artifact ID `8262641291`, digest `sha256:51ccf168f97eab55fae4c0fdec3c653264b2a29f6fa58d8a7a97563ad7f75771`.
+
+## G9 visual iteration 2 — running
 
 Required before acceptance:
 
-- Use the exact G7 four-viewport screenshots as design evidence rather than relying on subjective memory.
-- Improve terminal information hierarchy, desktop/laptop panel balance and tablet/mobile task clarity without removing functionality.
-- Produce readable CJK screenshot evidence in CI.
-- Preserve all G7 behavioral, accessibility, performance and four-viewport gates on the exact implementation Head.
+- Use the exact G8 screenshots to remove remaining duplicated status emphasis and unused ticket space without hiding source truthfulness.
+- Polish desktop center-rail density, laptop/tablet first-screen rhythm and mobile header/task/navigation compression.
+- Preserve all G7/G8 behavioral, accessibility, performance and four-viewport gates on the exact implementation Head.
