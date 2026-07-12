@@ -133,6 +133,23 @@
 - CI diagnostics Artifact ID `8262557472`, digest `sha256:5bc9762d657a0dd4e0c9fd1ee14904bca9ba45c19765159ea1873d256dc14873`.
 - G7 is accepted.
 
+## G8 — Screenshot-driven structure and interaction
+
+- Installed Noto CJK in the browser-quality runner so screenshots contain reviewable Chinese text.
+- Added a screenshot-specific visual layer without removing the previously verified product behavior.
+- Desktop became a chart-led workspace with a center market rail and full-height paper order ticket.
+- Laptop keeps chart and ticket above the fold; order book and trades continue below.
+- Tablet and mobile use explicit task panes; the browser gate now verifies the order pane at both widths before capturing the chart.
+- Exact verified implementation Head: `dbf2b24d6db2ff0364aa85dc76a63adb6e237448`.
+- Actions Run `29201931971`: `verify`, `public-market-smoke` and `web-quality` all passed.
+- Retained 25 test files / 168 tests plus paper flow, reload persistence, offline recovery, accessibility, keyboard and four-viewport gates.
+- Performance evidence: FCP `412 ms`, load `119.9 ms`, transfer `103,062 B`, JavaScript `96,879 B`, CSS `5,583 B`, DOM `256`, CLS `0.000781`, long tasks `175 ms`; all under budget.
+- Exact readable screenshots show no horizontal overflow at 1440×900, 1024×768, 768×1024 and 390×844; console and page errors are zero.
+- Browser quality Artifact ID `8262648834`, digest `sha256:5b1f7eaea508c6e569d2d94f094f6033455c002f8e147658cc6ed03c8fc0b7c9`.
+- Web Artifact ID `8262641527`, digest `sha256:971ef1aaabf938c488e9552ad6b88cc3217f9bb6f042437630fe2be4ed3681e4`.
+- CI diagnostics Artifact ID `8262641291`, digest `sha256:51ccf168f97eab55fae4c0fdec3c653264b2a29f6fa58d8a7a97563ad7f75771`.
+- G8 is accepted.
+
 ## Current work
 
-G8 is running. The exact G7 screenshots show a functionally complete but visually under-resolved terminal: desktop hierarchy is too flat, laptop/tablet panel balance pushes key controls below the fold, and CI screenshots lack readable CJK fonts. The next batch installs screenshot fonts in CI and performs the first screenshot-driven structural/interaction refinement while preserving every G7 gate.
+G9 is running. The G8 screenshots are structurally sound, but still show duplicated source-status emphasis, unused lower space in the desktop/laptop ticket and a dense stacked status/header/task area on mobile. The second iteration will polish those areas without hiding truthfulness or weakening any quality gate.
