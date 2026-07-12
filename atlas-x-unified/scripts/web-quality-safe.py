@@ -140,7 +140,7 @@ def main() -> int:
                     timeout=20_000,
                 )
 
-                if viewport['width'] <= 390:
+                if viewport['width'] <= 900:
                     page.get_by_role('button', name='下单', exact=True).click()
                     page.get_by_role('button', name='复核买入').wait_for(
                         state='visible',
