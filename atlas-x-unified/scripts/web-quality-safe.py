@@ -80,12 +80,13 @@ def main() -> int:
                 route.continue_()
                 return
             route.fulfill(
-                status=503,
+                status=200,
                 headers={
                     'access-control-allow-origin': '*',
+                    'cache-control': 'no-store',
                     'content-type': 'application/json; charset=utf-8',
                 },
-                body='{"error":"external network disabled by browser quality gate"}',
+                body='[]',
             )
 
         context.route('**/*', route_request)
