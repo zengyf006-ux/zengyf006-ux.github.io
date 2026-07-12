@@ -31,3 +31,7 @@ Version `v1` contains 36 platform-neutral cases: 17 normal, 8 boundary, and 11 e
 ## Architecture boundaries
 
 The package contains pure contracts and calculations only. Automated tests reject DOM or browser globals, local storage, React/UI imports, and global `fetch` or `WebSocket` replacement.
+
+## Dependency policy
+
+Direct dependencies and verification tooling are version-pinned in `package.json` and `package-lock.json`. CI installs only from the committed lock file with Node.js 22 and read-only repository permissions.
