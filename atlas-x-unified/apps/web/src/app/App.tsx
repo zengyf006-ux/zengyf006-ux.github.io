@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import type { Truthfulness } from '@atlas-x/contracts';
 import { multiplyDecimal } from '@atlas-x/domain';
 import {
@@ -18,6 +18,8 @@ import {
   tickerDisplayMetrics,
   type MarketPresentationTone,
 } from './market.js';
+import { buildCandleGeometry } from './candle-chart.js';
+import { usePublicCandles } from './useCandles.js';
 import { MarketDataProvider, useMarketData } from './useMarketData.js';
 import {
   PaperAccountProvider,
@@ -73,16 +75,36 @@ function SourceBadge({
   return <span className={`source-badge tone-${tone}`} title={title}>{label}</span>;
 }
 
-function Chart({ interval, last }: { readonly interval: Interval; readonly last: string }) {
-  const bars = [42, 48, 44, 56, 52, 63, 59, 68, 72, 66, 78, 74, 82, 88, 84, 92];
+function Chart({ interval }: { readonly interval: Interval }) {
+  const state = usePublicCandles(marketFixture.symbol, interval);
+  const geometry = useMemo(() => buildCandleGeometry(state.candles), [state.candles]);
+  const latest = state.candles.at(-1);
+  const latestPrice = latest === undefined ? '—' : formatMarketDecimal(latest.close);
   return (
-    <section className="chart" aria-label={`${marketFixture.symbol} ${interval} K线图`}>
-      <span className="chart-source-note">K线图形 · fixture</span>
+    <section className="chart" aria-label={`${marketFixture.symbol} ${interval} K线图 · ${state.label}`}>
+      <span className={`chart-source-note tone-${truthfulnessTone(state.truthfulness)}`} title={state.detail}>
+        {state.label}{state.loading ? ' · 更新中' : ''}
+      </span>
       <div className="chart-grid" aria-hidden="true" />
-      <div className="candles" aria-hidden="true">
-        {bars.map((value, index) => <i key={index} style={{ height: `${value}%` }} className={index % 3 === 0 ? 'down' : 'up'} />)}
+      <div className="candle-series" aria-hidden="true">
+        {geometry.map((item) => (
+          <i
+            key={item.id}
+            className={`candle-bar ${item.direction}`}
+            style={{
+              '--wick-top': item.wickTop,
+              '--wick-height': item.wickHeight,
+              '--body-top': item.bodyTop,
+              '--body-height': item.bodyHeight,
+            } as CSSProperties}
+          >
+            <span className="candle-wick" />
+            <span className="candle-body" />
+          </i>
+        ))}
       </div>
-      <div className="price-line"><span>{last}</span></div>
+      <div className="price-line"><span>{latestPrice}</span></div>
+      {state.error === null ? null : <p className="chart-error" role="status">{state.error}</p>}
     </section>
   );
 }
@@ -237,7 +259,7 @@ function Terminal() {
             <SourceBadge label={presentation.label} tone={presentation.tone} title={presentation.detail} />
           </div>
           <div className="intervals">{intervals.map((item) => <button key={item} className={item === interval ? 'active' : ''} onClick={() => setInterval(item)}>{item}</button>)}</div>
-          <Chart interval={interval} last={metrics?.price ?? formatMarketDecimal(marketFixture.last)} />
+          <Chart interval={interval} />
         </section>
         <OrderBook />
         <OrderTicket />
