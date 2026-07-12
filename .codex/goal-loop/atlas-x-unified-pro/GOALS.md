@@ -11,8 +11,8 @@ Status values: `ready`, `running`, `rejected`, `done`.
 | G4 | Event-sourced paper ledger with IndexedDB persistence and reset confirmation | G2 | done |
 | G5 | Professional Web terminal, markets, watchlist, assets, orders, fills, alerts, settings and data health | G3,G4 | done |
 | G6 | PWA installability, offline shell, recovery and update flow | G5 | done |
-| G7 | Unit/contract/vector/state/ledger/persistence/reconnect/E2E/a11y/performance gates | G3,G4,G5,G6 | running |
-| G8 | Visual iteration 1: product structure and interaction | G5,G7 | ready |
+| G7 | Unit/contract/vector/state/ledger/persistence/reconnect/E2E/a11y/performance gates | G3,G4,G5,G6 | done |
+| G8 | Visual iteration 1: product structure and interaction | G5,G7 | running |
 | G9 | Visual iteration 2: screenshot-led redesign and polish | G8 | ready |
 | G10 | Final exact-Head evidence, build artifact and independent-review package | G9 | ready |
 | G11 | Deployment permission gate | G10 | ready |
