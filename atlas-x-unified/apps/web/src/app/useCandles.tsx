@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SCHEMA_VERSION, type Candle, type Truthfulness } from '@atlas-x/contracts';
-import { addDecimal, multiplyDecimal, subtractDecimal } from '@atlas-x/domain';
+import { addDecimal, multiplyDecimal, parseDecimal, subtractDecimal } from '@atlas-x/domain';
 import {
   CoinbasePublicCandleAdapter,
   IndexedDbCandleCache,
@@ -41,8 +41,12 @@ function createFixtureCandles(symbol: string, interval: PublicCandleInterval): r
     const previous = FIXTURE_CLOSES[index - 1] ?? subtractDecimal(close, '80');
     const openTimeSeconds = end - (FIXTURE_CLOSES.length - index) * seconds;
     const open = previous;
-    const high = addDecimal(open > close ? open : close, '90');
-    const low = subtractDecimal(open < close ? open : close, '90');
+    const openDecimal = parseDecimal(open);
+    const closeDecimal = parseDecimal(close);
+    const upper = openDecimal.greaterThan(closeDecimal) ? open : close;
+    const lower = openDecimal.lessThan(closeDecimal) ? open : close;
+    const high = addDecimal(upper, '90');
+    const low = subtractDecimal(lower, '90');
     const volume = `${index + 1}.25`;
     const source = { truthfulness: 'fixture' as const, fixtureId: `web-candles-${interval}`, provider: 'golden-vector' };
     return {
@@ -115,7 +119,7 @@ export function usePublicCandles(symbol: string, interval: PublicCandleInterval)
     }
 
     let active = true;
-    let timer: number | undefined;
+    let timer: ReturnType<typeof globalThis.setInterval> | undefined;
     let cache: IndexedDbCandleCache | null = null;
     const controller = new AbortController();
     const adapter = new CoinbasePublicCandleAdapter({
@@ -163,7 +167,18 @@ export function usePublicCandles(symbol: string, interval: PublicCandleInterval)
           loading: false,
           error: null,
         });
-        if (cache !== null) await cache.write(symbol, interval, candles, cacheTime);
+        if (cache !== null) {
+          try {
+            await cache.write(symbol, interval, candles, cacheTime);
+          } catch (error) {
+            if (active) {
+              setState((current) => ({
+                ...current,
+                error: error instanceof Error ? `实时 K线可用，但本地缓存失败：${error.message}` : '实时 K线可用，但本地缓存失败',
+              }));
+            }
+          }
+        }
       } catch (error) {
         if (!active || controller.signal.aborted) return;
         const cached = await readCache();
