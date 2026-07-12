@@ -7,12 +7,12 @@ on:
     paths:
       - 'atlas-x-unified/**'
       - '.github/workflows/atlas-x-unified-verify.yml'
-      - '.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz'
+      - '.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz.b64'
   pull_request:
     paths:
       - 'atlas-x-unified/**'
       - '.github/workflows/atlas-x-unified-verify.yml'
-      - '.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz'
+      - '.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz.b64'
 
 permissions:
   contents: write
@@ -33,9 +33,9 @@ jobs:
       - name: Materialize verified G4 ledger batch
         working-directory: ${{ github.workspace }}
         run: |
-          test -f "${{ github.workspace }}/.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz"
-          tar -tzf "${{ github.workspace }}/.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz" >/dev/null
-          tar -xzf "${{ github.workspace }}/.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz" -C "${{ github.workspace }}/atlas-x-unified"
+          base64 --decode "${{ github.workspace }}/.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz.b64" > "${RUNNER_TEMP}/g4-materialize.tar.gz"
+          tar -tzf "${RUNNER_TEMP}/g4-materialize.tar.gz" >/dev/null
+          tar -xzf "${RUNNER_TEMP}/g4-materialize.tar.gz" -C "${{ github.workspace }}/atlas-x-unified"
       - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
