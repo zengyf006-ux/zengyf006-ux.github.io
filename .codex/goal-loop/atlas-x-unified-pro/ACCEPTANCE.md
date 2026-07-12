@@ -33,24 +33,31 @@ Head `7a279fa0552924b990f64bd61cc876baace0bf40`, Run `29195070635`.
 - IndexedDB cross-instance reload, storage failure mapping and confirmation-gated reset.
 - All paper data is explicitly `simulated`; real public smoke remains separate and passed.
 
-## G5 Web product — running
+## G5 Web product — accepted
 
-Verified checkpoint: Head `371b94bd7d0cccb13f13dad24703def13a08aba6`, Run `29198256110`.
+Exact verified implementation Head `822c8cc06c5e6a4b7fbae81d65d628f86ea0f6d6`, Run `29199915453`.
 
-Accepted for this checkpoint:
-
-- React/Vite build, strict workspace types, tests, audit and generated drift passed.
-- Production build Artifact was uploaded successfully.
+- React/Vite production build, all strict workspace typechecks, generated drift, audit and public market smoke passed.
+- 24 Vitest files / 164 tests passed without weakening or skipping tests.
 - Market, limit, stopMarket and stopLimit paper order drafts are available.
 - Quantity, amount and percentage inputs use shared decimal-safe domain logic.
-- Terminal, assets, current orders, fills, alerts, settings, data-health and help are reachable on desktop and mobile.
+- Terminal, markets, watchlist, assets, current orders, fills, alerts, settings, data-health and help are reachable on desktop and mobile.
 - One shared event-sourced paper account uses IndexedDB where available and truthfully reports memory fallback.
 - Mobile uses explicit chart/book/order/trades task panes instead of an unbounded vertical terminal.
-- Fixture is visibly labeled and independent Coinbase public smoke passed.
+- Coinbase ticker, order book, trades and read-only K lines are rendered with explicit provider and truthfulness labels.
+- Public K lines use exact decimal geometry, show request latency, retain only real values in IndexedDB, relabel offline retention as `cachedReal`, and fall back to visibly labeled fixture data when no real cache exists.
+- Browser online/offline events trigger immediate K-line recovery/fallback; duplicate refreshes are suppressed.
+- Web build Artifact ID `8262077478`, digest `sha256:692f16eea83aa70678f50fc56fd26e9ee3d9199f6bc221b7276ebab0f12db3cd`.
+- CI diagnostics Artifact ID `8262077374`, digest `sha256:e9ebcac2e5273f762a8fadca87a57fb6e7d16d2e69d20faddf9785a3aa5cb398`.
 
-Still required before G5 acceptance:
+The remaining E2E, accessibility, performance and four-viewport gates belong to G7. Screenshot-led product redesign belongs to G8 and G9; those requirements were not silently treated as G5 evidence.
 
-- Connect the existing public/cached market adapter into the Web state flow with explicit connection and latency display.
-- Complete live/cached/offline transition behavior in the rendered product.
-- Add E2E, accessibility, four-viewport screenshot and visual iteration evidence.
-- Remove remaining prototype-level chart rendering and complete screenshot-led product refinement.
+## G6 PWA — running
+
+Required before acceptance:
+
+- Installable manifest and application identity.
+- Versioned offline application shell without caching authenticated or real-money operations.
+- Explicit offline/recovery state and safe update activation flow.
+- Tests for update decisions and service-worker caching policy.
+- Exact-Head strict typecheck, tests, production build, audit and Artifact evidence.
