@@ -20,7 +20,7 @@ async function listSourceFiles(directory: URL): Promise<URL[]> {
     const url = new URL(entry.name + (entry.isDirectory() ? '/' : ''), directory);
     return entry.isDirectory() ? listSourceFiles(url) : [url];
   }));
-  return nested.flat().filter((url) => url.pathname.endsWith('.ts'));
+  return nested.flat().filter((url) => /\.tsx?$/.test(url.pathname));
 }
 
 async function sourceFiles(directories: readonly URL[]): Promise<URL[]> {
@@ -36,22 +36,18 @@ describe('unified architecture boundaries', () => {
     ];
     for (const file of await sourceFiles(coreDirectories)) {
       const content = await readFile(file, 'utf8');
-      for (const pattern of forbidden) {
-        expect(pattern.test(content), `${file.pathname} matches ${pattern}`).toBe(false);
-      }
+      for (const pattern of forbidden) expect(pattern.test(content), `${file.pathname} matches ${pattern}`).toBe(false);
     }
   });
 
-  it('forbids global business state and network monkey patches across every workspace', async () => {
+  it('forbids browser-persisted business truth and network monkey patches in every workspace', async () => {
     const forbidden = [
       /\blocalStorage\b/, /\bsessionStorage\b/, /window\.[A-Za-z_$][\w$]*\s*=/,
       /globalThis\.(?:fetch|WebSocket)\s*=/, /window\.(?:fetch|WebSocket)\s*=/,
     ];
     for (const file of await sourceFiles(workspaceDirectories)) {
       const content = await readFile(file, 'utf8');
-      for (const pattern of forbidden) {
-        expect(pattern.test(content), `${file.pathname} matches ${pattern}`).toBe(false);
-      }
+      for (const pattern of forbidden) expect(pattern.test(content), `${file.pathname} matches ${pattern}`).toBe(false);
     }
   });
 });

@@ -1,11 +1,9 @@
 {
   "name": "@atlas-x/unified",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": ">=22 <23"
-  },
+  "engines": { "node": ">=22 <23" },
   "scripts": {
     "generate:contracts": "openapi-typescript openapi/atlas-x.openapi.yaml -o src/generated/contracts.ts",
     "check:generated": "node scripts/check-generated.mjs",
@@ -13,9 +11,10 @@
     "typecheck:root": "tsc --noEmit -p tsconfig.json",
     "typecheck:workspaces": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
+    "build:web": "npm run build --workspace @atlas-x/web",
     "audit": "npm audit --audit-level=high",
     "smoke:public": "node scripts/smoke-public-market.mjs",
-    "verify": "npm run check:generated && npm run typecheck && npm test && npm run audit"
+    "verify": "npm run check:generated && npm run typecheck && npm test && npm run build:web && npm run audit"
   },
   "dependencies": {
     "ajv": "8.20.0",
@@ -24,13 +23,14 @@
   },
   "devDependencies": {
     "@types/node": "22.15.30",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.4",
     "openapi-typescript": "7.13.0",
     "typescript": "5.9.3",
+    "vite": "7.3.6",
     "vitest": "3.2.7",
     "yaml": "2.9.0"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+  "workspaces": ["apps/*", "packages/*"]
 }

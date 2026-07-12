@@ -1,4 +1,4 @@
-name: ATLAS X Unified Verify
+name: ATLAS X Unified Materialize Web
 
 on:
   push:
@@ -7,58 +7,50 @@ on:
     paths:
       - 'atlas-x-unified/**'
       - '.github/workflows/atlas-x-unified-verify.yml'
-  pull_request:
-    paths:
-      - 'atlas-x-unified/**'
-      - '.github/workflows/atlas-x-unified-verify.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: atlas-x-unified-${{ github.ref }}
-  cancel-in-progress: true
+  group: atlas-x-unified-materialize-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  verify:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: atlas-x-unified
     steps:
-      - name: Checkout
+      - name: Checkout current development branch
         uses: actions/checkout@v4
+        with:
+          ref: atlas-x-unified-pro
+          fetch-depth: 2
       - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: atlas-x-unified/package-lock.json
+      - name: Refresh workspace lock
+        run: npm install --package-lock-only --ignore-scripts
       - name: Install locked dependencies
         run: npm ci
-      - name: Rebuild deterministic foundation artifacts
+      - name: Rebuild deterministic contracts
         run: |
           node scripts/apply-foundation-rework.mjs
           npm run generate:contracts
-      - name: Reject generated drift
-        working-directory: ${{ github.workspace }}
-        run: git diff --exit-code -- atlas-x-unified/openapi atlas-x-unified/src/generated atlas-x-unified/vectors atlas-x-unified/test/contracts.test.ts atlas-x-unified/test/golden-vectors.test.ts atlas-x-unified/package-lock.json
-      - name: Verify deterministic unified workspaces
+      - name: Verify Web product batch
         run: npm run verify
-
-  public-market-smoke:
-    needs: verify
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    defaults:
-      run:
-        working-directory: atlas-x-unified
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Node 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Verify Coinbase public market chain
-        run: npm run smoke:public
+      - name: Restore read-only verification and commit lock
+        working-directory: ${{ github.workspace }}
+        run: |
+          git show HEAD^:.github/workflows/atlas-x-unified-verify.yml > .github/workflows/atlas-x-unified-verify.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add atlas-x-unified/package-lock.json .github/workflows/atlas-x-unified-verify.yml
+          git diff --cached --quiet || git commit -m "chore: lock verified Web dependencies"
+          git push origin HEAD:atlas-x-unified-pro

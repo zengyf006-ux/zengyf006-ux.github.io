@@ -11,6 +11,7 @@
     "noPropertyAccessFromIndexSignature": true,
     "useUnknownInCatchVariables": true,
     "verbatimModuleSyntax": true,
+    "jsx": "react-jsx",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -19,6 +20,6 @@
     "skipLibCheck": false,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts", "test/**/*.tsx", "vitest.config.ts"],
   "exclude": ["node_modules", "dist"]
 }
