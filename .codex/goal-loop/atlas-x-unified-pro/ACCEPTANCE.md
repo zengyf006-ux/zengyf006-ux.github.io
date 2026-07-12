@@ -52,12 +52,27 @@ Exact verified implementation Head `822c8cc06c5e6a4b7fbae81d65d628f86ea0f6d6`, R
 
 The remaining E2E, accessibility, performance and four-viewport gates belong to G7. Screenshot-led product redesign belongs to G8 and G9; those requirements were not silently treated as G5 evidence.
 
-## G6 PWA — running
+## G6 PWA — accepted
+
+Exact verified implementation Head `1ac0bb07ef94010712569237846a9fe52592140b`, Run `29200295123`.
+
+- Standalone manifest, stable application identity, normal and maskable SVG icons are present in the production build.
+- A versioned same-origin application-shell service worker caches only GET navigation and static assets.
+- Authorization/cookie/API/auth/order/account requests and cross-origin Coinbase traffic are excluded from service-worker caching.
+- Offline, recovered, install-available and update-ready states are explicit in the rendered product.
+- Updates remain waiting until the user chooses `安全更新`; controller replacement reloads only after that explicit request.
+- Production artifact verification confirms manifest linkage, shell files, compiled registration code and user-approved activation.
+- 25 Vitest files / 168 tests, strict typecheck, production build, PWA artifact gate, audit and public smoke passed.
+- Web build Artifact ID `8262186843`, digest `sha256:cc0f4465e1c853430e82cc3531d5a81f761c06c7035a403c0565f4b91041b7de`.
+- CI diagnostics Artifact ID `8262186688`, digest `sha256:13b1610de9b3e1b6501829ca657b4517ff49c5b09e63988148f5f08c31512df7`.
+
+## G7 quality gates — running
 
 Required before acceptance:
 
-- Installable manifest and application identity.
-- Versioned offline application shell without caching authenticated or real-money operations.
-- Explicit offline/recovery state and safe update activation flow.
-- Tests for update decisions and service-worker caching policy.
-- Exact-Head strict typecheck, tests, production build, audit and Artifact evidence.
+- Retain all existing unit, contract, vector, state, ledger, persistence and reconnect coverage.
+- Add browser E2E for shared paper-trading state, reload persistence and offline/recovery behavior.
+- Add accessibility-tree and keyboard checks.
+- Add deterministic performance budgets.
+- Capture and publish four required viewport screenshots and a machine-readable quality report.
+- Exact-Head strict typecheck, tests, production build, PWA gate, audit, public smoke and browser-quality job must all pass.
