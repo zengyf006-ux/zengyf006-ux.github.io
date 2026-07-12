@@ -14,7 +14,7 @@ Status values: `ready`, `running`, `rejected`, `done`.
 | G7 | Unit/contract/vector/state/ledger/persistence/reconnect/E2E/a11y/performance gates | G3,G4,G5,G6 | done |
 | G8 | Visual iteration 1: product structure and interaction | G5,G7 | done |
 | G9 | Visual iteration 2: screenshot-led redesign and polish | G8 | done |
-| G10 | Final exact-Head evidence, build artifact and independent-review package | G9 | running |
+| G10 | Final exact-Head evidence, build artifact and independent-review package | G9 | done |
 | G11 | Deployment permission gate | G10 | ready |
 
 ## Execution rules
@@ -23,3 +23,4 @@ Status values: `ready`, `running`, `rejected`, `done`.
 - A goal becomes `done` only with committed evidence and exact-Head CI where applicable.
 - A rejected batch is repaired on the same branch; tests are never weakened or skipped.
 - `CURRENT.md` identifies the immediate next action and must remain concise.
+- G11 remains `ready` until the user explicitly authorizes merge or deployment; no implied permission exists.
