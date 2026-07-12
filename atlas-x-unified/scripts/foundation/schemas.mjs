@@ -46,7 +46,6 @@ export const schemas = {
   }),
   DataSource: {
     oneOf: ['Unknown', 'CachedReal', 'Real', 'Simulated', 'Fixture'].map((name) => ref(`${name}DataSource`)),
-    discriminator: { propertyName: 'truthfulness' },
   },
   EventMetadata: object(Object.keys(eventFields), eventFields),
   Symbol: { type: 'string', pattern: '^[A-Z0-9]+-[A-Z0-9]+$' },
@@ -218,7 +217,6 @@ for (const [name, type, extras] of drafts) {
 }
 schemas.OrderDraft = {
   oneOf: ['MarketOrderDraft', 'LimitOrderDraft', 'StopMarketOrderDraft', 'StopLimitOrderDraft'].map(ref),
-  discriminator: { propertyName: 'type' },
 };
 schemas.Order = object([
   'metadata', 'orderId', 'draft', 'status', 'filledQuantity', 'remainingQuantity', 'feePaid', 'updatedAt',

@@ -153,47 +153,32 @@ export interface components {
         /** @enum {string} */
         Truthfulness: "unknown" | "cachedReal" | "real" | "simulated" | "fixture";
         UnknownDataSource: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            truthfulness: "UnknownDataSource";
+            /** @constant */
+            truthfulness: "unknown";
             provider?: string;
             reason?: string;
         };
         CachedRealDataSource: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            truthfulness: "CachedRealDataSource";
+            /** @constant */
+            truthfulness: "cachedReal";
             provider: string;
             /** Format: date-time */
             cacheTime: string;
         };
         RealDataSource: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            truthfulness: "RealDataSource";
+            /** @constant */
+            truthfulness: "real";
             provider: string;
         };
         SimulatedDataSource: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            truthfulness: "SimulatedDataSource";
+            /** @constant */
+            truthfulness: "simulated";
             provider: string;
             scenario?: string;
         };
         FixtureDataSource: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            truthfulness: "FixtureDataSource";
+            /** @constant */
+            truthfulness: "fixture";
             fixtureId: string;
             provider?: string;
         };
@@ -465,11 +450,8 @@ export interface components {
             quantity: components["schemas"]["PositiveDecimalString"];
             /** Format: date-time */
             createdAt: string;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "MarketOrderDraft";
+            /** @constant */
+            type: "market";
         };
         LimitOrderDraft: {
             schemaVersion: components["schemas"]["SchemaVersion"];
@@ -479,11 +461,8 @@ export interface components {
             quantity: components["schemas"]["PositiveDecimalString"];
             /** Format: date-time */
             createdAt: string;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "LimitOrderDraft";
+            /** @constant */
+            type: "limit";
             price: components["schemas"]["PositiveDecimalString"];
         };
         StopMarketOrderDraft: {
@@ -494,11 +473,8 @@ export interface components {
             quantity: components["schemas"]["PositiveDecimalString"];
             /** Format: date-time */
             createdAt: string;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "StopMarketOrderDraft";
+            /** @constant */
+            type: "stopMarket";
             stopPrice: components["schemas"]["PositiveDecimalString"];
         };
         StopLimitOrderDraft: {
@@ -509,11 +485,8 @@ export interface components {
             quantity: components["schemas"]["PositiveDecimalString"];
             /** Format: date-time */
             createdAt: string;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "StopLimitOrderDraft";
+            /** @constant */
+            type: "stopLimit";
             price: components["schemas"]["PositiveDecimalString"];
             stopPrice: components["schemas"]["PositiveDecimalString"];
         };

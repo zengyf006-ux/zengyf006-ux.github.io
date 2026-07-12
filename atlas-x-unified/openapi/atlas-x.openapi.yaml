@@ -243,8 +243,6 @@ components:
         - $ref: "#/components/schemas/RealDataSource"
         - $ref: "#/components/schemas/SimulatedDataSource"
         - $ref: "#/components/schemas/FixtureDataSource"
-      discriminator:
-        propertyName: truthfulness
     EventMetadata:
       type: object
       additionalProperties: false
@@ -1060,8 +1058,6 @@ components:
         - $ref: "#/components/schemas/LimitOrderDraft"
         - $ref: "#/components/schemas/StopMarketOrderDraft"
         - $ref: "#/components/schemas/StopLimitOrderDraft"
-      discriminator:
-        propertyName: type
     Order:
       type: object
       additionalProperties: false
