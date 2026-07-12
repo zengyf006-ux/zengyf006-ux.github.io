@@ -54,8 +54,9 @@ describe('ATLAS X Web product shell', () => {
   it('resolves quantity, amount and percentage inputs without native floating point', () => {
     expect(resolveTicketQuantity(marketTicket)).toBe('0.1');
     expect(resolveTicketQuantity({ ...marketTicket, inputMode: 'amount', inputValue: '11842.035' })).toBe('0.1');
-    const percentage = resolveTicketQuantity({ ...marketTicket, inputMode: 'percentage', inputValue: '10' });
-    expect(percentage.startsWith('0.084')).toBe(true);
+    const buyPercentage = resolveTicketQuantity({ ...marketTicket, inputMode: 'percentage', inputValue: '10' });
+    expect(buyPercentage.startsWith('0.084')).toBe(true);
+    expect(resolveTicketQuantity({ ...marketTicket, side: 'sell', inputMode: 'percentage', inputValue: '50' })).toBe('0.625');
   });
 
   it('creates all four contract-valid order draft variants', () => {
