@@ -1,0 +1,245 @@
+:root {
+  font-family: Inter, "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --border: #d8dad6;
+  --muted: #686e69;
+  --surface: #ffffff;
+  --soft: #eef0ed;
+  --green: #087f5b;
+  --red: #c43c35;
+  --ink: #151715;
+}
+
+body { background: #f2f3f1; }
+.app-shell { background: linear-gradient(180deg, #fafbf9 0, #f2f3f1 170px); }
+
+.market-runtime-banner {
+  min-height: 36px;
+  padding: 6px max(18px, calc((100vw - 1600px) / 2 + 18px));
+  background: #f8f9f7;
+}
+.market-runtime-primary strong { letter-spacing: .01em; }
+
+.topbar {
+  min-height: 62px;
+  grid-template-columns: 184px minmax(0, 1fr) auto;
+  padding: 0 max(18px, calc((100vw - 1600px) / 2 + 18px));
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 1px 0 rgba(22, 24, 22, .03);
+}
+.topbar nav { height: 62px; }
+.topbar nav button { padding-inline: 12px; font-size: 12px; letter-spacing: .01em; }
+.topbar nav button.active::after { left: 12px; right: 12px; height: 3px; border-radius: 3px 3px 0 0; }
+.brand span { width: 32px; height: 32px; border-radius: 9px; }
+.brand b { letter-spacing: .14em; }
+.top-actions button,
+.source-badge { min-height: 30px; border-radius: 999px; }
+
+main {
+  width: min(1600px, 100%);
+  padding: 12px;
+}
+
+.terminal-grid {
+  height: max(680px, calc(100vh - 122px));
+  min-height: 680px;
+  grid-template-columns: minmax(560px, 1fr) 292px 348px;
+  grid-template-rows: minmax(0, 1fr) minmax(188px, .38fr);
+  border-color: #d5d8d3;
+  border-radius: 14px;
+  background: #d5d8d3;
+  box-shadow: 0 12px 36px rgba(20, 24, 20, .06);
+}
+.market-stage {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  min-height: 0;
+}
+.book {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.trades {
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 0;
+  overflow: hidden;
+}
+.ticket {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.market-heading {
+  min-height: 118px;
+  align-items: center;
+  padding: 20px 24px 14px;
+  background: linear-gradient(135deg, #fff 0, #fbfcfa 100%);
+}
+.market-heading p {
+  margin-bottom: 7px;
+  color: #53605a;
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+.market-heading h1 { font-size: clamp(32px, 3vw, 44px); }
+.market-heading strong { margin-top: 9px; font-size: 13px; letter-spacing: .01em; }
+.market-heading .source-badge { align-self: flex-start; margin-top: 1px; }
+.intervals {
+  min-height: 43px;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 20px 7px;
+  background: #fcfdfb;
+}
+.intervals button { min-width: 39px; min-height: 30px; padding: 5px 9px; }
+.intervals button.active { box-shadow: inset 0 0 0 1px rgba(21, 23, 21, .04); }
+.chart { min-height: 0; }
+.chart-grid { opacity: .72; }
+.candle-series { inset: 10% 7% 12%; }
+.chart-source-note { top: 12px; right: 14px; min-height: 27px; padding-inline: 10px; }
+.chart-error {
+  left: 14px;
+  bottom: 12px;
+  max-width: min(540px, calc(100% - 28px));
+  padding: 6px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 18px rgba(80, 58, 0, .07);
+}
+
+.panel header {
+  min-height: 52px;
+  padding-inline: 15px;
+  background: #fcfdfb;
+}
+.panel header h2 { font-size: 13px; letter-spacing: .015em; }
+.panel header span { line-height: 1.35; text-align: right; }
+.book-side { padding: 7px 0; }
+.book-side div { min-height: 28px; align-items: center; padding: 5px 14px; }
+.book-side div::before { width: 54%; }
+.mid-price { padding: 10px 14px; font-size: 17px; }
+.panel-source-warning { margin: 7px 14px 11px; }
+
+.trades > div {
+  min-height: 31px;
+  align-items: center;
+  padding: 5px 14px;
+}
+.trades .panel-source-warning { margin-top: 6px; }
+
+.ticket header { position: sticky; z-index: 4; top: 0; }
+.segmented { margin: 13px 14px 11px; }
+.segmented button { min-height: 36px; }
+.order-types { gap: 5px; padding: 0 14px 10px; }
+.order-types button { min-height: 32px; padding: 6px 9px; }
+.input-modes { margin: 0 14px 10px; }
+.ticket label { margin-bottom: 10px; }
+.ticket input { height: 40px; }
+.estimate { margin-block: 10px; padding-block: 8px; }
+.estimate div { padding: 4px 0; }
+.submit { min-height: 46px; margin-top: 6px; border-radius: 10px; box-shadow: 0 7px 18px rgba(8, 127, 91, .12); }
+.submit.sell { box-shadow: 0 7px 18px rgba(196, 60, 53, .12); }
+.status { min-height: 17px; }
+
+.page { box-shadow: 0 12px 36px rgba(20, 24, 20, .05); }
+.metric-grid article,
+.info-grid article,
+.settings-grid article { background: #fafbf9; }
+
+@media (min-width: 901px) and (max-width: 1180px) {
+  .topbar { grid-template-columns: 158px minmax(0, 1fr) auto; }
+  .topbar nav button { padding-inline: 8px; }
+  .topbar nav button:nth-child(n+6) { display: none; }
+  .terminal-grid {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-rows: max(610px, calc(100vh - 122px)) auto;
+  }
+  .market-stage { grid-column: 1; grid-row: 1; }
+  .ticket {
+    grid-column: 2;
+    grid-row: 1;
+    display: block;
+    overflow-y: auto;
+  }
+  .book { grid-column: 1; grid-row: 2; }
+  .trades { grid-column: 2; grid-row: 2; }
+  .book,
+  .trades { min-height: 260px; }
+  .market-heading { min-height: 112px; }
+}
+
+@media (min-width: 721px) and (max-width: 900px) {
+  main { padding: 10px; }
+  .topbar { grid-template-columns: 154px minmax(0, 1fr) auto; padding-inline: 14px; }
+  .topbar nav button { padding-inline: 7px; }
+  .topbar nav button:nth-child(n+6) { display: none; }
+  .top-actions .source-badge { display: none; }
+  .mobile-task-switch {
+    position: sticky;
+    top: 62px;
+    z-index: 19;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    min-height: 48px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: 12px 12px 0 0;
+    background: rgba(252, 253, 251, .97);
+    backdrop-filter: blur(12px);
+  }
+  .mobile-task-switch button {
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 720;
+  }
+  .mobile-task-switch button.active { border-bottom-color: var(--ink); color: var(--ink); }
+  .terminal-grid {
+    display: block;
+    height: auto;
+    min-height: calc(100vh - 166px);
+    border-radius: 0 0 12px 12px;
+  }
+  .terminal-grid .mobile-panel { display: none; }
+  .terminal-grid.mobile-chart .market-stage { display: flex; min-height: calc(100vh - 166px); }
+  .terminal-grid.mobile-book .book,
+  .terminal-grid.mobile-order .ticket,
+  .terminal-grid.mobile-trades .trades { display: block; min-height: calc(100vh - 166px); }
+  .terminal-grid .book,
+  .terminal-grid .ticket,
+  .terminal-grid .trades { grid-column: auto; grid-row: auto; border-top: 0; }
+  .chart { min-height: 500px; }
+  .ticket { overflow-y: visible; }
+}
+
+@media (max-width: 720px) {
+  .market-runtime-banner { min-height: 54px; padding: 7px 12px; }
+  .market-runtime-detail { max-width: 46%; }
+  .topbar { min-height: 56px; padding-inline: 14px; background: #fff; }
+  .brand span { width: 30px; height: 30px; }
+  .mobile-task-switch {
+    min-height: 48px;
+    background: rgba(248, 249, 247, .98);
+  }
+  .terminal-grid { min-height: calc(100vh - 158px); }
+  .market-stage { min-height: calc(100vh - 158px); }
+  .market-heading { min-height: 110px; padding: 17px 16px 11px; }
+  .market-heading h1 { font-size: 30px; }
+  .market-heading .source-badge { min-height: 28px; }
+  .intervals { min-height: 43px; padding-inline: 14px; }
+  .chart { min-height: 0; }
+  .candle-series { inset: 10% 5% 10%; }
+  .chart-source-note { top: 9px; right: 9px; }
+  .chart-error { left: 10px; bottom: 10px; max-width: calc(100% - 20px); border-radius: 8px; }
+  .ticket header { position: static; }
+  .pwa-status { border-radius: 12px; }
+}
