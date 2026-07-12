@@ -62,25 +62,17 @@ describe('market connection state machine', () => {
   it('moves through cache, live, delayed, degraded, stale and reconnecting states', () => {
     let connection = initialMarketConnection(now);
     expect(connection.state).toBe('initializing');
-    connection = reduceMarketConnection(connection, {
-      type: 'cacheLoaded', provider: 'coinbase-exchange', cacheTime: now,
-    }, now);
+    connection = reduceMarketConnection(connection, { type: 'cacheLoaded', provider: 'coinbase-exchange', cacheTime: now }, now);
     expect(connection).toMatchObject({ state: 'cached', source: { truthfulness: 'cachedReal', cacheTime: now } });
     connection = reduceMarketConnection(connection, { type: 'subscribed', provider: 'coinbase-exchange' }, now);
     expect(connection).toMatchObject({ state: 'live', source: { truthfulness: 'real' } });
-    connection = reduceMarketConnection(connection, {
-      type: 'message', provider: 'coinbase-exchange', latencyMs: 6001, delayedAfterMs: 5000,
-    }, now);
+    connection = reduceMarketConnection(connection, { type: 'message', provider: 'coinbase-exchange', latencyMs: 6001, delayedAfterMs: 5000 }, now);
     expect(connection.state).toBe('delayed');
-    connection = reduceMarketConnection(connection, {
-      type: 'sequenceGap', provider: 'coinbase-exchange', expected: 2, actual: 4,
-    }, now);
+    connection = reduceMarketConnection(connection, { type: 'sequenceGap', provider: 'coinbase-exchange', expected: 2, actual: 4 }, now);
     expect(connection).toMatchObject({ state: 'degraded', error: { code: 'MARKET_DEGRADED' } });
     connection = reduceMarketConnection(connection, { type: 'stale', provider: 'coinbase-exchange', ageMs: 31000 }, now);
     expect(connection).toMatchObject({ state: 'stale', error: { code: 'MARKET_STALE' } });
-    connection = reduceMarketConnection(connection, {
-      type: 'socketClosed', provider: 'coinbase-exchange', retryAt: '2026-07-12T00:00:01.000Z',
-    }, now);
+    connection = reduceMarketConnection(connection, { type: 'socketClosed', provider: 'coinbase-exchange', retryAt: '2026-07-12T00:00:01.000Z' }, now);
     expect(connection).toMatchObject({ state: 'reconnecting', retryAt: '2026-07-12T00:00:01.000Z' });
   });
 
@@ -89,9 +81,7 @@ describe('market connection state machine', () => {
     expect(connection).toMatchObject({ state: 'offline', source: { truthfulness: 'unknown' } });
     connection = reduceMarketConnection(connection, { type: 'subscribed', provider: 'coinbase-exchange' }, now);
     expect(connection.state).toBe('live');
-    connection = reduceMarketConnection(connection, {
-      type: 'fatal', code: 'DATA_SOURCE_INVALID', message: 'bad payload', provider: 'coinbase-exchange',
-    }, now);
+    connection = reduceMarketConnection(connection, { type: 'fatal', code: 'DATA_SOURCE_INVALID', message: 'bad payload', provider: 'coinbase-exchange' }, now);
     expect(connection).toMatchObject({ state: 'error', error: { code: 'DATA_SOURCE_INVALID', retryable: false } });
   });
 });
@@ -245,7 +235,6 @@ describe('Coinbase adapter lifecycle', () => {
   });
 });
 
-
 describe('Coinbase adapter resilience', () => {
   function createAdapter(options: {
     readonly cached?: MarketDataSnapshot | null;
@@ -326,12 +315,23 @@ describe('Coinbase adapter resilience', () => {
     advance(1_000);
     scheduler.runDelay(1_000);
     expect(adapter.connection()).toMatchObject({ state: 'stale', error: { code: 'MARKET_STALE' } });
-
     sockets[0]?.emit('message', { data: JSON.stringify({
       type: 'ticker', sequence: 1, product_id: 'BTC-USD', price: '100', open_24h: '90', volume_24h: '10',
       low_24h: '80', high_24h: '110', best_bid: '99', best_ask: '101', time: new Date(Date.parse(now) + 1_000).toISOString(), trade_id: 1,
     }) });
     expect(adapter.connection().state).toBe('live');
+    await adapter.close();
+  });
+
+  it('degrades on a forward sequence gap reported by the public feed', async () => {
+    const { adapter, sockets } = createAdapter();
+    sockets[0]?.emit('message', { data: JSON.stringify({ type: 'subscriptions', channels: [] }) });
+    for (const sequence of [10, 12]) {
+      sockets[0]?.emit('message', { data: JSON.stringify({
+        type: 'heartbeat', sequence, product_id: 'BTC-USD', time: now, last_trade_id: sequence,
+      }) });
+    }
+    expect(adapter.connection()).toMatchObject({ state: 'degraded', error: { code: 'MARKET_DEGRADED' } });
     await adapter.close();
   });
 
@@ -345,6 +345,22 @@ describe('Coinbase adapter resilience', () => {
       }) });
     }
     expect(adapter.connection()).toMatchObject({ state: 'degraded', error: { code: 'MARKET_DEGRADED' } });
+    await adapter.close();
+  });
+
+  it('never labels retained memory data as real while offline', async () => {
+    const { adapter, sockets } = createAdapter();
+    sockets[0]?.emit('message', { data: JSON.stringify({ type: 'subscriptions', channels: [] }) });
+    sockets[0]?.emit('message', { data: JSON.stringify({
+      type: 'ticker', sequence: 1, product_id: 'BTC-USD', price: '100', open_24h: '90', volume_24h: '10',
+      low_24h: '80', high_24h: '110', best_bid: '99', best_ask: '101', time: now, trade_id: 1,
+    }) });
+    adapter.setOnline(false);
+    const snapshot = await adapter.snapshot();
+    expect(snapshot.truthfulness).toBe('cachedReal');
+    expect(snapshot.connection.state).toBe('offline');
+    expect(snapshot.connection.source.truthfulness).toBe('cachedReal');
+    expect(snapshot.tickers[0]?.metadata.source.truthfulness).toBe('cachedReal');
     await adapter.close();
   });
 
