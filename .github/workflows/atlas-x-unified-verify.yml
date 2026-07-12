@@ -13,7 +13,7 @@ on:
       - '.github/workflows/atlas-x-unified-verify.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: atlas-x-unified-${{ github.ref }}
@@ -28,8 +28,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'push' && github.ref_name || github.event.pull_request.head.sha }}
       - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
@@ -38,30 +36,12 @@ jobs:
           cache-dependency-path: atlas-x-unified/package-lock.json
       - name: Install locked dependencies
         run: npm ci
-      - name: Correct generated business discriminants
+      - name: Rebuild deterministic foundation artifacts
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('scripts/foundation/schemas.mjs')
-          source = path.read_text()
-          source = source.replace("    discriminator: { propertyName: 'truthfulness' },\n", '')
-          source = source.replace("  discriminator: { propertyName: 'type' },\n", '')
-          path.write_text(source)
-          PY
           node scripts/apply-foundation-rework.mjs
           npm run generate:contracts
-      - name: Verify corrected contracts and workspaces
-        run: npm run verify
-      - name: Commit corrected contract source and generated artifacts
-        if: github.event_name == 'push'
+      - name: Reject generated drift
         working-directory: .
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add atlas-x-unified/scripts/foundation/schemas.mjs atlas-x-unified/openapi/atlas-x.openapi.yaml atlas-x-unified/src/generated/contracts.ts
-          if git diff --cached --quiet; then
-            echo "No contract discriminant changes"
-          else
-            git commit -m "fix: preserve contract business discriminants"
-            git push origin HEAD:atlas-x-unified-pro
-          fi
+        run: git diff --exit-code -- atlas-x-unified/openapi atlas-x-unified/src/generated atlas-x-unified/vectors atlas-x-unified/test/contracts.test.ts atlas-x-unified/test/golden-vectors.test.ts atlas-x-unified/package-lock.json
+      - name: Verify unified workspaces
+        run: npm run verify
