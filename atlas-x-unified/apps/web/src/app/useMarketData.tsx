@@ -18,6 +18,7 @@ import {
 import {
   createFixtureMarketSnapshot,
   presentMarketSnapshot,
+  tickerDisplayMetrics,
   type MarketPresentation,
 } from './market.js';
 
@@ -77,12 +78,14 @@ function createCache(): { readonly cache: MarketCachePort; readonly close: () =>
 
 function MarketRuntimeBanner({ value }: { readonly value: MarketDataContextValue }) {
   const ticker = value.presentation.ticker;
+  const metrics = ticker === null ? null : tickerDisplayMetrics(ticker);
   return (
     <section className={`market-runtime-banner tone-${value.presentation.tone}`} aria-live="polite" aria-label="公共行情状态">
       <div className="market-runtime-primary">
         <span className="market-runtime-label">{value.presentation.label}</span>
         <b>{ticker?.symbol ?? '公共行情'}</b>
-        <strong>{ticker?.last ?? '—'}</strong>
+        <strong>{metrics?.price ?? '—'}</strong>
+        {metrics === null ? null : <span className={`market-runtime-change ${metrics.direction}`}>{metrics.changeAmount} · {metrics.changePercent}</span>}
       </div>
       <div className="market-runtime-detail">
         <span>{value.presentation.connectionLabel}</span>
