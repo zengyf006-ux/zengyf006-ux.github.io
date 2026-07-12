@@ -98,7 +98,7 @@ export function MarketDataProvider({ children }: PropsWithChildren) {
   const [fallbackReason, setFallbackReason] = useState<string | null>(null);
 
   useEffect(() => {
-    if (globalThis.WebSocket === undefined) {
+    if (!('WebSocket' in globalThis)) {
       setFallbackReason('当前环境不支持 WebSocket，继续显示明确标识的 fixture。');
       return;
     }
