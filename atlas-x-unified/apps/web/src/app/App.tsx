@@ -78,30 +78,38 @@ function OrderTicket() {
     side: 'buy', type: 'market', inputMode: 'quantity', inputValue: '0.1', limitPrice: '118400', stopPrice: '119000',
   });
   const [confirming, setConfirming] = useState(false);
-  const [ticketError, setTicketError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const { snapshot, message, submit } = usePaperAccount();
-  const estimate = useMemo(() => {
+  const preview = useMemo(() => {
     try {
-      setTicketError('');
-      return estimateTicket(ticket);
+      return { estimate: estimateTicket(ticket), error: '' } as const;
     } catch (error) {
-      setTicketError(error instanceof Error ? error.message : '输入无效');
-      return null;
+      return { estimate: null, error: error instanceof Error ? error.message : '输入无效' } as const;
     }
   }, [ticket]);
+  const estimate = preview.estimate;
+  const ticketError = submitError !== '' ? submitError : preview.error;
   const cash = snapshot?.account.availableCash ?? '—';
   const coverage = estimate === null ? '—' : `${multiplyDecimal(estimate.coverageRate, '100')}%`;
   const needsLimit = ticket.type === 'limit' || ticket.type === 'stopLimit';
   const needsStop = ticket.type === 'stopMarket' || ticket.type === 'stopLimit';
   const inputLabel = ticket.inputMode === 'quantity' ? '数量 BTC' : ticket.inputMode === 'amount' ? '金额 USD' : '比例 %';
 
+  function updateTicket(next: TicketState) {
+    setSubmitError('');
+    setTicket(next);
+  }
+
   async function placeOrder() {
     try {
       const draft = createDraft(ticket, `web-${Date.now()}`, new Date().toISOString());
       const submitted = await submit(draft, marketFixture.last);
-      if (submitted) setConfirming(false);
+      if (submitted) {
+        setSubmitError('');
+        setConfirming(false);
+      }
     } catch (error) {
-      setTicketError(error instanceof Error ? error.message : '无法创建委托');
+      setSubmitError(error instanceof Error ? error.message : '无法创建委托');
     }
   }
 
@@ -109,17 +117,17 @@ function OrderTicket() {
     <section className="panel ticket mobile-panel" aria-labelledby="ticket-title">
       <header><h2 id="ticket-title">模拟下单</h2><span>可用 USD {cash}</span></header>
       <div className="segmented" aria-label="买卖方向">
-        {(['buy', 'sell'] as const).map((side) => <button key={side} className={ticket.side === side ? 'active' : ''} onClick={() => setTicket({ ...ticket, side })}>{side === 'buy' ? '买入' : '卖出'}</button>)}
+        {(['buy', 'sell'] as const).map((side) => <button key={side} className={ticket.side === side ? 'active' : ''} onClick={() => updateTicket({ ...ticket, side })}>{side === 'buy' ? '买入' : '卖出'}</button>)}
       </div>
       <div className="order-types" aria-label="订单类型">
-        {orderTypes.map(([type, label]) => <button key={type} className={ticket.type === type ? 'active' : ''} onClick={() => setTicket({ ...ticket, type })}>{label}</button>)}
+        {orderTypes.map(([type, label]) => <button key={type} className={ticket.type === type ? 'active' : ''} onClick={() => updateTicket({ ...ticket, type })}>{label}</button>)}
       </div>
       <div className="input-modes" aria-label="输入方式">
-        {inputModes.map(([inputMode, label]) => <button key={inputMode} className={ticket.inputMode === inputMode ? 'active' : ''} onClick={() => setTicket({ ...ticket, inputMode })}>{label}</button>)}
+        {inputModes.map(([inputMode, label]) => <button key={inputMode} className={ticket.inputMode === inputMode ? 'active' : ''} onClick={() => updateTicket({ ...ticket, inputMode })}>{label}</button>)}
       </div>
-      {needsStop ? <label>触发价<input value={ticket.stopPrice} inputMode="decimal" onChange={(event) => setTicket({ ...ticket, stopPrice: event.target.value })} /></label> : null}
-      {needsLimit ? <label>限价<input value={ticket.limitPrice} inputMode="decimal" onChange={(event) => setTicket({ ...ticket, limitPrice: event.target.value })} /></label> : null}
-      <label>{inputLabel}<input value={ticket.inputValue} inputMode="decimal" onChange={(event) => setTicket({ ...ticket, inputValue: event.target.value })} /></label>
+      {needsStop ? <label>触发价<input value={ticket.stopPrice} inputMode="decimal" onChange={(event) => updateTicket({ ...ticket, stopPrice: event.target.value })} /></label> : null}
+      {needsLimit ? <label>限价<input value={ticket.limitPrice} inputMode="decimal" onChange={(event) => updateTicket({ ...ticket, limitPrice: event.target.value })} /></label> : null}
+      <label>{inputLabel}<input value={ticket.inputValue} inputMode="decimal" onChange={(event) => updateTicket({ ...ticket, inputValue: event.target.value })} /></label>
       <div className="estimate" aria-label="下单预估">
         <div><span>预计成交</span><b>{estimate?.filledQuantity ?? '—'} BTC</b></div>
         <div><span>VWAP</span><b>{estimate?.vwap ?? '—'}</b></div>
@@ -192,8 +200,13 @@ function InformationPage({ page }: { readonly page: ProductPage }) {
 
 function ProductShell() {
   const [page, setPage] = useState<ProductPage>('terminal');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = (next: ProductPage) => {
+    setPage(next);
+    setMobileMenuOpen(false);
+  };
   const content = page === 'terminal' ? <Terminal /> : page === 'markets' ? <Markets /> : page === 'watchlist' ? <Markets watchlistOnly /> : ['assets', 'orders', 'fills'].includes(page) ? <AccountPage page={page} /> : <InformationPage page={page} />;
-  return <div className="app-shell"><header className="topbar"><button className="brand" onClick={() => setPage('terminal')} aria-label="返回交易终端"><span>AX</span><b>ATLAS X</b></button><nav aria-label="主要导航">{PRODUCT_PAGES.slice(0, 8).map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => setPage(id)}>{label}</button>)}</nav><div className="top-actions"><SourceBadge /><button onClick={() => setPage('health')}>数据状态</button></div></header><main>{content}</main><nav className="mobile-nav" aria-label="手机导航">{PRODUCT_PAGES.slice(0, 5).map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => setPage(id)}>{label}</button>)}</nav></div>;
+  return <div className="app-shell"><header className="topbar"><button className="brand" onClick={() => navigate('terminal')} aria-label="返回交易终端"><span>AX</span><b>ATLAS X</b></button><nav aria-label="主要导航">{PRODUCT_PAGES.map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav><button className="mobile-more" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>更多</button><div className="top-actions"><SourceBadge /><button onClick={() => navigate('health')}>数据状态</button></div></header><main>{content}</main>{mobileMenuOpen ? <nav className="mobile-more-sheet" aria-label="更多页面">{PRODUCT_PAGES.slice(5).map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav> : null}<nav className="mobile-nav" aria-label="手机导航">{PRODUCT_PAGES.slice(0, 5).map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav></div>;
 }
 
 export function App() {
