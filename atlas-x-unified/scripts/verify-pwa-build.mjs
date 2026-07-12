@@ -33,13 +33,14 @@ if ((worker.match(/skipWaiting\(\)/g) ?? []).length !== 1) {
   throw new Error('Service worker must activate updates only through the explicit SKIP_WAITING path');
 }
 
-const assets = await readdir(path.join(dist, 'assets'));
+const assetsDir = path.join(dist, 'assets');
+const assets = await readdir(assetsDir);
 const javascript = assets.filter((file) => file.endsWith('.js'));
 const styles = assets.filter((file) => file.endsWith('.css'));
 if (javascript.length === 0 || styles.length === 0) {
   throw new Error('Production PWA shell is missing compiled JavaScript or CSS');
 }
-const bundle = await readFile(path.join(dist, javascript[0]), 'utf8');
+const bundle = await readFile(path.join(assetsDir, javascript[0]), 'utf8');
 if (!bundle.includes('sw.js') || !bundle.includes('SKIP_WAITING')) {
   throw new Error('Production JavaScript does not contain PWA registration and update activation');
 }
