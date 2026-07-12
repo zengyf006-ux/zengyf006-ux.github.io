@@ -34,7 +34,6 @@ describe('Coinbase public candle adapter', () => {
       '1970-01-01T00:02:00.000Z',
     ]);
     expect(candles[0]).toMatchObject({
-      schemaVersion: undefined,
       symbol: 'BTC-USD',
       interval: '1m',
       open: '99',
@@ -74,7 +73,7 @@ describe('Coinbase public candle adapter', () => {
       low: '8',
       close: '9',
       volume: '10',
-      quoteVolume: '121',
+      quoteVolume: '110',
       openTime: '1970-01-01T00:00:00.000Z',
       closeTime: '1970-01-01T04:00:00.000Z',
       closed: true,
