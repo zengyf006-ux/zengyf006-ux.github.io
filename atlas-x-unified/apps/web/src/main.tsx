@@ -8,6 +8,7 @@ import './app/navigation.css';
 import './app/market-runtime.css';
 import './app/pwa.css';
 import './app/visual-g8.css';
+import './app/visual-g9.css';
 
 const root = document.getElementById('root');
 if (root === null) throw new Error('ATLAS X root element is missing');
