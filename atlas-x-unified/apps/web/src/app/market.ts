@@ -142,7 +142,7 @@ export function presentMarketSnapshot(snapshot: MarketDataSnapshot): MarketPrese
     }
     case 'fixture':
       return {
-        label: '测试数据',
+        label: '测试数据 · fixture',
         detail: '确定性测试数据，不代表实时市场',
         tone: 'warning',
         connectionLabel: '测试',
