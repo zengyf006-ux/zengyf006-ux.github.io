@@ -120,13 +120,74 @@ def main() -> int:
             return False
         return bool(page.evaluate('() => navigator.serviceWorker.controller !== null'))
 
+    def safe_capture_viewports(
+        browser: Any,
+        base_url: str,
+        output: Path,
+        gate: Any,
+        report: dict[str, Any],
+    ) -> None:
+        screenshots: list[dict[str, Any]] = []
+        for name, viewport in runner.VIEWPORTS.items():
+            context = browser.new_context(viewport=viewport, service_workers='allow')
+            try:
+                runner.install_network_boundaries(context, base_url)
+                page = context.new_page()
+                page.goto(base_url, wait_until='domcontentloaded', timeout=20_000)
+                page.get_by_text('ATLAS X', exact=True).first.wait_for(
+                    state='visible',
+                    timeout=20_000,
+                )
+
+                if viewport['width'] <= 390:
+                    page.get_by_role('button', name='下单', exact=True).click()
+                    page.get_by_role('button', name='复核买入').wait_for(
+                        state='visible',
+                        timeout=10_000,
+                    )
+                    page.get_by_role('button', name='图表', exact=True).click()
+                    page.locator('.market-stage').wait_for(state='visible', timeout=10_000)
+                else:
+                    page.get_by_role('button', name='复核买入').wait_for(
+                        state='visible',
+                        timeout=20_000,
+                    )
+
+                page.wait_for_timeout(600)
+                dimensions = page.evaluate(
+                    """
+                    () => ({
+                      scrollWidth: document.documentElement.scrollWidth,
+                      clientWidth: document.documentElement.clientWidth,
+                      scrollHeight: document.documentElement.scrollHeight,
+                      clientHeight: document.documentElement.clientHeight,
+                    })
+                    """
+                )
+                gate.check(
+                    dimensions['scrollWidth'] <= dimensions['clientWidth'] + 1,
+                    f'Horizontal overflow at {name}: {dimensions}',
+                )
+                screenshot = output / 'screenshots' / f'{name}.png'
+                page.screenshot(path=str(screenshot), full_page=False)
+                screenshots.append({
+                    'name': name,
+                    'viewport': viewport,
+                    'path': str(screenshot.relative_to(output)),
+                    'dimensions': dimensions,
+                    'bytes': screenshot.stat().st_size,
+                })
+            finally:
+                context.close()
+        report['screenshots'] = screenshots
+
     runner.install_network_boundaries = safe_network_boundaries
     runner.ensure_service_worker_control = safe_service_worker_control
     runner.performance_metrics = phase('performance', runner.performance_metrics)
     runner.accessibility_audit = phase('accessibility', runner.accessibility_audit)
     runner.run_paper_flow = phase('paper-flow', runner.run_paper_flow)
     runner.run_offline_recovery = phase('offline-recovery', runner.run_offline_recovery)
-    runner.capture_viewports = phase('four-viewports', runner.capture_viewports)
+    runner.capture_viewports = phase('four-viewports', safe_capture_viewports)
 
     signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(105)
