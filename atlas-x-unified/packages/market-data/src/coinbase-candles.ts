@@ -18,7 +18,7 @@ export interface PublicCandleResponse {
 export type PublicCandleFetcher = (
   url: string,
   init?: {
-    readonly signal?: AbortSignal;
+    readonly signal?: AbortSignal | undefined;
     readonly headers?: Readonly<Record<string, string>>;
     readonly cache?: RequestCache;
   },
