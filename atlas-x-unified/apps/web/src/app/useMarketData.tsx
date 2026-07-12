@@ -6,6 +6,7 @@ import {
   useState,
   type PropsWithChildren,
 } from 'react';
+import type { DataSource, OrderBookSnapshot, Trade } from '@atlas-x/contracts';
 import {
   CoinbasePublicFeedAdapter,
   IndexedDbMarketCache,
@@ -25,6 +26,8 @@ import {
 interface MarketDataContextValue {
   readonly snapshot: MarketDataSnapshot;
   readonly presentation: MarketPresentation;
+  readonly orderBook: OrderBookSnapshot | null;
+  readonly trades: readonly Trade[];
   readonly fallbackReason: string | null;
 }
 
@@ -76,6 +79,14 @@ function createCache(): { readonly cache: MarketCachePort; readonly close: () =>
   return { cache, close: () => cache.close() };
 }
 
+function withSource(book: OrderBookSnapshot, source: DataSource): OrderBookSnapshot {
+  return { ...book, metadata: { ...book.metadata, source } };
+}
+
+function tradeWithSource(trade: Trade, source: DataSource): Trade {
+  return { ...trade, metadata: { ...trade.metadata, source } };
+}
+
 function MarketRuntimeBanner({ value }: { readonly value: MarketDataContextValue }) {
   const ticker = value.presentation.ticker;
   const metrics = ticker === null ? null : tickerDisplayMetrics(ticker);
@@ -98,6 +109,8 @@ function MarketRuntimeBanner({ value }: { readonly value: MarketDataContextValue
 
 export function MarketDataProvider({ children }: PropsWithChildren) {
   const [snapshot, setSnapshot] = useState<MarketDataSnapshot>(() => createFixtureMarketSnapshot());
+  const [orderBook, setOrderBook] = useState<OrderBookSnapshot | null>(null);
+  const [trades, setTrades] = useState<readonly Trade[]>([]);
   const [fallbackReason, setFallbackReason] = useState<string | null>(null);
 
   useEffect(() => {
@@ -130,6 +143,14 @@ export function MarketDataProvider({ children }: PropsWithChildren) {
         const next = await adapter.snapshot();
         if (!active) return;
         setSnapshot(next);
+        if (next.truthfulness === 'cachedReal' && next.connection.source.truthfulness === 'cachedReal') {
+          const source = next.connection.source;
+          setOrderBook((current) => current === null ? null : withSource(current, source));
+          setTrades((current) => current.map((trade) => tradeWithSource(trade, source)));
+        } else if (next.truthfulness === 'unknown' && next.connection.state === 'offline') {
+          setOrderBook(null);
+          setTrades([]);
+        }
         setFallbackReason(null);
       } catch (error) {
         if (!active) return;
@@ -139,10 +160,17 @@ export function MarketDataProvider({ children }: PropsWithChildren) {
 
     async function consume() {
       try {
-        for await (const _event of adapter.subscribe({
+        for await (const event of adapter.subscribe({
           symbols: ['BTC-USD', 'ETH-USD', 'SOL-USD', 'LINK-USD'],
           signal: controller.signal,
         })) {
+          if (event.eventType === 'orderBook' && 'bids' in event.payload && 'asks' in event.payload) {
+            setOrderBook(event.payload as OrderBookSnapshot);
+          }
+          if (event.eventType === 'trade' && 'tradeId' in event.payload) {
+            const trade = event.payload as Trade;
+            setTrades((current) => [trade, ...current.filter((item) => item.tradeId !== trade.tradeId)].slice(0, 30));
+          }
           await publishSnapshot();
         }
       } catch (error) {
@@ -177,7 +205,13 @@ export function MarketDataProvider({ children }: PropsWithChildren) {
   }, []);
 
   const presentation = useMemo(() => presentMarketSnapshot(snapshot), [snapshot]);
-  const value = useMemo<MarketDataContextValue>(() => ({ snapshot, presentation, fallbackReason }), [snapshot, presentation, fallbackReason]);
+  const value = useMemo<MarketDataContextValue>(() => ({
+    snapshot,
+    presentation,
+    orderBook,
+    trades,
+    fallbackReason,
+  }), [snapshot, presentation, orderBook, trades, fallbackReason]);
   return (
     <MarketDataContext.Provider value={value}>
       <MarketRuntimeBanner value={value} />
