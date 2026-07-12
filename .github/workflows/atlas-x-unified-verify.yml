@@ -13,7 +13,7 @@ on:
       - '.github/workflows/atlas-x-unified-verify.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: atlas-x-unified-${{ github.ref }}
@@ -28,8 +28,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'push' && github.ref_name || github.event.pull_request.head.sha }}
       - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
@@ -38,22 +36,12 @@ jobs:
           cache-dependency-path: atlas-x-unified/package-lock.json
       - name: Install locked dependencies
         run: npm ci
-      - name: Apply foundation contract migration
-        run: node scripts/apply-foundation-rework.mjs
-      - name: Generate cross-platform contract types
-        run: npm run generate:contracts
+      - name: Rebuild deterministic foundation artifacts
+        run: |
+          node scripts/apply-foundation-rework.mjs
+          npm run generate:contracts
+      - name: Reject generated drift
+        working-directory: .
+        run: git diff --exit-code -- atlas-x-unified/openapi atlas-x-unified/src/generated atlas-x-unified/vectors atlas-x-unified/test/contracts.test.ts atlas-x-unified/test/golden-vectors.test.ts
       - name: Verify unified foundation
         run: npm run verify
-      - name: Commit deterministic generated foundation
-        if: github.event_name == 'push'
-        working-directory: .
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add atlas-x-unified/openapi atlas-x-unified/src/generated atlas-x-unified/vectors atlas-x-unified/test/contracts.test.ts atlas-x-unified/test/golden-vectors.test.ts
-          if git diff --cached --quiet; then
-            echo "No generated changes"
-          else
-            git commit -m "chore: materialize foundation contracts"
-            git push origin HEAD:atlas-x-unified-pro
-          fi
