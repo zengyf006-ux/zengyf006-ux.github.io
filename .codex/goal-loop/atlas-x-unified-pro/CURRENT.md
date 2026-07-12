@@ -1,9 +1,10 @@
 # Current
 
-- Current exact verified implementation Head: `37cca57090a7519fbf6e6423b03da71d8112a63e`
-- Current phase: G5 professional Web product and trading terminal
-- Completed: G0 goal-loop; G1 foundation; G2 workspaces; G3 market data; G4 paper ledger; G5 Web batches 1-3
-- In progress: read-only public candle adapter and truthful K-line rendering
-- Next action: add failing Coinbase candle parser/adapter tests, then replace the fixture chart while preserving cached/offline source labels
+- Current exact verified implementation Head: `822c8cc06c5e6a4b7fbae81d65d628f86ea0f6d6`
+- Current phase: G6 PWA installability, offline shell, recovery and update flow
+- Completed: G0 goal-loop; G1 foundation; G2 workspaces; G3 market data; G4 paper ledger; G5 professional Web product
+- In progress: installable manifest, versioned application-shell service worker and explicit update/recovery UI
+- Next action: add PWA identity and caching policy, register the service worker, then verify offline shell and safe update activation
 - Current blocker: none
-- Latest Actions Run ID: `29199258526`
+- Latest verified Actions Run ID: `29199915453`
+- Latest verified test/build result: 24 test files / 164 tests; strict typecheck, production build, audit and public market smoke all passed
