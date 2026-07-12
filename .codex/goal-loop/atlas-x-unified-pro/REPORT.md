@@ -12,53 +12,49 @@
 
 ## G0 — Goal loop
 
-- `41b8243` — `docs: establish unified pro goal loop`
-- Durable goal, graph, report, acceptance, current status and evidence directory established.
+- `41b8243` — durable goal, graph, report, acceptance, current status and evidence directory.
 
 ## G1 — Foundation rework
 
-Commits:
-
-- `9842891` — record TDD red evidence.
-- `5985e58` — add failing foundation and expanded risk acceptance tests.
-- `8d3f8c4` — implement fixed schema version, named decimal format, strict truthfulness, domain schemas, stable errors, risk assessment, docs and workflow migration.
-- `c84c7dc` — fix Golden Vector meta-schema version migration after Run `29191899789` exposed the mismatch.
-- `53ad963` — Actions materialized multiline OpenAPI, generated TypeScript and migrated/expanded vectors.
-- `e874c32` — restore final read-only deterministic CI.
-
-Evidence:
-
-- Fixed schema version: `atlas.unified.v1`.
-- Named format: `atlas-decimal-34`, 34 digits accepted and 35 rejected by TypeScript and AJV.
-- Strict DataSource branches distinguish unknown, cached real, real, simulated and fixture.
-- Full OrderStatus and MarketConnection state sets; only `canceled` is accepted.
-- Complete requested domain schemas and stable DomainErrorCode enum.
-- Fee-aware spot-long risk assessment separates equity and available cash, supports optional target, reward/risk outputs and conservative quantity caps.
-- Original risk API and original vectors remain executable; vectors expanded from 38 to 44: normal 20, boundary 9, error 15.
+- Commits: `9842891`, `5985e58`, `8d3f8c4`, `c84c7dc`, `53ad963`, `e874c32`.
+- Fixed `atlas.unified.v1`, `atlas-decimal-34`, strict DataSource variants, complete statuses, stable errors, fee-aware risk and multiline contract docs.
 - Exact verified Head: `e874c3275f69e3f1e35ba763ae97250f983c05d5`.
-- GitHub Actions Run `29192009639` succeeded with locked install, deterministic rebuild, zero generated drift and read-only permissions.
+- Actions Run `29192009639`: success.
 
 ## G2 — Workspace boundaries
 
+- Commits: `345f9e5`, `2935702`, `c7e7de3`, `51e9d1b`.
+- Six strict workspaces with tested one-way dependencies and typed ports.
+- Exact verified Head: `51e9d1b754701e2b890de0ee572b6a359869a576`.
+- Actions Run `29192393389`: success.
+
+## Contract generation correction
+
+- `a0231a7` added a regression test proving openapi-typescript was replacing business const values with schema names when `discriminator` was present.
+- `9a29aa5` removed the harmful discriminator annotations while retaining strict `oneOf` + `const` validation. Generated TypeScript now uses `real`, `cachedReal`, `fixture`, `market`, `stopMarket` and `stopLimit`.
+- `21b9082` restored read-only verification.
+
+## G3 — Truthful resilient market data
+
 Commits:
 
-- `345f9e5` — add failing workspace dependency and source-boundary tests.
-- `2935702` — establish contracts, domain, market-data, paper-trading, UI and web workspaces with one-way dependencies.
-- `c7e7de3` — Actions generated package-lock workspace registrations.
-- `51e9d1b` — restore final read-only workspace verification.
+- `f704aab` — initial failing public market behavior tests.
+- `5122e41` — added forward-gap and offline-memory truthfulness regression tests plus TDD red evidence.
+- `6e1e98e` — implemented state reducer, sequence policy, Coinbase public parser/adapter, truthful cache/fixture behavior, bounded reconnect, stale/offline recovery, public smoke and docs.
 
 Evidence:
 
-- Dependency direction is fixed and tested: contracts → domain → market-data/paper-trading → web; UI depends only on contracts.
-- Root compatibility facade preserves all G1 behavior while packages expose focused typed entrypoints.
-- Market data and paper trading are represented by ports, not DOM actions or global browser state.
-- Paper trading event storage uses a typed event union rather than `unknown` records.
-- Architecture tests cover every workspace and reject localStorage/sessionStorage business truth, global window state, and fetch/WebSocket monkey patches.
-- Local clean `npm ci` and `npm run verify`: 10 test files, 94 tests, all six workspace typechecks, audit 0.
-- Exact verified Head: `51e9d1b754701e2b890de0ee572b6a359869a576`.
-- GitHub Actions Run `29192393389`: success; locked install, deterministic rebuild, zero lock/generated drift and full workspace verification.
-- Final workflow permissions are read-only.
+- Public endpoint and channels are isolated behind an injected WebSocket factory; no global WebSocket/fetch replacement.
+- Ticker, trade and level2 messages normalize to canonical decimal strings and `real` source metadata.
+- Cached and retained values are recursively relabeled `cachedReal`; fixtures remain `fixture`.
+- Sequence gaps, out-of-order messages, stale data, cache failure, socket closure, offline state and recovery are tested.
+- Local clean verification: 12 test files, 115 tests, all workspace strict typechecks, generated drift clean, audit 0.
+- Exact verified Head: `6e1e98ead4e157311571a05d29445c344f6deafb`.
+- GitHub Actions Run `29193464887`: success.
+- Job `verify`: locked install, deterministic rebuild, zero drift and full regression success.
+- Job `public-market-smoke`: Coinbase Exchange public ticker, level2 book and one-minute candles observed successfully; fixture mode cannot satisfy this job.
+- Workflow token permissions remain read-only.
 
 ## Current work
 
-G3 is running: deterministic fixture and public Coinbase feed parsing, connection transitions, reconnection backoff, cache/offline truthfulness and source visibility.
+G4 is running: deterministic event-sourced paper account, order lifecycle, reservations, partial fills, fees, realized/unrealized PnL, reset confirmation and IndexedDB persistence.

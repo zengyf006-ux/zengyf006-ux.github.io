@@ -1,9 +1,9 @@
 # Current
 
-- Current exact Head: `51e9d1b754701e2b890de0ee572b6a359869a576`
-- Current phase: G3 market data adapters and connection state machine
-- Completed: G0 goal-loop; G1 foundation; G2 workspace boundaries
-- In progress: deterministic connection/reconnect/cache truthfulness behavior
-- Next action: add failing state-machine and Coinbase public-feed parser tests
+- Current exact verified implementation Head: `6e1e98ead4e157311571a05d29445c344f6deafb`
+- Current phase: G4 event-sourced paper trading ledger
+- Completed: G0 goal-loop; G1 foundation; G2 workspaces; G3 market data
+- In progress: paper account state machine, reservations, fills, cancellation and persistence
+- Next action: add failing ledger replay and command tests
 - Current blocker: none
-- Latest Actions Run ID: `29192393389`
+- Latest Actions Run ID: `29193464887`
