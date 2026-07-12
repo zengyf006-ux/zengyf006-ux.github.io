@@ -22,11 +22,11 @@ npm run generate:contracts
 npm run check:generated
 ```
 
-Financial values use canonical decimal strings at every JSON and interface boundary. Runtime arithmetic uses `decimal.js`; JSON numbers and exponent notation are rejected for financial fields.
+Financial values use canonical decimal strings at every JSON and interface boundary. Runtime arithmetic uses `decimal.js` with an explicit decimal128-compatible 34-significant-digit, half-up output context and higher internal precision. JSON numbers, exponent notation, negative zero, and inputs beyond the supported precision are rejected; balance and risk position caps round quantities down conservatively.
 
 ## Golden Vectors
 
-Version `v1` contains 36 platform-neutral cases: 17 normal, 8 boundary, and 11 error cases. The JSON files and their Draft 2020-12 schema are intentionally independent of TypeScript so a future SwiftUI test target can execute the same fixtures.
+Version `v1` contains 38 platform-neutral cases: 18 normal, 8 boundary, and 12 error cases. The JSON files and their Draft 2020-12 schema are intentionally independent of TypeScript so a future SwiftUI test target can execute the same fixtures.
 
 ## Architecture boundaries
 

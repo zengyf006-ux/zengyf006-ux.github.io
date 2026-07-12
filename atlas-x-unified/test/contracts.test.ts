@@ -56,6 +56,8 @@ describe('OpenAPI 3.1 cross-platform contracts', () => {
 
     expect(validator.validate('MarketSnapshot', validSnapshot)).toEqual({ valid: true, errors: [] });
     expect(validator.validate('MarketSnapshot', { ...validSnapshot, last: 60000.15 }).valid).toBe(false);
+    expect(validator.validate('DecimalString', '-0').valid).toBe(false);
+    expect(validator.validate('DecimalString', '-0.1').valid).toBe(true);
   });
 
   it('keeps OrderDraft structurally distinct from submitted Order', async () => {
