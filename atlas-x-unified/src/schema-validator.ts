@@ -1,5 +1,6 @@
 import { Ajv2020, type ErrorObject, type ValidateFunction } from 'ajv/dist/2020.js';
 import addFormatsModule from 'ajv-formats';
+import { ATLAS_DECIMAL_FORMAT, isCanonicalDecimalString } from './decimal.js';
 
 const addFormats = addFormatsModule as unknown as (ajv: Ajv2020) => Ajv2020;
 
@@ -36,6 +37,10 @@ export function createOpenApiComponentValidator(
 ): OpenApiComponentValidator {
   const ajv = new Ajv2020({ allErrors: true, strict: true, validateFormats: true });
   addFormats(ajv);
+  ajv.addFormat(ATLAS_DECIMAL_FORMAT, {
+    type: 'string',
+    validate: isCanonicalDecimalString,
+  });
 
   const definitions = rewriteOpenApiRefs(components) as Record<string, unknown>;
   const compiled = new Map<string, ValidateFunction>();
@@ -48,13 +53,12 @@ export function createOpenApiComponentValidator(
 
       let validator = compiled.get(schemaName);
       if (validator === undefined) {
-        const created = ajv.compile({
+        validator = ajv.compile({
           $schema: 'https://json-schema.org/draft/2020-12/schema',
           $ref: `#/$defs/${schemaName}`,
           $defs: definitions,
         });
-        compiled.set(schemaName, created);
-        validator = created;
+        compiled.set(schemaName, validator);
       }
 
       const valid = validator(value) as boolean;

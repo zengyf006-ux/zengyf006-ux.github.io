@@ -11,7 +11,8 @@
     "check:generated": "node scripts/check-generated.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "verify": "npm run check:generated && npm run typecheck && npm test && npm audit --omit=dev --audit-level=high"
+    "audit": "npm audit --audit-level=high",
+    "verify": "npm run check:generated && npm run typecheck && npm test && npm run audit"
   },
   "dependencies": {
     "ajv": "8.20.0",
