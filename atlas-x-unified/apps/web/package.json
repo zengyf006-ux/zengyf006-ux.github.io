@@ -1,0 +1,16 @@
+{
+  "name": "@atlas-x/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": { ".": { "types": "./src/index.ts", "default": "./src/index.ts" } },
+  "scripts": { "typecheck": "tsc --noEmit -p tsconfig.json" },
+  "dependencies": {
+    "@atlas-x/contracts": "*",
+    "@atlas-x/domain": "*",
+    "@atlas-x/market-data": "*",
+    "@atlas-x/paper-trading": "*",
+    "@atlas-x/ui": "*"
+  }
+}
