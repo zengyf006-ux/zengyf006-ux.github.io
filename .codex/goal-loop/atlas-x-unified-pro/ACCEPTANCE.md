@@ -35,4 +35,22 @@ Head `7a279fa0552924b990f64bd61cc876baace0bf40`, Run `29195070635`.
 
 ## G5 Web product — running
 
-Required evidence: typed React application shell; professional terminal, market, watchlist, assets, orders, fills, alerts, settings, data-health and help surfaces; truthful source states; paper order workflow; responsive dedicated phone/desktop layouts; no placeholder or dead controls.
+Verified checkpoint: Head `371b94bd7d0cccb13f13dad24703def13a08aba6`, Run `29198256110`.
+
+Accepted for this checkpoint:
+
+- React/Vite build, strict workspace types, tests, audit and generated drift passed.
+- Production build Artifact was uploaded successfully.
+- Market, limit, stopMarket and stopLimit paper order drafts are available.
+- Quantity, amount and percentage inputs use shared decimal-safe domain logic.
+- Terminal, assets, current orders, fills, alerts, settings, data-health and help are reachable on desktop and mobile.
+- One shared event-sourced paper account uses IndexedDB where available and truthfully reports memory fallback.
+- Mobile uses explicit chart/book/order/trades task panes instead of an unbounded vertical terminal.
+- Fixture is visibly labeled and independent Coinbase public smoke passed.
+
+Still required before G5 acceptance:
+
+- Connect the existing public/cached market adapter into the Web state flow with explicit connection and latency display.
+- Complete live/cached/offline transition behavior in the rendered product.
+- Add E2E, accessibility, four-viewport screenshot and visual iteration evidence.
+- Remove remaining prototype-level chart rendering and complete screenshot-led product refinement.
