@@ -1,5 +1,5 @@
 import { Decimal } from 'decimal.js';
-import { decimalString, parseDecimal, type DecimalString } from './decimal.js';
+import { decimalString, parseDecimal, quantizeDecimal, type DecimalString } from './decimal.js';
 
 export interface SpotLongRiskInput {
   readonly availableQuote: string;
@@ -61,9 +61,9 @@ export function calculateSpotLongPosition(input: SpotLongRiskInput): SpotLongRis
   const unitRisk = stopDistance
     .plus(entry.times(feeRate))
     .plus(stop.times(feeRate));
-  const quantityByRisk = riskBudget.dividedBy(unitRisk);
+  const quantityByRisk = quantizeDecimal(riskBudget.dividedBy(unitRisk), Decimal.ROUND_DOWN);
   const balanceUnitCost = entry.times(new Decimal(1).plus(feeRate));
-  const quantityByBalance = available.dividedBy(balanceUnitCost);
+  const quantityByBalance = quantizeDecimal(available.dividedBy(balanceUnitCost), Decimal.ROUND_DOWN);
   const balanceBinds = quantityByBalance.lessThanOrEqualTo(quantityByRisk);
   const suggestedQuantity = balanceBinds ? quantityByBalance : quantityByRisk;
   const notional = suggestedQuantity.times(entry);

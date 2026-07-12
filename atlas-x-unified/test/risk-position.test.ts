@@ -35,8 +35,8 @@ describe('calculateSpotLongPosition', () => {
 
     expect(result.riskBudget).toBe('10');
     expect(result.unitRisk).toBe('10.19');
-    expect(result.suggestedQuantity).toBe('0.98135426889106967615');
-    expect(result.totalCapital).toBe('98.233562315996074583');
+    expect(result.suggestedQuantity).toBe('0.9813542688910696761530912659470068');
+    expect(result.totalCapital).toBe('98.23356231599607458292443572129538');
     expect(result.bindingConstraint).toBe('risk');
   });
 
@@ -49,7 +49,7 @@ describe('calculateSpotLongPosition', () => {
       feeRate: '0.001',
     });
 
-    expect(result.quantityByBalance).toBe('9.99000999000999001');
+    expect(result.quantityByBalance).toBe('9.99000999000999000999000999000999');
     expect(result.suggestedQuantity).toBe(result.quantityByBalance);
     expect(result.totalCapital).toBe('1000');
     expect(result.bindingConstraint).toBe('balance');

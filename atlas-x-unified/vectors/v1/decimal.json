@@ -23,6 +23,16 @@
       "expected": "0.3"
     },
     {
+      "id": "add-large-fraction",
+      "category": "normal",
+      "operation": "add",
+      "input": {
+        "left": "12345678901234567890",
+        "right": "0.1"
+      },
+      "expected": "12345678901234567890.1"
+    },
+    {
       "id": "subtract-decimals",
       "category": "normal",
       "operation": "subtract",
@@ -97,6 +107,15 @@
         "right": "0"
       },
       "errorPattern": "division by zero"
+    },
+    {
+      "id": "reject-over-decimal128-precision",
+      "category": "error",
+      "operation": "normalize",
+      "input": {
+        "value": "12345678901234567890123456789012345"
+      },
+      "errorPattern": "34 significant digits"
     }
   ]
 }

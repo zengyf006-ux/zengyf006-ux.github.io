@@ -73,7 +73,7 @@ describe('estimateOrder', () => {
     expect(result.grossAmount).toBe('394');
     expect(result.vwap).toBe('98.5');
     expect(result.referencePrice).toBe('99');
-    expect(result.slippageRate).toBe('0.0050505050505050505051');
+    expect(result.slippageRate).toBe('0.005050505050505050505050505050505051');
     expect(result.fee).toBe('0.788');
     expect(result.requiredBalance).toBe('4');
     expect(result.insufficientBalance).toBe(true);
