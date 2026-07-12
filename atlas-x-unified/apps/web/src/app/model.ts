@@ -1,5 +1,12 @@
 import type { OrderDraft } from '@atlas-x/contracts';
-import { estimateOrder, type OrderEstimate } from '@atlas-x/domain';
+import {
+  decimalString,
+  divideDecimal,
+  estimateOrder,
+  multiplyDecimal,
+  parseDecimal,
+  type OrderEstimate,
+} from '@atlas-x/domain';
 
 export const PRODUCT_PAGES = [
   ['terminal', '交易'], ['markets', '市场'], ['watchlist', '自选'], ['assets', '资产'],
@@ -9,12 +16,21 @@ export const PRODUCT_PAGES = [
 
 export type ProductPage = (typeof PRODUCT_PAGES)[number][0];
 export type Interval = '1m' | '5m' | '15m' | '1h' | '4h' | '1d';
+export type TicketOrderType = 'market' | 'limit' | 'stopMarket' | 'stopLimit';
+export type TicketInputMode = 'quantity' | 'amount' | 'percentage';
+export type MobileTerminalPane = 'chart' | 'book' | 'order' | 'trades';
+
 export type TicketState = Readonly<{
   side: 'buy' | 'sell';
-  type: 'market' | 'limit';
-  quantity: string;
+  type: TicketOrderType;
+  inputMode: TicketInputMode;
+  inputValue: string;
   limitPrice: string;
+  stopPrice: string;
 }>;
+
+export const PAPER_AVAILABLE_QUOTE = '100000';
+export const PAPER_AVAILABLE_BASE = '1.25';
 
 export const marketFixture = {
   symbol: 'BTC-USD',
@@ -33,15 +49,40 @@ export const marketFixture = {
   ],
 } as const;
 
+function positive(value: string, label: string): string {
+  const parsed = parseDecimal(value);
+  if (!parsed.greaterThan(0)) throw new Error(`${label} must be positive`);
+  return decimalString(parsed);
+}
+
+function executionReference(ticket: TicketState): string {
+  return ticket.type === 'limit' || ticket.type === 'stopLimit'
+    ? positive(ticket.limitPrice, 'limit price')
+    : marketFixture.last;
+}
+
+export function resolveTicketQuantity(ticket: TicketState): string {
+  const input = positive(ticket.inputValue, 'order input');
+  if (ticket.inputMode === 'quantity') return input;
+  const reference = executionReference(ticket);
+  if (ticket.inputMode === 'amount') return divideDecimal(input, reference);
+
+  const percentage = parseDecimal(input);
+  if (percentage.greaterThan(100)) throw new Error('percentage must not exceed 100');
+  const balance = ticket.side === 'buy' ? PAPER_AVAILABLE_QUOTE : PAPER_AVAILABLE_BASE;
+  return divideDecimal(multiplyDecimal(balance, divideDecimal(input, '100')), reference);
+}
+
 export function estimateTicket(ticket: TicketState): OrderEstimate {
+  const orderType = ticket.type === 'limit' || ticket.type === 'stopLimit' ? 'limit' : 'market';
   return estimateOrder({
     side: ticket.side,
-    orderType: ticket.type,
-    quantity: ticket.quantity,
-    ...(ticket.type === 'limit' ? { limitPrice: ticket.limitPrice } : {}),
+    orderType,
+    quantity: resolveTicketQuantity(ticket),
+    ...(orderType === 'limit' ? { limitPrice: positive(ticket.limitPrice, 'limit price') } : {}),
     feeRate: '0.001',
-    availableBase: '1.25',
-    availableQuote: '100000',
+    availableBase: PAPER_AVAILABLE_BASE,
+    availableQuote: PAPER_AVAILABLE_QUOTE,
     orderBook: { bids: marketFixture.bids, asks: marketFixture.asks },
   });
 }
@@ -52,10 +93,19 @@ export function createDraft(ticket: TicketState, id: string, now: string): Order
     clientOrderId: id,
     symbol: marketFixture.symbol,
     side: ticket.side,
-    quantity: ticket.quantity,
+    quantity: resolveTicketQuantity(ticket),
     createdAt: now,
   };
-  return ticket.type === 'market'
-    ? { ...base, type: 'market' }
-    : { ...base, type: 'limit', price: ticket.limitPrice };
+
+  switch (ticket.type) {
+    case 'market': return { ...base, type: 'market' };
+    case 'limit': return { ...base, type: 'limit', price: positive(ticket.limitPrice, 'limit price') };
+    case 'stopMarket': return { ...base, type: 'stopMarket', stopPrice: positive(ticket.stopPrice, 'stop price') };
+    case 'stopLimit': return {
+      ...base,
+      type: 'stopLimit',
+      price: positive(ticket.limitPrice, 'limit price'),
+      stopPrice: positive(ticket.stopPrice, 'stop price'),
+    };
+  }
 }
