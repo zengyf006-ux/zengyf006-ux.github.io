@@ -84,6 +84,20 @@
 - Web Artifact ID `8261899305`, digest `sha256:496c73381c678494913138cc1ccbf95c2415324f441de830ae6794a372fc3c4b`.
 - CI diagnostics Artifact ID `8261899047`, digest `sha256:26a219e31b8dc8854b3230d30a27ef8edb35998ba644e6be731db474825365ec`.
 
+## G5 — Web product, batch 4 public candles and recovery
+
+- Added a strict Coinbase public candle adapter for 1m, 5m, 15m, 1h, synthetic exact 4h and 1d intervals.
+- Added IndexedDB candle persistence that accepts only matching `real` public candles.
+- Replaced the prototype bar chart with decimal-safe candle bodies and wicks derived from contract strings without native floating-point financial calculations.
+- The rendered chart identifies `real`, `cachedReal` and fixture data, exposes provider, interval, count and request latency, and preserves the latest real candle cache during outages.
+- Browser online/offline events now cause immediate candle fallback and recovery; overlapping refresh requests are suppressed.
+- Added parser, aggregation, malformed-data, cache, chart-geometry, latency and offline-presentation tests.
+- Exact verified implementation Head: `822c8cc06c5e6a4b7fbae81d65d628f86ea0f6d6`.
+- Actions Run `29199915453`: 24 test files / 164 tests, all strict typechecks, production build, audit, diagnostics, Web Artifact and public market smoke passed.
+- Web Artifact ID `8262077478`, digest `sha256:692f16eea83aa70678f50fc56fd26e9ee3d9199f6bc221b7276ebab0f12db3cd`.
+- CI diagnostics Artifact ID `8262077374`, digest `sha256:e9ebcac2e5273f762a8fadca87a57fb6e7d16d2e69d20faddf9785a3aa5cb398`.
+- G5 is accepted. E2E/a11y/performance gates remain assigned to G7; screenshot-led redesign remains assigned to G8 and G9.
+
 ## Current work
 
-G5 remains running. The next batch adds a read-only public candle adapter and replaces the fixture chart while preserving exact source, cache and offline labels.
+G6 is running. The next batch adds an installable manifest, versioned offline application shell, explicit recovery state and safe update activation flow without adding any real-money or production deployment path.
