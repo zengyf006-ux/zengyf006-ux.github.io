@@ -98,10 +98,26 @@ Exact verified implementation Head `dbf2b24d6db2ff0364aa85dc76a63adb6e237448`, R
 - Web build Artifact ID `8262641527`, digest `sha256:971ef1aaabf938c488e9552ad6b88cc3217f9bb6f042437630fe2be4ed3681e4`.
 - CI diagnostics Artifact ID `8262641291`, digest `sha256:51ccf168f97eab55fae4c0fdec3c653264b2a29f6fa58d8a7a97563ad7f75771`.
 
-## G9 visual iteration 2 — running
+## G9 visual iteration 2 — accepted
+
+Exact verified implementation Head `2643b59313af011fe5e08afbab0171c24fa0cab4`, Run `29202179426`.
+
+- The exact G8 screenshots were used to remove duplicated desktop source badges while preserving the global runtime state, chart source label, panel source labels and data-health route.
+- Desktop and laptop ticket whitespace now ends with an explicit local-paper-ledger and no-real-funds boundary instead of decorative empty space.
+- Mobile runtime, top bar, task switch and bottom navigation were compressed; the prior oversized `更多` control was corrected by restoring an explicit two-column mobile header grid.
+- Desktop center-rail density and hover affordances were refined without changing any market or paper-trading behavior.
+- All 25 Vitest files / 168 tests, strict typechecks, production build, PWA gate, audit, live public smoke, paper-flow E2E, reload persistence, offline recovery, accessibility, keyboard and four-viewports passed.
+- Performance evidence remained far under budget: FCP `296 ms`, load `115.1 ms`, transfer `104,362 B`, JavaScript `96,878 B`, CSS `6,154 B`, DOM `256`, CLS `0.000438`, long tasks `186 ms`.
+- Four final polish screenshots passed without horizontal overflow at 1440×900, 1024×768, 768×1024 and 390×844; console and page errors were zero.
+- Browser quality Artifact ID `8262716202`, digest `sha256:f54b7953b45a6d8d41891177e447257d243e76f92a71b50921d0fd57950d93e7`.
+- Web build Artifact ID `8262709536`, digest `sha256:77fbb5dfef4685a1d1b0c2b9f93c63476630e3bc3d08445b013ac6566aa26665`.
+- CI diagnostics Artifact ID `8262709441`, digest `sha256:f91ec7c2a2a6bba5ce52d3e244e994e411f2a97e508f1fa699934c56a1340a17`.
+
+## G10 final evidence — running
 
 Required before acceptance:
 
-- Use the exact G8 screenshots to remove remaining duplicated status emphasis and unused ticket space without hiding source truthfulness.
-- Polish desktop center-rail density, laptop/tablet first-screen rhythm and mobile header/task/navigation compression.
-- Preserve all G7/G8 behavioral, accessibility, performance and four-viewport gates on the exact implementation Head.
+- All workflow jobs must checkout and verify the exact PR Head rather than a synthetic merge ref.
+- Build a machine-readable evidence manifest that validates the exact Head, production PWA build, browser report, screenshots, checksums and goal-loop state.
+- Publish one independent-review Artifact containing the final build, browser evidence, state files and review instructions.
+- Update the stale Draft PR title/body to the actual unified Web/PWA scope while keeping it Draft and unmerged.
