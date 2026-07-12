@@ -99,6 +99,11 @@ jobs:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: atlas-x-unified/requirements-e2e.txt
+      - name: Install readable CJK screenshot fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-cache -f
       - name: Install locked application dependencies
         run: npm ci
       - name: Install pinned browser-quality dependencies
