@@ -1,0 +1,237 @@
+{
+  "schemaVersion": "atlas.unified.v1",
+  "vectorVersion": "1.0.0",
+  "domain": "orderbook",
+  "cases": [
+    {
+      "id": "aggregate-two-sided-book",
+      "category": "normal",
+      "operation": "aggregate",
+      "input": {
+        "tickSize": "0.5",
+        "bids": [
+          {
+            "price": "100.49",
+            "quantity": "0.1"
+          },
+          {
+            "price": "100.4",
+            "quantity": "0.2"
+          },
+          {
+            "price": "99.99",
+            "quantity": "0.3"
+          }
+        ],
+        "asks": [
+          {
+            "price": "100.01",
+            "quantity": "0.4"
+          },
+          {
+            "price": "100.49",
+            "quantity": "0.6"
+          },
+          {
+            "price": "100.51",
+            "quantity": "0.5"
+          }
+        ]
+      },
+      "expected": {
+        "tickSize": "0.5",
+        "bids": [
+          {
+            "price": "100",
+            "quantity": "0.3",
+            "cumulativeQuantity": "0.3"
+          },
+          {
+            "price": "99.5",
+            "quantity": "0.3",
+            "cumulativeQuantity": "0.6"
+          }
+        ],
+        "asks": [
+          {
+            "price": "100.5",
+            "quantity": "1",
+            "cumulativeQuantity": "1"
+          },
+          {
+            "price": "101",
+            "quantity": "0.5",
+            "cumulativeQuantity": "1.5"
+          }
+        ]
+      }
+    },
+    {
+      "id": "stable-unsorted-book",
+      "category": "normal",
+      "operation": "aggregate",
+      "input": {
+        "tickSize": "1",
+        "bids": [
+          {
+            "price": "98",
+            "quantity": "1"
+          },
+          {
+            "price": "100",
+            "quantity": "2"
+          },
+          {
+            "price": "99",
+            "quantity": "3"
+          }
+        ],
+        "asks": [
+          {
+            "price": "103",
+            "quantity": "1"
+          },
+          {
+            "price": "101",
+            "quantity": "2"
+          },
+          {
+            "price": "102",
+            "quantity": "3"
+          }
+        ]
+      },
+      "expected": {
+        "tickSize": "1",
+        "bids": [
+          {
+            "price": "100",
+            "quantity": "2",
+            "cumulativeQuantity": "2"
+          },
+          {
+            "price": "99",
+            "quantity": "3",
+            "cumulativeQuantity": "5"
+          },
+          {
+            "price": "98",
+            "quantity": "1",
+            "cumulativeQuantity": "6"
+          }
+        ],
+        "asks": [
+          {
+            "price": "101",
+            "quantity": "2",
+            "cumulativeQuantity": "2"
+          },
+          {
+            "price": "102",
+            "quantity": "3",
+            "cumulativeQuantity": "5"
+          },
+          {
+            "price": "103",
+            "quantity": "1",
+            "cumulativeQuantity": "6"
+          }
+        ]
+      }
+    },
+    {
+      "id": "one-sided-book",
+      "category": "normal",
+      "operation": "aggregate",
+      "input": {
+        "tickSize": "0.1",
+        "bids": [
+          {
+            "price": "1.09",
+            "quantity": "2"
+          }
+        ],
+        "asks": []
+      },
+      "expected": {
+        "tickSize": "0.1",
+        "bids": [
+          {
+            "price": "1",
+            "quantity": "2",
+            "cumulativeQuantity": "2"
+          }
+        ],
+        "asks": []
+      }
+    },
+    {
+      "id": "high-precision-tick",
+      "category": "boundary",
+      "operation": "aggregate",
+      "input": {
+        "tickSize": "0.0001",
+        "bids": [
+          {
+            "price": "0.12345",
+            "quantity": "0.1"
+          },
+          {
+            "price": "0.12349",
+            "quantity": "0.2"
+          }
+        ],
+        "asks": [
+          {
+            "price": "0.12341",
+            "quantity": "0.3"
+          }
+        ]
+      },
+      "expected": {
+        "tickSize": "0.0001",
+        "bids": [
+          {
+            "price": "0.1234",
+            "quantity": "0.3",
+            "cumulativeQuantity": "0.3"
+          }
+        ],
+        "asks": [
+          {
+            "price": "0.1235",
+            "quantity": "0.3",
+            "cumulativeQuantity": "0.3"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reject-zero-tick",
+      "category": "error",
+      "operation": "aggregate",
+      "input": {
+        "tickSize": "0",
+        "bids": [],
+        "asks": []
+      },
+      "errorPattern": "tick"
+    },
+    {
+      "id": "reject-zero-level-quantity",
+      "category": "error",
+      "operation": "aggregate",
+      "input": {
+        "tickSize": "1",
+        "bids": [
+          {
+            "price": "100",
+            "quantity": "0"
+          }
+        ],
+        "asks": []
+      },
+      "errorPattern": "level"
+    }
+  ]
+}

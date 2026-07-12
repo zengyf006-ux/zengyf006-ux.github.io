@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">ATLAS X maskable icon</title>
+  <rect width="512" height="512" fill="#171817"/>
+  <circle cx="256" cy="256" r="196" fill="#202220"/>
+  <path d="M134 363 230 139h45l96 224h-60l-19-47h-80l-19 47h-59Zm96-96h43l-21-56-22 56Z" fill="#f7f7f5"/>
+  <path d="m291 158 45 68 45-68h62l-74 105 78 111h-64l-48-72-48 72h-62l78-111-74-105h62Z" fill="#7fe0bd" opacity=".92"/>
+</svg>
