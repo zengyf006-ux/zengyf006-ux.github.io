@@ -73,7 +73,7 @@ function createFixtureCandles(symbol: string, interval: PublicCandleInterval): r
   });
 }
 
-function cacheCandles(entry: CandleCacheEntry): readonly Candle[] {
+export function cacheCandles(entry: CandleCacheEntry): readonly Candle[] {
   const source = {
     truthfulness: 'cachedReal' as const,
     provider: 'coinbase',
@@ -83,6 +83,29 @@ function cacheCandles(entry: CandleCacheEntry): readonly Candle[] {
     ...candle,
     metadata: { ...candle.metadata, source },
   }));
+}
+
+export function cachedCandleState(
+  entry: CandleCacheEntry,
+  loading: boolean,
+  error: string | null,
+): PublicCandleState {
+  return {
+    candles: cacheCandles(entry),
+    truthfulness: 'cachedReal',
+    label: '真实 K线缓存',
+    detail: `Coinbase · 缓存时间 ${entry.cacheTime}`,
+    loading,
+    error,
+  };
+}
+
+export function liveCandleDetail(
+  interval: PublicCandleInterval,
+  count: number,
+  latencyMs: number,
+): string {
+  return `Coinbase · ${interval} · ${count} 根 · ${Math.max(0, Math.round(latencyMs))} ms`;
 }
 
 function initialState(symbol: string, interval: PublicCandleInterval): PublicCandleState {
@@ -120,6 +143,7 @@ export function usePublicCandles(symbol: string, interval: PublicCandleInterval)
 
     let active = true;
     let timer: ReturnType<typeof globalThis.setInterval> | undefined;
+    let refreshPromise: Promise<void> | null = null;
     let cache: IndexedDbCandleCache | null = null;
     const controller = new AbortController();
     const adapter = new CoinbasePublicCandleAdapter({
@@ -134,36 +158,41 @@ export function usePublicCandles(symbol: string, interval: PublicCandleInterval)
       });
     }
 
-    async function readCache(): Promise<boolean> {
+    async function readCache(loading: boolean, error: string | null): Promise<boolean> {
       if (cache === null) return false;
       try {
         const entry = await cache.read(symbol, interval);
         if (!active || entry === null || entry.candles.length === 0) return false;
-        setState({
-          candles: cacheCandles(entry),
-          truthfulness: 'cachedReal',
-          label: '真实 K线缓存',
-          detail: `Coinbase · 缓存时间 ${entry.cacheTime}`,
-          loading: true,
-          error: null,
-        });
+        setState(cachedCandleState(entry, loading, error));
         return true;
       } catch {
         return false;
       }
     }
 
-    async function refresh() {
+    async function showOffline(reason: string) {
+      const cached = await readCache(false, reason);
+      if (!active || cached) return;
+      setState({ ...fixture, loading: false, error: reason });
+    }
+
+    async function performRefresh() {
+      if ('navigator' in globalThis && globalThis.navigator.onLine === false) {
+        await showOffline('浏览器已离线，无法刷新公共 K 线。');
+        return;
+      }
+      const startedAt = Date.now();
       try {
         const candles = await adapter.load(symbol, interval, controller.signal);
         if (!active) return;
         if (candles.length === 0) throw new Error('Coinbase 当前没有返回该周期的 K 线。');
         const cacheTime = new Date().toISOString();
+        const latencyMs = Date.now() - startedAt;
         setState({
           candles,
           truthfulness: 'real',
           label: '实时真实 K线',
-          detail: `Coinbase · ${interval} · ${candles.length} 根`,
+          detail: liveCandleDetail(interval, candles.length, latencyMs),
           loading: false,
           error: null,
         });
@@ -181,27 +210,38 @@ export function usePublicCandles(symbol: string, interval: PublicCandleInterval)
         }
       } catch (error) {
         if (!active || controller.signal.aborted) return;
-        const cached = await readCache();
-        if (!active) return;
-        if (cached) {
-          setState((current) => ({
-            ...current,
-            loading: false,
-            error: error instanceof Error ? error.message : '公共 K 线暂时不可用',
-          }));
-        } else {
-          setState({
-            ...fixture,
-            loading: false,
-            error: error instanceof Error ? error.message : '公共 K 线暂时不可用',
-          });
-        }
+        const reason = error instanceof Error ? error.message : '公共 K 线暂时不可用';
+        const cached = await readCache(false, reason);
+        if (!active || cached) return;
+        setState({ ...fixture, loading: false, error: reason });
       }
     }
 
+    function refresh(): Promise<void> {
+      if (refreshPromise !== null) return refreshPromise;
+      refreshPromise = performRefresh().finally(() => {
+        refreshPromise = null;
+      });
+      return refreshPromise;
+    }
+
+    const online = () => {
+      setState((current) => ({ ...current, loading: true, error: null }));
+      void refresh();
+    };
+    const offline = () => {
+      void showOffline('浏览器已离线，当前仅显示真实缓存或明确标识的 fixture。');
+    };
+    globalThis.addEventListener('online', online);
+    globalThis.addEventListener('offline', offline);
+
     async function start() {
-      await readCache();
-      await refresh();
+      const browserOffline = 'navigator' in globalThis && globalThis.navigator.onLine === false;
+      if (browserOffline) await showOffline('浏览器已离线，当前仅显示真实缓存或明确标识的 fixture。');
+      else {
+        await readCache(true, null);
+        await refresh();
+      }
       const requested = INTERVAL_SECONDS[interval] * 1000;
       const refreshMs = Math.min(Math.max(requested, 60_000), 3_600_000);
       if (active) timer = globalThis.setInterval(() => void refresh(), refreshMs);
@@ -212,6 +252,8 @@ export function usePublicCandles(symbol: string, interval: PublicCandleInterval)
       active = false;
       controller.abort();
       if (timer !== undefined) globalThis.clearInterval(timer);
+      globalThis.removeEventListener('online', online);
+      globalThis.removeEventListener('offline', offline);
       void cache?.close();
     };
   }, [fixture, interval, symbol]);
