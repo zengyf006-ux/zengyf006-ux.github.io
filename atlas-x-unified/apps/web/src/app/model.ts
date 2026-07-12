@@ -69,8 +69,9 @@ export function resolveTicketQuantity(ticket: TicketState): string {
 
   const percentage = parseDecimal(input);
   if (percentage.greaterThan(100)) throw new Error('percentage must not exceed 100');
-  const balance = ticket.side === 'buy' ? PAPER_AVAILABLE_QUOTE : PAPER_AVAILABLE_BASE;
-  return divideDecimal(multiplyDecimal(balance, divideDecimal(input, '100')), reference);
+  const ratio = divideDecimal(input, '100');
+  if (ticket.side === 'sell') return multiplyDecimal(PAPER_AVAILABLE_BASE, ratio);
+  return divideDecimal(multiplyDecimal(PAPER_AVAILABLE_QUOTE, ratio), reference);
 }
 
 export function estimateTicket(ticket: TicketState): OrderEstimate {
