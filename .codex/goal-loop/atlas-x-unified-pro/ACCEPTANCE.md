@@ -2,22 +2,25 @@
 
 ## Parent acceptance
 
-The project may request final review only when all 15 completion conditions from `GOAL.md`/the user specification are evidenced on an exact Head and PR #15 remains Draft and unmerged.
+The project may request final review only when all 15 completion conditions from `GOAL.md` and the user specification are evidenced on an exact Head and PR #15 remains Draft and unmerged.
 
-## Current rejection: Foundation completeness
+## G1 foundation rework — accepted
 
-Starting Head `2f9f4993296eeee55d25f58248682cc7d48ee43a` is rejected as a final foundation because:
+The starting foundation rejection was resolved on exact verified Head `e874c3275f69e3f1e35ba763ae97250f983c05d5` with Actions Run `29192009639` successful.
 
-1. Required OpenAPI domain schemas are missing.
-2. `OrderStatus` and `MarketConnection` state sets are incomplete.
-3. SchemaVersion accepts arbitrary semantic versions instead of only `atlas.unified.v1`.
-4. The 34-digit decimal rule is described but not a named OpenAPI format enforced identically by AJV/TypeScript/future Swift fixtures.
-5. `DataSource` is not yet the required strict discriminated union.
-6. Domain errors are not uniformly represented by stable codes.
-7. Risk sizing omits equity/available cash separation, entry/exit fees, optional target and reward/risk outputs.
-8. Workflow path coverage omits its own workflow file.
-9. OpenAPI is not reviewable multiline YAML and milestone evidence/legacy disposition docs are absent.
+Accepted evidence:
 
-## Rework requirement
+1. Required OpenAPI domain schemas are present.
+2. OrderStatus and MarketConnection state sets match the required values; `cancelled` is rejected.
+3. SchemaVersion is fixed to `atlas.unified.v1`.
+4. `atlas-decimal-34` is executed by AJV and TypeScript; number, exponent, negative zero, noncanonical and 35-digit values are rejected.
+5. DataSource is a strict discriminated union and cached-real time requirements are enforced.
+6. Domain errors use stable codes.
+7. Risk assessment includes equity, available cash, independent fees, target/reward/risk ratio and conservative caps.
+8. Workflow listens to both unified source and its own workflow file.
+9. OpenAPI is reviewable multiline YAML and contract/evidence/legacy disposition docs exist.
+10. Generated types/vectors are deterministic, full audit passes and CI is read-only.
 
-Add failing tests first, implement the minimum strict contract/domain changes, regenerate types, run `npm ci`, `npm run verify`, full audit, exact-Head Actions, and record evidence before G1 may become `done`.
+## G2 acceptance — running
+
+Required next evidence: workspace dependency graph, package-boundary tests, strict builds for each package, no circular domain/UI/network dependencies, and preservation of all G1 gates.

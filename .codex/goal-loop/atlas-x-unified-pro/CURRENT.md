@@ -1,9 +1,9 @@
 # Current
 
-- Current exact Head: `2f9f4993296eeee55d25f58248682cc7d48ee43a`
-- Current phase: G0 goal-loop bootstrap; G1 foundation rework queued
-- Completed: PR/Head/Actions baseline verified
-- In progress: create durable state files
-- Next action: write failing foundation contract and risk tests
+- Current exact Head: `e874c3275f69e3f1e35ba763ae97250f983c05d5`
+- Current phase: G2 package and application boundaries
+- Completed: G0 goal-loop; G1 foundation rework
+- In progress: define workspace packages without moving or weakening verified behavior
+- Next action: add package-boundary tests and scaffold contracts/domain/market-data/paper-trading/ui/web workspaces
 - Current blocker: none
-- Latest Actions Run ID: `29190101359`
+- Latest Actions Run ID: `29192009639`
