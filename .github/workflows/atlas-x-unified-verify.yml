@@ -7,10 +7,6 @@ on:
     paths:
       - 'atlas-x-unified/**'
       - '.github/workflows/atlas-x-unified-verify.yml'
-  pull_request:
-    paths:
-      - 'atlas-x-unified/**'
-      - '.github/workflows/atlas-x-unified-verify.yml'
 
 permissions:
   contents: write
@@ -49,12 +45,11 @@ jobs:
           npm run generate:contracts
       - name: Verify Web product batch
         run: npm run verify
-      - name: Restore read-only verification and commit lock
+      - name: Commit verified dependency lock
         working-directory: ${{ github.workspace }}
         run: |
-          git show HEAD^:.github/workflows/atlas-x-unified-verify.yml > .github/workflows/atlas-x-unified-verify.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add atlas-x-unified/package-lock.json .github/workflows/atlas-x-unified-verify.yml
+          git add atlas-x-unified/package-lock.json
           git diff --cached --quiet || git commit -m "chore: lock verified Web dependencies"
           git push origin HEAD:atlas-x-unified-pro
