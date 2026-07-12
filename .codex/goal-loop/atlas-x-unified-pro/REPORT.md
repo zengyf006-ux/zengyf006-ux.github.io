@@ -51,6 +51,25 @@
 - Exact verified Head: `7a279fa0552924b990f64bd61cc876baace0bf40`.
 - Actions Run `29195070635`: `verify` success; `public-market-smoke` success; workflow permissions read-only.
 
+## G5 — Web product, batches 1-2
+
+- `2a8f32a` — established the React/Vite professional trading shell and product pages.
+- `a757165` — locked React/Vite dependencies after full verification.
+- `962b151` — restored read-only Web verification and public market smoke.
+- `bb6294c` / `8fa22db` — expanded Web acceptance for all four order types and exact input modes.
+- `679eded` / `fd32fec` — implemented decimal-safe quantity, amount and buy/sell percentage sizing plus four draft variants.
+- `2333d59` / `3e06dff` / `418f0db` — replaced per-component memory ledgers with one shared Context ledger and IndexedDB persistence with truthful memory fallback.
+- `08e70ce` / `da05fc3` — completed the first paper trading workflow, assets/orders/fills pages, alerts, settings, reset confirmation and mobile reachability.
+- `940ea4f`, `3ec244d`, `050306a`, `4fae14e` — dedicated mobile task switching, responsive product styles and complete mobile navigation.
+- `92adbce` — added production build Artifact publication while retaining read-only permissions.
+- Fixture remains visibly labeled and cannot satisfy the independent public Coinbase smoke.
+- Market, limit, stopMarket and stopLimit are available with quantity, amount and percentage input modes, decimal-safe estimates and confirmation.
+- A single event-sourced account is shared across terminal, assets, orders, fills and settings; IndexedDB reload is used where available.
+- Mobile trading uses task panes for chart, book, order and trades rather than one unbounded vertical terminal.
+- Exact verified Head: `371b94bd7d0cccb13f13dad24703def13a08aba6`.
+- Actions Run `29198256110`: `verify` success; production Web build Artifact success; `public-market-smoke` success.
+- Artifact ID `8261621959`, digest `sha256:619ee936aa5b21dfdb5a7f05c481f1cc7980998e514d737b219e287b44262888`.
+
 ## Current work
 
-G5 is running: typed React Web product structure, terminal workflow, market/watchlist/assets/orders/fills/alerts/settings/data-health pages and dedicated desktop/mobile interaction architecture.
+G5 remains running. The next batch connects the existing real/cached/fixture market-data state machine to the React application through injected services, without allowing fixture data to appear as real.
