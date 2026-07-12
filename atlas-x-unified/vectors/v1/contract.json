@@ -1,0 +1,160 @@
+{
+  "schemaVersion": "1.0.0",
+  "vectorVersion": "1.0.0",
+  "domain": "contract",
+  "cases": [
+    {
+      "id": "valid-real-market-snapshot",
+      "category": "normal",
+      "operation": "validateComponent",
+      "input": {
+        "schemaName": "MarketSnapshot",
+        "value": {
+          "metadata": {
+            "schemaVersion": "1.0.0",
+            "id": "evt-btc-100",
+            "source": {
+              "provider": "binance",
+              "truthfulness": "real"
+            },
+            "sequence": 100,
+            "serverTime": "2026-07-12T00:00:00.000Z",
+            "receivedAt": "2026-07-12T00:00:00.020Z"
+          },
+          "symbol": "BTC-USDT",
+          "bid": "60000.1",
+          "ask": "60000.2",
+          "last": "60000.15",
+          "baseVolume": "123.45",
+          "quoteVolume": "7400000"
+        }
+      },
+      "expected": true
+    },
+    {
+      "id": "valid-fixture-candle",
+      "category": "normal",
+      "operation": "validateComponent",
+      "input": {
+        "schemaName": "Candle",
+        "value": {
+          "metadata": {
+            "schemaVersion": "1.0.0",
+            "id": "fixture-candle-1",
+            "source": {
+              "provider": "golden-vector",
+              "truthfulness": "fixture"
+            },
+            "sequence": 1,
+            "serverTime": "2026-07-12T00:01:00.000Z",
+            "receivedAt": "2026-07-12T00:01:00.000Z"
+          },
+          "symbol": "BTC-USDT",
+          "interval": "1m",
+          "openTime": "2026-07-12T00:00:00.000Z",
+          "closeTime": "2026-07-12T00:01:00.000Z",
+          "open": "100",
+          "high": "101",
+          "low": "99",
+          "close": "100.5",
+          "volume": "12.3",
+          "quoteVolume": "1236.15",
+          "closed": true
+        }
+      },
+      "expected": true
+    },
+    {
+      "id": "valid-limit-order-draft",
+      "category": "normal",
+      "operation": "validateComponent",
+      "input": {
+        "schemaName": "OrderDraft",
+        "value": {
+          "schemaVersion": "1.0.0",
+          "clientOrderId": "client-001",
+          "symbol": "BTC-USDT",
+          "side": "buy",
+          "type": "limit",
+          "quantity": "0.01",
+          "price": "59000",
+          "createdAt": "2026-07-12T00:00:00.000Z"
+        }
+      },
+      "expected": true
+    },
+    {
+      "id": "valid-cached-order-book",
+      "category": "boundary",
+      "operation": "validateComponent",
+      "input": {
+        "schemaName": "OrderBookSnapshot",
+        "value": {
+          "metadata": {
+            "schemaVersion": "1.0.0",
+            "id": "book-cache-1",
+            "source": {
+              "provider": "atlas-cache",
+              "truthfulness": "cachedReal",
+              "cacheTime": "2026-07-12T00:00:00.000Z"
+            },
+            "sequence": 0,
+            "serverTime": "2026-07-12T00:00:00.000Z",
+            "receivedAt": "2026-07-12T00:00:05.000Z"
+          },
+          "symbol": "BTC-USDT",
+          "tickSize": "0.1",
+          "bids": [],
+          "asks": []
+        }
+      },
+      "expected": true
+    },
+    {
+      "id": "reject-number-financial-field",
+      "category": "error",
+      "operation": "validateComponent",
+      "input": {
+        "schemaName": "MarketSnapshot",
+        "value": {
+          "metadata": {
+            "schemaVersion": "1.0.0",
+            "id": "evt-btc-101",
+            "source": {
+              "provider": "binance",
+              "truthfulness": "real"
+            },
+            "sequence": 101,
+            "serverTime": "2026-07-12T00:00:00.000Z",
+            "receivedAt": "2026-07-12T00:00:00.020Z"
+          },
+          "symbol": "BTC-USDT",
+          "bid": "60000.1",
+          "ask": "60000.2",
+          "last": 60000.15,
+          "baseVolume": "123.45",
+          "quoteVolume": "7400000"
+        }
+      },
+      "expected": false
+    },
+    {
+      "id": "reject-draft-as-order",
+      "category": "error",
+      "operation": "validateComponent",
+      "input": {
+        "schemaName": "Order",
+        "value": {
+          "schemaVersion": "1.0.0",
+          "clientOrderId": "client-001",
+          "symbol": "BTC-USDT",
+          "side": "buy",
+          "type": "market",
+          "quantity": "1",
+          "createdAt": "2026-07-12T00:00:00.000Z"
+        }
+      },
+      "expected": false
+    }
+  ]
+}

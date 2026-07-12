@@ -1,0 +1,15 @@
+{
+  "total": 36,
+  "categories": {
+    "normal": 17,
+    "boundary": 8,
+    "error": 11
+  },
+  "domains": {
+    "contract": 6,
+    "decimal": 10,
+    "orderEstimate": 7,
+    "orderbook": 6,
+    "riskPosition": 7
+  }
+}

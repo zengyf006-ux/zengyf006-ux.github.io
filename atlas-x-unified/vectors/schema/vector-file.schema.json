@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-x.example.invalid/schemas/golden-vector-file-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "vectorVersion",
+    "domain",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "vectorVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "decimal",
+        "contract",
+        "orderbook",
+        "orderEstimate",
+        "riskPosition"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "category",
+          "operation",
+          "input"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "boundary",
+              "error"
+            ]
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "input": {},
+          "expected": {},
+          "errorPattern": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "expected"
+            ],
+            "properties": {
+              "expected": {},
+              "errorPattern": false
+            }
+          },
+          {
+            "required": [
+              "errorPattern"
+            ],
+            "properties": {
+              "errorPattern": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expected": false
+            }
+          }
+        ]
+      }
+    }
+  }
+}

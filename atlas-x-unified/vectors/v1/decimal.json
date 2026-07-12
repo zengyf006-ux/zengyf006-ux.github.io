@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "1.0.0",
+  "vectorVersion": "1.0.0",
+  "domain": "decimal",
+  "cases": [
+    {
+      "id": "normalize-leading-trailing",
+      "category": "normal",
+      "operation": "normalize",
+      "input": {
+        "value": "00012.3400"
+      },
+      "expected": "12.34"
+    },
+    {
+      "id": "add-binary-float-trap",
+      "category": "normal",
+      "operation": "add",
+      "input": {
+        "left": "0.1",
+        "right": "0.2"
+      },
+      "expected": "0.3"
+    },
+    {
+      "id": "subtract-decimals",
+      "category": "normal",
+      "operation": "subtract",
+      "input": {
+        "left": "1",
+        "right": "0.9"
+      },
+      "expected": "0.1"
+    },
+    {
+      "id": "multiply-decimals",
+      "category": "normal",
+      "operation": "multiply",
+      "input": {
+        "left": "0.07",
+        "right": "0.08"
+      },
+      "expected": "0.0056"
+    },
+    {
+      "id": "divide-decimals",
+      "category": "normal",
+      "operation": "divide",
+      "input": {
+        "left": "1",
+        "right": "8"
+      },
+      "expected": "0.125"
+    },
+    {
+      "id": "normalize-negative-zero",
+      "category": "boundary",
+      "operation": "normalize",
+      "input": {
+        "value": "-0.000"
+      },
+      "expected": "0"
+    },
+    {
+      "id": "normalize-small-decimal",
+      "category": "boundary",
+      "operation": "normalize",
+      "input": {
+        "value": "0000.0000000100"
+      },
+      "expected": "0.00000001"
+    },
+    {
+      "id": "reject-exponent",
+      "category": "error",
+      "operation": "normalize",
+      "input": {
+        "value": "1e3"
+      },
+      "errorPattern": "decimal"
+    },
+    {
+      "id": "reject-nan",
+      "category": "error",
+      "operation": "normalize",
+      "input": {
+        "value": "NaN"
+      },
+      "errorPattern": "decimal"
+    },
+    {
+      "id": "reject-division-zero",
+      "category": "error",
+      "operation": "divide",
+      "input": {
+        "left": "1",
+        "right": "0"
+      },
+      "errorPattern": "division by zero"
+    }
+  ]
+}
