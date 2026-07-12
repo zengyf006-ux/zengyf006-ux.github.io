@@ -7,6 +7,7 @@ from pathlib import Path
 import signal
 import sys
 from typing import Any, Callable, TextIO
+from urllib.parse import urlparse
 
 
 class Tee:
@@ -68,6 +69,31 @@ def main() -> int:
 
     runner = load_runner()
 
+    def safe_network_boundaries(context: Any, base_url: str) -> None:
+        base = urlparse(base_url)
+        allowed_origin = f'{base.scheme}://{base.netloc}'
+
+        def route_request(route: Any) -> None:
+            parsed = urlparse(route.request.url)
+            origin = f'{parsed.scheme}://{parsed.netloc}'
+            if parsed.scheme in {'data', 'blob'} or origin == allowed_origin:
+                route.continue_()
+                return
+            route.fulfill(
+                status=503,
+                headers={
+                    'access-control-allow-origin': '*',
+                    'content-type': 'application/json; charset=utf-8',
+                },
+                body='{"error":"external network disabled by browser quality gate"}',
+            )
+
+        context.route('**/*', route_request)
+        context.route_web_socket(
+            lambda url: urlparse(url).netloc != base.netloc,
+            lambda _websocket: None,
+        )
+
     def safe_service_worker_control(page: Any) -> bool:
         if not page.evaluate("() => 'serviceWorker' in navigator"):
             return False
@@ -94,6 +120,7 @@ def main() -> int:
             return False
         return bool(page.evaluate('() => navigator.serviceWorker.controller !== null'))
 
+    runner.install_network_boundaries = safe_network_boundaries
     runner.ensure_service_worker_control = safe_service_worker_control
     runner.performance_metrics = phase('performance', runner.performance_metrics)
     runner.accessibility_audit = phase('accessibility', runner.accessibility_audit)
