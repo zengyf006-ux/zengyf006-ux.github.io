@@ -7,6 +7,10 @@ on:
     paths:
       - 'atlas-x-unified/**'
       - '.github/workflows/atlas-x-unified-verify.yml'
+  pull_request:
+    paths:
+      - 'atlas-x-unified/**'
+      - '.github/workflows/atlas-x-unified-verify.yml'
 
 permissions:
   contents: write
