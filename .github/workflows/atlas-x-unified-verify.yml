@@ -56,6 +56,8 @@ jobs:
         run: set -o pipefail; npm test 2>&1 | tee ci-logs/tests.log
       - name: Production Web build
         run: set -o pipefail; npm run build:web 2>&1 | tee ci-logs/build.log
+      - name: Verify production PWA shell
+        run: set -o pipefail; npm run verify:pwa 2>&1 | tee ci-logs/pwa.log
       - name: Dependency audit
         run: set -o pipefail; npm run audit 2>&1 | tee ci-logs/audit.log
       - name: Upload CI diagnostics
