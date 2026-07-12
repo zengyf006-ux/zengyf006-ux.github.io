@@ -1,0 +1,49 @@
+.pwa-status {
+  position: fixed;
+  z-index: 60;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  width: min(560px, calc(100vw - 36px));
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 16px 48px rgba(23, 24, 23, .16);
+  backdrop-filter: blur(12px);
+}
+.pwa-status > div:first-child { display: grid; gap: 3px; min-width: 0; }
+.pwa-status strong { font-size: 12px; }
+.pwa-status span { color: var(--muted); font-size: 11px; line-height: 1.45; }
+.pwa-status.phase-offline { border-color: #d9b86f; background: rgba(255, 249, 234, .98); }
+.pwa-status.phase-updateReady { border-color: #98cbb8; background: rgba(238, 250, 245, .98); }
+.pwa-status.phase-error { border-color: #e1a5a1; background: rgba(255, 242, 241, .98); }
+.pwa-actions { display: flex; flex: 0 0 auto; gap: 7px; }
+.pwa-actions button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 720;
+}
+.pwa-actions button.primary { border-color: var(--ink); background: var(--ink); color: #fff; }
+.pwa-actions button:disabled { cursor: wait; opacity: .55; }
+
+@media (max-width: 720px) {
+  .pwa-status {
+    right: 10px;
+    bottom: 74px;
+    width: calc(100vw - 20px);
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pwa-actions { width: 100%; }
+  .pwa-actions button { flex: 1; }
+}
