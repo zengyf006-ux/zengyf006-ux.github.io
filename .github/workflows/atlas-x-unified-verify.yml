@@ -31,8 +31,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Materialize verified G4 ledger batch
-        working-directory: .
-        run: tar -xzf .codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz -C atlas-x-unified
+        working-directory: ${{ github.workspace }}
+        run: |
+          test -f "${{ github.workspace }}/.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz"
+          tar -tzf "${{ github.workspace }}/.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz" >/dev/null
+          tar -xzf "${{ github.workspace }}/.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz" -C "${{ github.workspace }}/atlas-x-unified"
       - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
@@ -46,13 +49,13 @@ jobs:
           node scripts/apply-foundation-rework.mjs
           npm run generate:contracts
       - name: Reject generated drift
-        working-directory: .
+        working-directory: ${{ github.workspace }}
         run: git diff --exit-code -- atlas-x-unified/openapi atlas-x-unified/src/generated atlas-x-unified/vectors atlas-x-unified/test/contracts.test.ts atlas-x-unified/test/golden-vectors.test.ts atlas-x-unified/package-lock.json
       - name: Verify deterministic unified workspaces
         run: npm run verify
       - name: Commit verified G4 ledger batch
         if: github.event_name == 'push' && github.ref == 'refs/heads/atlas-x-unified-pro'
-        working-directory: .
+        working-directory: ${{ github.workspace }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
