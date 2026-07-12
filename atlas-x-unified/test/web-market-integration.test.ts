@@ -109,7 +109,7 @@ describe('truthful Web market integration', () => {
     expect(cached.detail).toContain('缓存时间');
 
     const fixture = presentMarketSnapshot(createFixtureMarketSnapshot());
-    expect(fixture).toMatchObject({ label: '测试数据', tone: 'warning' });
+    expect(fixture).toMatchObject({ label: '测试数据 · fixture', tone: 'warning' });
     expect(fixture.detail).toContain('不代表实时市场');
   });
 });
