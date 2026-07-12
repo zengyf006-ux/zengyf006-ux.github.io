@@ -98,6 +98,22 @@
 - CI diagnostics Artifact ID `8262077374`, digest `sha256:e9ebcac2e5273f762a8fadca87a57fb6e7d16d2e69d20faddf9785a3aa5cb398`.
 - G5 is accepted. E2E/a11y/performance gates remain assigned to G7; screenshot-led redesign remains assigned to G8 and G9.
 
+## G6 — Installable PWA and safe offline shell
+
+- Added a standalone Web App Manifest, application metadata, normal SVG icon and maskable SVG icon.
+- Added a versioned service worker that installs the public application shell, uses network-first navigation, caches same-origin static GET responses and does not intercept cross-origin public market traffic.
+- Explicitly excludes authorization, cookie, API, auth, orders and accounts requests from service-worker caching.
+- Added browser-visible install, offline, recovery and update states.
+- Updates remain waiting until the user chooses `安全更新`; a controller replacement reload occurs only after that explicit action.
+- Added deterministic PWA state and policy tests plus a production artifact gate for manifest, shell, registration and activation boundaries.
+- An initial gate failure at `dd1cba9` exposed a wrong `dist/assets` path in the verifier; the verifier was corrected without weakening any assertion.
+- Exact verified implementation Head: `1ac0bb07ef94010712569237846a9fe52592140b`.
+- Actions Run `29200295123`: 25 test files / 168 tests, all strict typechecks, production build, PWA artifact gate, audit and public market smoke passed.
+- PWA gate evidence: `[pwa-build] shell=5 js=1 css=1 manifest=standalone update=user-approved`.
+- Web Artifact ID `8262186843`, digest `sha256:cc0f4465e1c853430e82cc3531d5a81f761c06c7035a403c0565f4b91041b7de`.
+- CI diagnostics Artifact ID `8262186688`, digest `sha256:13b1610de9b3e1b6501829ca657b4517ff49c5b09e63988148f5f08c31512df7`.
+- G6 is accepted.
+
 ## Current work
 
-G6 is running. The next batch adds an installable manifest, versioned offline application shell, explicit recovery state and safe update activation flow without adding any real-money or production deployment path.
+G7 is running. The next batch adds a browser-driven quality job covering shared paper state, IndexedDB reload persistence, offline/recovery, accessibility tree, keyboard operation, deterministic performance budgets and four required viewport screenshots.
