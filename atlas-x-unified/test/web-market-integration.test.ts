@@ -7,6 +7,7 @@ import {
 import {
   createFixtureMarketSnapshot,
   presentMarketSnapshot,
+  tickerDisplayMetrics,
 } from '../apps/web/src/app/market.js';
 import { createFakeIndexedDbFactory } from './helpers/fake-indexeddb.js';
 
@@ -62,6 +63,15 @@ describe('truthful Web market integration', () => {
     await expect(second.read()).resolves.toEqual(realSnapshot());
     await expect(second.write(createFixtureMarketSnapshot())).rejects.toThrow(/real/i);
     await second.close();
+  });
+
+  it('derives exact, display-ready ticker movement without native floating point', () => {
+    expect(tickerDisplayMetrics(realTicker())).toEqual({
+      price: '118,420',
+      changeAmount: '+2,420',
+      changePercent: '+2.09%',
+      direction: 'positive',
+    });
   });
 
   it('presents real, cached and fixture states without ambiguous labels', () => {
