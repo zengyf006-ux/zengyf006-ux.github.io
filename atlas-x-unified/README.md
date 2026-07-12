@@ -12,3 +12,7 @@ npm run verify
 ```
 
 The generated TypeScript contract file is committed and must remain byte-for-byte synchronized with `openapi/atlas-x.openapi.yaml`.
+
+## Golden Vectors
+
+Version `v1` currently contains 36 cases: 17 normal, 8 boundary, and 11 error cases. The JSON files and their JSON Schema are platform-neutral so the future SwiftUI test target can execute the same fixtures.

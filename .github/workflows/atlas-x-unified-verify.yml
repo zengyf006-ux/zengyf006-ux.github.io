@@ -1,0 +1,51 @@
+name: ATLAS X Unified Verify
+
+on:
+  push:
+    paths:
+      - 'atlas-x-unified/**'
+  pull_request:
+    paths:
+      - 'atlas-x-unified/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atlas-x-unified-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: atlas-x-unified
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Bootstrap lock and generated contracts
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          if [[ ! -f package-lock.json || ! -f src/generated/contracts.ts ]]; then
+            npm install --ignore-scripts
+            npm run generate:contracts
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json src/generated/contracts.ts
+            git commit -m "chore: lock dependencies and generated contracts"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+      - name: Install locked dependencies
+        if: hashFiles('atlas-x-unified/package-lock.json') != '' && hashFiles('atlas-x-unified/src/generated/contracts.ts') != ''
+        run: npm ci
+      - name: Verify unified core
+        if: hashFiles('atlas-x-unified/package-lock.json') != '' && hashFiles('atlas-x-unified/src/generated/contracts.ts') != ''
+        run: npm run verify
