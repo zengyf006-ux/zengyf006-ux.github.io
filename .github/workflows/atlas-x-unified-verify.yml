@@ -7,13 +7,15 @@ on:
     paths:
       - 'atlas-x-unified/**'
       - '.github/workflows/atlas-x-unified-verify.yml'
+      - '.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz'
   pull_request:
     paths:
       - 'atlas-x-unified/**'
       - '.github/workflows/atlas-x-unified-verify.yml'
+      - '.codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: atlas-x-unified-${{ github.ref }}
@@ -28,6 +30,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Materialize verified G4 ledger batch
+        working-directory: .
+        run: tar -xzf .codex/goal-loop/atlas-x-unified-pro/EVIDENCE/g4-materialize.tar.gz -C atlas-x-unified
       - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
@@ -45,6 +50,17 @@ jobs:
         run: git diff --exit-code -- atlas-x-unified/openapi atlas-x-unified/src/generated atlas-x-unified/vectors atlas-x-unified/test/contracts.test.ts atlas-x-unified/test/golden-vectors.test.ts atlas-x-unified/package-lock.json
       - name: Verify deterministic unified workspaces
         run: npm run verify
+      - name: Commit verified G4 ledger batch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/atlas-x-unified-pro'
+        working-directory: .
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add atlas-x-unified
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat: add event-sourced paper trading ledger'
+            git push origin HEAD:atlas-x-unified-pro
+          fi
 
   public-market-smoke:
     needs: verify
