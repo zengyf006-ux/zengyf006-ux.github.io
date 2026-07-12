@@ -67,9 +67,9 @@ describe('final exact-Head evidence', () => {
     expect(() => validateQualityReport(report, 'b'.repeat(40))).toThrow(/does not match/);
   });
 
-  it('rejects screenshot overflow and performance regression', () => {
+  it('rejects screenshot overflow beyond the one-pixel rendering tolerance and performance regression', () => {
     const overflow = passingReport('a'.repeat(40));
-    overflow.screenshots[0]!.dimensions.scrollWidth = 101;
+    overflow.screenshots[0]!.dimensions.scrollWidth = 102;
     expect(() => validateQualityReport(overflow, 'a'.repeat(40))).toThrow(/Horizontal overflow/);
 
     const slow = passingReport('a'.repeat(40));
