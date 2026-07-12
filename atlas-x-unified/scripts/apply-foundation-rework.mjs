@@ -79,7 +79,9 @@ riskFile.cases.push(...expandedRiskCases.filter((item) => !ids.has(item.id)));
 await writeFile(riskUrl, `${JSON.stringify(riskFile, null, 2)}\n`);
 
 const vectorSchemaUrl = new URL('../vectors/schema/vector-file.schema.json', import.meta.url);
-await writeFile(vectorSchemaUrl, `${JSON.stringify(migrate(JSON.parse(await readFile(vectorSchemaUrl, 'utf8'))), null, 2)}\n`);
+const vectorSchema = migrate(JSON.parse(await readFile(vectorSchemaUrl, 'utf8')));
+vectorSchema.properties.schemaVersion.const = SCHEMA_VERSION;
+await writeFile(vectorSchemaUrl, `${JSON.stringify(vectorSchema, null, 2)}\n`);
 for (const relative of ['../test/contracts.test.ts', '../test/golden-vectors.test.ts']) {
   const url = new URL(relative, import.meta.url);
   await writeFile(url, (await readFile(url, 'utf8')).replaceAll("'1.0.0'", `'${SCHEMA_VERSION}'`));
