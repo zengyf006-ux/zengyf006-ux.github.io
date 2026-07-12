@@ -1,15 +1,15 @@
 {
-  "total": 38,
+  "total": 44,
   "categories": {
-    "normal": 18,
-    "boundary": 8,
-    "error": 12
+    "normal": 20,
+    "boundary": 9,
+    "error": 15
   },
   "domains": {
     "contract": 6,
     "decimal": 12,
     "orderEstimate": 7,
     "orderbook": 6,
-    "riskPosition": 7
+    "riskPosition": 13
   }
 }

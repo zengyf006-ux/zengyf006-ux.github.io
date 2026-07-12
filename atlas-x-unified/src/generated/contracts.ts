@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/accounts/{accountId}/snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAccountSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/orders": {
         parameters: {
             query?: never;
@@ -120,25 +136,68 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @example 1.0.0 */
-        SchemaVersion: string;
         /**
-         * @description Canonical non-exponent decimal string. Financial values are never JSON numbers.
-         * @example 0
-         * @example 0.1
-         * @example -12.34
+         * @example atlas.unified.v1
+         * @constant
+         */
+        SchemaVersion: "atlas.unified.v1";
+        /**
+         * Format: atlas-decimal-34
+         * @description Canonical decimal string with at most 34 significant digits; JSON numbers and exponent notation are forbidden.
          */
         DecimalString: string;
+        /** Format: atlas-decimal-34 */
         NonNegativeDecimalString: string;
+        /** Format: atlas-decimal-34 */
         PositiveDecimalString: string;
         /** @enum {string} */
         Truthfulness: "unknown" | "cachedReal" | "real" | "simulated" | "fixture";
-        DataSource: {
-            provider: string;
-            truthfulness: components["schemas"]["Truthfulness"];
-            /** Format: date-time */
-            cacheTime?: string;
+        UnknownDataSource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            truthfulness: "UnknownDataSource";
+            provider?: string;
+            reason?: string;
         };
+        CachedRealDataSource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            truthfulness: "CachedRealDataSource";
+            provider: string;
+            /** Format: date-time */
+            cacheTime: string;
+        };
+        RealDataSource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            truthfulness: "RealDataSource";
+            provider: string;
+        };
+        SimulatedDataSource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            truthfulness: "SimulatedDataSource";
+            provider: string;
+            scenario?: string;
+        };
+        FixtureDataSource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            truthfulness: "FixtureDataSource";
+            fixtureId: string;
+            provider?: string;
+        };
+        DataSource: components["schemas"]["UnknownDataSource"] | components["schemas"]["CachedRealDataSource"] | components["schemas"]["RealDataSource"] | components["schemas"]["SimulatedDataSource"] | components["schemas"]["FixtureDataSource"];
         EventMetadata: {
             schemaVersion: components["schemas"]["SchemaVersion"];
             id: string;
@@ -150,14 +209,39 @@ export interface components {
             receivedAt: string;
         };
         Symbol: string;
-        MarketSnapshot: {
+        /** @enum {string} */
+        MarketConnectionState: "initializing" | "cached" | "live" | "delayed" | "reconnecting" | "stale" | "offline" | "degraded" | "error";
+        MarketConnection: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            state: components["schemas"]["MarketConnectionState"];
+            source: components["schemas"]["DataSource"];
+            /** Format: date-time */
+            updatedAt: string;
+            latencyMs?: number;
+            retryAt?: string | null;
+            error?: components["schemas"]["DomainError"] | null;
+        };
+        Ticker: {
             metadata: components["schemas"]["EventMetadata"];
             symbol: components["schemas"]["Symbol"];
             bid: components["schemas"]["PositiveDecimalString"];
             ask: components["schemas"]["PositiveDecimalString"];
             last: components["schemas"]["PositiveDecimalString"];
-            baseVolume: components["schemas"]["NonNegativeDecimalString"];
-            quoteVolume: components["schemas"]["NonNegativeDecimalString"];
+            open24h: components["schemas"]["PositiveDecimalString"];
+            high24h: components["schemas"]["PositiveDecimalString"];
+            low24h: components["schemas"]["PositiveDecimalString"];
+            baseVolume24h: components["schemas"]["NonNegativeDecimalString"];
+            quoteVolume24h: components["schemas"]["NonNegativeDecimalString"];
+        };
+        Trade: {
+            metadata: components["schemas"]["EventMetadata"];
+            tradeId: string;
+            symbol: components["schemas"]["Symbol"];
+            /** @enum {string} */
+            side: "buy" | "sell";
+            price: components["schemas"]["PositiveDecimalString"];
+            quantity: components["schemas"]["PositiveDecimalString"];
+            quoteAmount: components["schemas"]["PositiveDecimalString"];
         };
         /** @enum {string} */
         CandleInterval: "1m" | "3m" | "5m" | "15m" | "30m" | "1h" | "2h" | "4h" | "6h" | "12h" | "1d" | "1w";
@@ -188,6 +272,22 @@ export interface components {
             bids: components["schemas"]["OrderBookLevel"][];
             asks: components["schemas"]["OrderBookLevel"][];
         };
+        MarketSnapshot: {
+            metadata: components["schemas"]["EventMetadata"];
+            symbol: components["schemas"]["Symbol"];
+            bid: components["schemas"]["PositiveDecimalString"];
+            ask: components["schemas"]["PositiveDecimalString"];
+            last: components["schemas"]["PositiveDecimalString"];
+            baseVolume: components["schemas"]["NonNegativeDecimalString"];
+            quoteVolume: components["schemas"]["NonNegativeDecimalString"];
+        };
+        MarketEventEnvelope: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            /** @enum {string} */
+            eventType: "ticker" | "trade" | "candle" | "orderBook";
+            metadata: components["schemas"]["EventMetadata"];
+            payload: components["schemas"]["Ticker"] | components["schemas"]["Trade"] | components["schemas"]["Candle"] | components["schemas"]["OrderBookSnapshot"];
+        };
         AccountAsset: {
             metadata: components["schemas"]["EventMetadata"];
             accountId: string;
@@ -196,67 +296,228 @@ export interface components {
             locked: components["schemas"]["NonNegativeDecimalString"];
             total: components["schemas"]["NonNegativeDecimalString"];
         };
+        Position: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            positionId: string;
+            symbol: components["schemas"]["Symbol"];
+            /** @constant */
+            side: "long";
+            quantity: components["schemas"]["NonNegativeDecimalString"];
+            averageEntryPrice: components["schemas"]["PositiveDecimalString"] | null;
+            marketPrice: components["schemas"]["PositiveDecimalString"] | null;
+            marketValue: components["schemas"]["NonNegativeDecimalString"];
+            realizedPnl: components["schemas"]["DecimalString"];
+            unrealizedPnl: components["schemas"]["DecimalString"] | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        Reservation: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            reservationId: string;
+            accountId: string;
+            asset: string;
+            amount: components["schemas"]["PositiveDecimalString"];
+            /** @enum {string} */
+            reason: "order" | "fee" | "settlement";
+            referenceId: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AccountSnapshot: {
+            metadata: components["schemas"]["EventMetadata"];
+            accountId: string;
+            baseCurrency: string;
+            equity: components["schemas"]["NonNegativeDecimalString"];
+            availableCash: components["schemas"]["NonNegativeDecimalString"];
+            assets: components["schemas"]["AccountAsset"][];
+            positions: components["schemas"]["Position"][];
+            reservations: components["schemas"]["Reservation"][];
+        };
         /** @enum {string} */
         OrderSide: "buy" | "sell";
         /** @enum {string} */
         OrderType: "market" | "limit" | "stopMarket" | "stopLimit";
-        OrderDraftBase: {
+        /** @enum {string} */
+        OrderStatus: "draft" | "validating" | "reviewRequired" | "submitting" | "received" | "accepted" | "pending" | "waitingTrigger" | "partiallyFilled" | "filled" | "canceled" | "expired" | "rejected" | "failed";
+        OrderIntent: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            intentId: string;
+            symbol: components["schemas"]["Symbol"];
+            side: components["schemas"]["OrderSide"];
+            type: components["schemas"]["OrderType"];
+            /** @enum {string} */
+            inputMode: "quantity" | "amount" | "percentage";
+            inputValue: components["schemas"]["PositiveDecimalString"];
+            limitPrice?: components["schemas"]["PositiveDecimalString"];
+            stopPrice?: components["schemas"]["PositiveDecimalString"];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        OrderEstimate: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            requestedQuantity: components["schemas"]["PositiveDecimalString"];
+            filledQuantity: components["schemas"]["NonNegativeDecimalString"];
+            unfilledQuantity: components["schemas"]["NonNegativeDecimalString"];
+            grossAmount: components["schemas"]["NonNegativeDecimalString"];
+            vwap?: components["schemas"]["PositiveDecimalString"] | null;
+            referencePrice?: components["schemas"]["PositiveDecimalString"] | null;
+            slippageRate?: components["schemas"]["DecimalString"] | null;
+            fee: components["schemas"]["NonNegativeDecimalString"];
+            coverageRate: components["schemas"]["NonNegativeDecimalString"];
+            requiredBalance: components["schemas"]["NonNegativeDecimalString"];
+            availableBalance: components["schemas"]["NonNegativeDecimalString"];
+            insufficientBalance: boolean;
+            depthInsufficient: boolean;
+            warnings?: components["schemas"]["DomainError"][];
+        };
+        OrderValidation: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            valid: boolean;
+            reviewRequired: boolean;
+            errors: components["schemas"]["DomainError"][];
+            warnings: components["schemas"]["DomainError"][];
+        };
+        RiskAssessment: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            equity: components["schemas"]["NonNegativeDecimalString"];
+            availableCash: components["schemas"]["NonNegativeDecimalString"];
+            riskBudget: components["schemas"]["NonNegativeDecimalString"];
+            stopDistance: components["schemas"]["PositiveDecimalString"];
+            unitRisk: components["schemas"]["PositiveDecimalString"];
+            quantityByRisk: components["schemas"]["NonNegativeDecimalString"];
+            quantityByBalance: components["schemas"]["NonNegativeDecimalString"];
+            suggestedQuantity: components["schemas"]["NonNegativeDecimalString"];
+            notional: components["schemas"]["NonNegativeDecimalString"];
+            entryFee: components["schemas"]["NonNegativeDecimalString"];
+            exitFeeAtStop: components["schemas"]["NonNegativeDecimalString"];
+            totalCapital: components["schemas"]["NonNegativeDecimalString"];
+            riskAmount: components["schemas"]["NonNegativeDecimalString"];
+            targetPrice?: components["schemas"]["PositiveDecimalString"] | null;
+            rewardAmount?: components["schemas"]["NonNegativeDecimalString"] | null;
+            rewardRiskRatio?: components["schemas"]["NonNegativeDecimalString"] | null;
+            /** @enum {string} */
+            bindingConstraint: "risk" | "balance";
+            warnings?: components["schemas"]["DomainError"][];
+        };
+        Strategy: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            strategyId: string;
+            name: string;
+            enabled: boolean;
+            symbols: components["schemas"]["Symbol"][];
+            riskRate: components["schemas"]["PositiveDecimalString"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AlertRule: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            alertId: string;
+            symbol: components["schemas"]["Symbol"];
+            /** @enum {string} */
+            condition: "priceAbove" | "priceBelow" | "changeAbove" | "changeBelow" | "connectionState";
+            threshold: components["schemas"]["DecimalString"];
+            enabled: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @enum {string} */
+        DomainErrorCode: "DECIMAL_INVALID" | "SCHEMA_VERSION_UNSUPPORTED" | "DATA_SOURCE_INVALID" | "MARKET_OFFLINE" | "MARKET_STALE" | "MARKET_DEGRADED" | "ORDER_INVALID" | "ORDER_INSUFFICIENT_BALANCE" | "ORDER_INSUFFICIENT_DEPTH" | "ORDER_NOT_FOUND" | "ORDER_ALREADY_FINAL" | "RISK_INVALID_INPUT" | "RISK_INVALID_STOP" | "RISK_INVALID_TARGET" | "RISK_INSUFFICIENT_EQUITY" | "STORAGE_FAILURE" | "INTERNAL_FAILURE";
+        DomainError: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            code: components["schemas"]["DomainErrorCode"];
+            message: string;
+            field?: string;
+            retryable?: boolean;
+            details?: {
+                [key: string]: unknown;
+            };
+        };
+        ErrorObject: components["schemas"]["DomainError"];
+        AuditEvent: {
+            metadata: components["schemas"]["EventMetadata"];
+            auditId: string;
+            action: string;
+            entityType: string;
+            entityId: string;
+            /** @enum {string} */
+            outcome: "success" | "rejected" | "failed";
+            error?: components["schemas"]["DomainError"] | null;
+        };
+        AppSnapshot: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            /** Format: date-time */
+            capturedAt: string;
+            marketConnection: components["schemas"]["MarketConnection"];
+            markets: components["schemas"]["Ticker"][];
+            account: components["schemas"]["AccountSnapshot"];
+            orders: components["schemas"]["Order"][];
+            fills: components["schemas"]["Fill"][];
+            strategies: components["schemas"]["Strategy"][];
+            alerts: components["schemas"]["AlertRule"][];
+        };
+        MarketOrderDraft: {
             schemaVersion: components["schemas"]["SchemaVersion"];
             clientOrderId: string;
             symbol: components["schemas"]["Symbol"];
             side: components["schemas"]["OrderSide"];
-            type: components["schemas"]["OrderType"];
             quantity: components["schemas"]["PositiveDecimalString"];
             /** Format: date-time */
             createdAt: string;
-        };
-        MarketOrderDraft: components["schemas"]["OrderDraftBase"] & {
-            /** @constant */
-            type: "market";
-        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "MarketOrderDraft";
         };
-        LimitOrderDraft: components["schemas"]["OrderDraftBase"] & {
-            /** @constant */
-            type: "limit";
-            price: components["schemas"]["PositiveDecimalString"];
-        } & {
+        LimitOrderDraft: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            clientOrderId: string;
+            symbol: components["schemas"]["Symbol"];
+            side: components["schemas"]["OrderSide"];
+            quantity: components["schemas"]["PositiveDecimalString"];
+            /** Format: date-time */
+            createdAt: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "LimitOrderDraft";
+            price: components["schemas"]["PositiveDecimalString"];
         };
-        StopMarketOrderDraft: components["schemas"]["OrderDraftBase"] & {
-            /** @constant */
-            type: "stopMarket";
-            stopPrice: components["schemas"]["PositiveDecimalString"];
-        } & {
+        StopMarketOrderDraft: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            clientOrderId: string;
+            symbol: components["schemas"]["Symbol"];
+            side: components["schemas"]["OrderSide"];
+            quantity: components["schemas"]["PositiveDecimalString"];
+            /** Format: date-time */
+            createdAt: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "StopMarketOrderDraft";
-        };
-        StopLimitOrderDraft: components["schemas"]["OrderDraftBase"] & {
-            /** @constant */
-            type: "stopLimit";
-            price: components["schemas"]["PositiveDecimalString"];
             stopPrice: components["schemas"]["PositiveDecimalString"];
-        } & {
+        };
+        StopLimitOrderDraft: {
+            schemaVersion: components["schemas"]["SchemaVersion"];
+            clientOrderId: string;
+            symbol: components["schemas"]["Symbol"];
+            side: components["schemas"]["OrderSide"];
+            quantity: components["schemas"]["PositiveDecimalString"];
+            /** Format: date-time */
+            createdAt: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "StopLimitOrderDraft";
+            price: components["schemas"]["PositiveDecimalString"];
+            stopPrice: components["schemas"]["PositiveDecimalString"];
         };
         OrderDraft: components["schemas"]["MarketOrderDraft"] | components["schemas"]["LimitOrderDraft"] | components["schemas"]["StopMarketOrderDraft"] | components["schemas"]["StopLimitOrderDraft"];
-        /** @enum {string} */
-        OrderStatus: "accepted" | "partiallyFilled" | "filled" | "cancelled" | "rejected";
         Order: {
             metadata: components["schemas"]["EventMetadata"];
             orderId: string;
@@ -268,6 +529,7 @@ export interface components {
             feePaid: components["schemas"]["NonNegativeDecimalString"];
             /** Format: date-time */
             updatedAt: string;
+            failure?: components["schemas"]["DomainError"] | null;
         };
         Fill: {
             metadata: components["schemas"]["EventMetadata"];
@@ -281,23 +543,15 @@ export interface components {
             fee: components["schemas"]["NonNegativeDecimalString"];
             feeAsset: string;
         };
-        ErrorObject: {
-            schemaVersion: components["schemas"]["SchemaVersion"];
-            code: string;
-            message: string;
-            details?: {
-                [key: string]: unknown;
-            };
-        };
     };
     responses: {
-        /** @description Structured error. */
+        /** @description Stable domain error */
         ErrorResponse: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": components["schemas"]["ErrorObject"];
+                "application/json": components["schemas"]["DomainError"];
             };
         };
     };
@@ -321,7 +575,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Current market snapshot. */
+            /** @description Current market snapshot */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -344,7 +598,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Ordered candle events. */
+            /** @description Ordered candle events */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -367,7 +621,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Current order-book snapshot. */
+            /** @description Current order-book snapshot */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -390,13 +644,36 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Account asset snapshots. */
+            /** @description Account assets */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["AccountAsset"][];
+                };
+            };
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    getAccountSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paper account snapshot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountSnapshot"];
                 };
             };
             default: components["responses"]["ErrorResponse"];
@@ -415,7 +692,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Submitted order. */
+            /** @description Submitted paper order */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -438,7 +715,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Submitted order. */
+            /** @description Submitted order */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -459,7 +736,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Fill events. */
+            /** @description Fill events */
             200: {
                 headers: {
                     [name: string]: unknown;

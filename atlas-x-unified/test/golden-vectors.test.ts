@@ -25,7 +25,7 @@ interface GoldenCase {
 }
 
 interface GoldenFile {
-  readonly schemaVersion: '1.0.0';
+  readonly schemaVersion: 'atlas.unified.v1';
   readonly vectorVersion: string;
   readonly domain: 'decimal' | 'contract' | 'orderbook' | 'orderEstimate' | 'riskPosition';
   readonly cases: readonly GoldenCase[];

@@ -1,1 +1,1126 @@
-{"openapi":"3.1.0","jsonSchemaDialect":"https://json-schema.org/draft/2020-12/schema","info":{"title":"ATLAS X Unified Contract","version":"1.0.0","description":"Cross-platform data contract for ATLAS X Web/PWA and SwiftUI clients.","x-atlas-decimal-context":{"maximumSignificantDigits":34,"outputRounding":"half-up","internalPrecision":80,"conservativeQuantityRounding":"down"}},"servers":[{"url":"https://api.example.invalid","description":"Contract placeholder only; this milestone does not deploy or define production routing."}],"paths":{"/v1/markets/{symbol}/snapshot":{"get":{"operationId":"getMarketSnapshot","parameters":[{"$ref":"#/components/parameters/Symbol"}],"responses":{"200":{"description":"Current market snapshot.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/MarketSnapshot"}}}},"default":{"$ref":"#/components/responses/ErrorResponse"}}}},"/v1/markets/{symbol}/candles":{"get":{"operationId":"getCandles","parameters":[{"$ref":"#/components/parameters/Symbol"}],"responses":{"200":{"description":"Ordered candle events.","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/Candle"}}}}},"default":{"$ref":"#/components/responses/ErrorResponse"}}}},"/v1/markets/{symbol}/order-book":{"get":{"operationId":"getOrderBook","parameters":[{"$ref":"#/components/parameters/Symbol"}],"responses":{"200":{"description":"Current order-book snapshot.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/OrderBookSnapshot"}}}},"default":{"$ref":"#/components/responses/ErrorResponse"}}}},"/v1/accounts/{accountId}/assets":{"get":{"operationId":"getAccountAssets","parameters":[{"name":"accountId","in":"path","required":true,"schema":{"type":"string","minLength":1}}],"responses":{"200":{"description":"Account asset snapshots.","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/AccountAsset"}}}}},"default":{"$ref":"#/components/responses/ErrorResponse"}}}},"/v1/orders":{"post":{"operationId":"submitOrder","requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/OrderDraft"}}}},"responses":{"201":{"description":"Submitted order.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Order"}}}},"default":{"$ref":"#/components/responses/ErrorResponse"}}}},"/v1/orders/{orderId}":{"get":{"operationId":"getOrder","parameters":[{"name":"orderId","in":"path","required":true,"schema":{"type":"string","minLength":1}}],"responses":{"200":{"description":"Submitted order.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Order"}}}},"default":{"$ref":"#/components/responses/ErrorResponse"}}}},"/v1/fills":{"get":{"operationId":"listFills","responses":{"200":{"description":"Fill events.","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/Fill"}}}}},"default":{"$ref":"#/components/responses/ErrorResponse"}}}}},"components":{"parameters":{"Symbol":{"name":"symbol","in":"path","required":true,"schema":{"$ref":"#/components/schemas/Symbol"}}},"responses":{"ErrorResponse":{"description":"Structured error.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ErrorObject"}}}}},"schemas":{"SchemaVersion":{"type":"string","pattern":"^\\d+\\.\\d+\\.\\d+$","examples":["1.0.0"]},"DecimalString":{"type":"string","pattern":"^(?:0|-?(?:0\\.\\d*[1-9]|[1-9]\\d*(?:\\.\\d*[1-9])?))$","description":"Canonical non-exponent decimal string. Financial values are never JSON numbers.","examples":["0","0.1","-12.34"]},"NonNegativeDecimalString":{"type":"string","pattern":"^(?:0|[1-9]\\d*)(?:\\.\\d*[1-9])?$"},"PositiveDecimalString":{"type":"string","pattern":"^(?:0\\.\\d*[1-9]|[1-9]\\d*(?:\\.\\d*[1-9])?)$"},"Truthfulness":{"type":"string","enum":["unknown","cachedReal","real","simulated","fixture"]},"DataSource":{"type":"object","additionalProperties":false,"required":["provider","truthfulness"],"properties":{"provider":{"type":"string","minLength":1},"truthfulness":{"$ref":"#/components/schemas/Truthfulness"},"cacheTime":{"type":"string","format":"date-time"}}},"EventMetadata":{"type":"object","additionalProperties":false,"required":["schemaVersion","id","source","sequence","serverTime","receivedAt"],"properties":{"schemaVersion":{"$ref":"#/components/schemas/SchemaVersion"},"id":{"type":"string","minLength":1,"pattern":"^[A-Za-z0-9._:-]+$"},"source":{"$ref":"#/components/schemas/DataSource"},"sequence":{"type":"integer","minimum":0},"serverTime":{"type":"string","format":"date-time"},"receivedAt":{"type":"string","format":"date-time"}}},"Symbol":{"type":"string","pattern":"^[A-Z0-9]+-[A-Z0-9]+$"},"MarketSnapshot":{"type":"object","additionalProperties":false,"required":["metadata","symbol","bid","ask","last","baseVolume","quoteVolume"],"properties":{"metadata":{"$ref":"#/components/schemas/EventMetadata"},"symbol":{"$ref":"#/components/schemas/Symbol"},"bid":{"$ref":"#/components/schemas/PositiveDecimalString"},"ask":{"$ref":"#/components/schemas/PositiveDecimalString"},"last":{"$ref":"#/components/schemas/PositiveDecimalString"},"baseVolume":{"$ref":"#/components/schemas/NonNegativeDecimalString"},"quoteVolume":{"$ref":"#/components/schemas/NonNegativeDecimalString"}}},"CandleInterval":{"type":"string","enum":["1m","3m","5m","15m","30m","1h","2h","4h","6h","12h","1d","1w"]},"Candle":{"type":"object","additionalProperties":false,"required":["metadata","symbol","interval","openTime","closeTime","open","high","low","close","volume","quoteVolume","closed"],"properties":{"metadata":{"$ref":"#/components/schemas/EventMetadata"},"symbol":{"$ref":"#/components/schemas/Symbol"},"interval":{"$ref":"#/components/schemas/CandleInterval"},"openTime":{"type":"string","format":"date-time"},"closeTime":{"type":"string","format":"date-time"},"open":{"$ref":"#/components/schemas/PositiveDecimalString"},"high":{"$ref":"#/components/schemas/PositiveDecimalString"},"low":{"$ref":"#/components/schemas/PositiveDecimalString"},"close":{"$ref":"#/components/schemas/PositiveDecimalString"},"volume":{"$ref":"#/components/schemas/NonNegativeDecimalString"},"quoteVolume":{"$ref":"#/components/schemas/NonNegativeDecimalString"},"closed":{"type":"boolean"}}},"OrderBookLevel":{"type":"object","additionalProperties":false,"required":["price","quantity"],"properties":{"price":{"$ref":"#/components/schemas/PositiveDecimalString"},"quantity":{"$ref":"#/components/schemas/PositiveDecimalString"}}},"OrderBookSnapshot":{"type":"object","additionalProperties":false,"required":["metadata","symbol","tickSize","bids","asks"],"properties":{"metadata":{"$ref":"#/components/schemas/EventMetadata"},"symbol":{"$ref":"#/components/schemas/Symbol"},"tickSize":{"$ref":"#/components/schemas/PositiveDecimalString"},"bids":{"type":"array","items":{"$ref":"#/components/schemas/OrderBookLevel"}},"asks":{"type":"array","items":{"$ref":"#/components/schemas/OrderBookLevel"}}}},"AccountAsset":{"type":"object","additionalProperties":false,"required":["metadata","accountId","asset","available","locked","total"],"properties":{"metadata":{"$ref":"#/components/schemas/EventMetadata"},"accountId":{"type":"string","minLength":1},"asset":{"type":"string","pattern":"^[A-Z0-9]+$"},"available":{"$ref":"#/components/schemas/NonNegativeDecimalString"},"locked":{"$ref":"#/components/schemas/NonNegativeDecimalString"},"total":{"$ref":"#/components/schemas/NonNegativeDecimalString"}}},"OrderSide":{"type":"string","enum":["buy","sell"]},"OrderType":{"type":"string","enum":["market","limit","stopMarket","stopLimit"]},"OrderDraftBase":{"type":"object","required":["schemaVersion","clientOrderId","symbol","side","type","quantity","createdAt"],"properties":{"schemaVersion":{"$ref":"#/components/schemas/SchemaVersion"},"clientOrderId":{"type":"string","minLength":1},"symbol":{"$ref":"#/components/schemas/Symbol"},"side":{"$ref":"#/components/schemas/OrderSide"},"type":{"$ref":"#/components/schemas/OrderType"},"quantity":{"$ref":"#/components/schemas/PositiveDecimalString"},"createdAt":{"type":"string","format":"date-time"}}},"MarketOrderDraft":{"type":"object","unevaluatedProperties":false,"allOf":[{"$ref":"#/components/schemas/OrderDraftBase"},{"type":"object","required":["type"],"properties":{"type":{"const":"market"}}}]},"LimitOrderDraft":{"type":"object","unevaluatedProperties":false,"allOf":[{"$ref":"#/components/schemas/OrderDraftBase"},{"type":"object","required":["type","price"],"properties":{"type":{"const":"limit"},"price":{"$ref":"#/components/schemas/PositiveDecimalString"}}}]},"StopMarketOrderDraft":{"type":"object","unevaluatedProperties":false,"allOf":[{"$ref":"#/components/schemas/OrderDraftBase"},{"type":"object","required":["type","stopPrice"],"properties":{"type":{"const":"stopMarket"},"stopPrice":{"$ref":"#/components/schemas/PositiveDecimalString"}}}]},"StopLimitOrderDraft":{"type":"object","unevaluatedProperties":false,"allOf":[{"$ref":"#/components/schemas/OrderDraftBase"},{"type":"object","required":["type","price","stopPrice"],"properties":{"type":{"const":"stopLimit"},"price":{"$ref":"#/components/schemas/PositiveDecimalString"},"stopPrice":{"$ref":"#/components/schemas/PositiveDecimalString"}}}]},"OrderDraft":{"oneOf":[{"$ref":"#/components/schemas/MarketOrderDraft"},{"$ref":"#/components/schemas/LimitOrderDraft"},{"$ref":"#/components/schemas/StopMarketOrderDraft"},{"$ref":"#/components/schemas/StopLimitOrderDraft"}],"discriminator":{"propertyName":"type"}},"OrderStatus":{"type":"string","enum":["accepted","partiallyFilled","filled","cancelled","rejected"]},"Order":{"type":"object","additionalProperties":false,"required":["metadata","orderId","draft","status","filledQuantity","remainingQuantity","feePaid","updatedAt"],"properties":{"metadata":{"$ref":"#/components/schemas/EventMetadata"},"orderId":{"type":"string","minLength":1},"draft":{"$ref":"#/components/schemas/OrderDraft"},"status":{"$ref":"#/components/schemas/OrderStatus"},"filledQuantity":{"$ref":"#/components/schemas/NonNegativeDecimalString"},"remainingQuantity":{"$ref":"#/components/schemas/NonNegativeDecimalString"},"averageFillPrice":{"oneOf":[{"$ref":"#/components/schemas/PositiveDecimalString"},{"type":"null"}]},"feePaid":{"$ref":"#/components/schemas/NonNegativeDecimalString"},"updatedAt":{"type":"string","format":"date-time"}}},"Fill":{"type":"object","additionalProperties":false,"required":["metadata","fillId","orderId","symbol","side","price","quantity","quoteAmount","fee","feeAsset"],"properties":{"metadata":{"$ref":"#/components/schemas/EventMetadata"},"fillId":{"type":"string","minLength":1},"orderId":{"type":"string","minLength":1},"symbol":{"$ref":"#/components/schemas/Symbol"},"side":{"$ref":"#/components/schemas/OrderSide"},"price":{"$ref":"#/components/schemas/PositiveDecimalString"},"quantity":{"$ref":"#/components/schemas/PositiveDecimalString"},"quoteAmount":{"$ref":"#/components/schemas/PositiveDecimalString"},"fee":{"$ref":"#/components/schemas/NonNegativeDecimalString"},"feeAsset":{"type":"string","pattern":"^[A-Z0-9]+$"}}},"ErrorObject":{"type":"object","additionalProperties":false,"required":["schemaVersion","code","message"],"properties":{"schemaVersion":{"$ref":"#/components/schemas/SchemaVersion"},"code":{"type":"string","pattern":"^[A-Z0-9_]+$"},"message":{"type":"string","minLength":1},"details":{"type":"object","additionalProperties":true}}}}}}
+openapi: 3.1.0
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+info:
+  title: ATLAS X Unified Contract
+  version: 1.1.0
+  description: Cross-platform contract for ATLAS X Web/PWA and future SwiftUI clients.
+  x-atlas-schema-version: atlas.unified.v1
+  x-atlas-decimal-context:
+    format: atlas-decimal-34
+    maximumSignificantDigits: 34
+    outputRounding: half-up
+    internalPrecision: 80
+    conservativeQuantityRounding: down
+servers:
+  - url: https://api.example.invalid
+    description: Contract placeholder only; no production routing is defined.
+paths:
+  /v1/markets/{symbol}/snapshot:
+    get:
+      operationId: getMarketSnapshot
+      parameters: &a1
+        - $ref: "#/components/parameters/Symbol"
+      responses:
+        "200":
+          description: Current market snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketSnapshot"
+        default: &a2
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/markets/{symbol}/candles:
+    get:
+      operationId: getCandles
+      parameters: *a1
+      responses:
+        "200":
+          description: Ordered candle events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Candle"
+        default: *a2
+  /v1/markets/{symbol}/order-book:
+    get:
+      operationId: getOrderBook
+      parameters: *a1
+      responses:
+        "200":
+          description: Current order-book snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderBookSnapshot"
+        default: *a2
+  /v1/accounts/{accountId}/assets:
+    get:
+      operationId: getAccountAssets
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: &a3
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: Account assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountAsset"
+        default: *a2
+  /v1/accounts/{accountId}/snapshot:
+    get:
+      operationId: getAccountSnapshot
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: *a3
+      responses:
+        "200":
+          description: Paper account snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountSnapshot"
+        default: *a2
+  /v1/orders:
+    post:
+      operationId: submitOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderDraft"
+      responses:
+        "201":
+          description: Submitted paper order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        default: *a2
+  /v1/orders/{orderId}:
+    get:
+      operationId: getOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: *a3
+      responses:
+        "200":
+          description: Submitted order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        default: *a2
+  /v1/fills:
+    get:
+      operationId: listFills
+      responses:
+        "200":
+          description: Fill events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Fill"
+        default: *a2
+components:
+  parameters:
+    Symbol:
+      name: symbol
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/Symbol"
+  responses:
+    ErrorResponse:
+      description: Stable domain error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DomainError"
+  schemas:
+    SchemaVersion:
+      type: string
+      const: atlas.unified.v1
+      examples:
+        - atlas.unified.v1
+    DecimalString:
+      type: string
+      format: atlas-decimal-34
+      pattern: ^(?:0|-?(?:0\.\d*[1-9]|[1-9]\d*(?:\.\d*[1-9])?))$
+      description: Canonical decimal string with at most 34 significant digits; JSON numbers and exponent notation
+        are forbidden.
+    NonNegativeDecimalString:
+      type: string
+      format: atlas-decimal-34
+      pattern: ^(?:0|0\.\d*[1-9]|[1-9]\d*(?:\.\d*[1-9])?)$
+    PositiveDecimalString:
+      type: string
+      format: atlas-decimal-34
+      pattern: ^(?:0\.\d*[1-9]|[1-9]\d*(?:\.\d*[1-9])?)$
+    Truthfulness:
+      type: string
+      enum:
+        - unknown
+        - cachedReal
+        - real
+        - simulated
+        - fixture
+    UnknownDataSource:
+      type: object
+      additionalProperties: false
+      required:
+        - truthfulness
+      properties:
+        truthfulness:
+          const: unknown
+        provider: *a3
+        reason: *a3
+    CachedRealDataSource:
+      type: object
+      additionalProperties: false
+      required:
+        - truthfulness
+        - provider
+        - cacheTime
+      properties:
+        truthfulness:
+          const: cachedReal
+        provider: *a3
+        cacheTime: &a4
+          type: string
+          format: date-time
+    RealDataSource:
+      type: object
+      additionalProperties: false
+      required:
+        - truthfulness
+        - provider
+      properties:
+        truthfulness:
+          const: real
+        provider: *a3
+    SimulatedDataSource:
+      type: object
+      additionalProperties: false
+      required:
+        - truthfulness
+        - provider
+      properties:
+        truthfulness:
+          const: simulated
+        provider: *a3
+        scenario: *a3
+    FixtureDataSource:
+      type: object
+      additionalProperties: false
+      required:
+        - truthfulness
+        - fixtureId
+      properties:
+        truthfulness:
+          const: fixture
+        fixtureId: *a3
+        provider: *a3
+    DataSource:
+      oneOf:
+        - $ref: "#/components/schemas/UnknownDataSource"
+        - $ref: "#/components/schemas/CachedRealDataSource"
+        - $ref: "#/components/schemas/RealDataSource"
+        - $ref: "#/components/schemas/SimulatedDataSource"
+        - $ref: "#/components/schemas/FixtureDataSource"
+      discriminator:
+        propertyName: truthfulness
+    EventMetadata:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - id
+        - source
+        - sequence
+        - serverTime
+        - receivedAt
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        id: *a3
+        source:
+          $ref: "#/components/schemas/DataSource"
+        sequence:
+          type: integer
+          minimum: 0
+        serverTime: *a4
+        receivedAt: *a4
+    Symbol:
+      type: string
+      pattern: ^[A-Z0-9]+-[A-Z0-9]+$
+    MarketConnectionState:
+      type: string
+      enum:
+        - initializing
+        - cached
+        - live
+        - delayed
+        - reconnecting
+        - stale
+        - offline
+        - degraded
+        - error
+    MarketConnection:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - state
+        - source
+        - updatedAt
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        state:
+          $ref: "#/components/schemas/MarketConnectionState"
+        source:
+          $ref: "#/components/schemas/DataSource"
+        updatedAt: *a4
+        latencyMs:
+          type: integer
+          minimum: 0
+        retryAt:
+          anyOf:
+            - *a4
+            - type: "null"
+        error:
+          anyOf:
+            - $ref: "#/components/schemas/DomainError"
+            - type: "null"
+    Ticker:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - symbol
+        - bid
+        - ask
+        - last
+        - open24h
+        - high24h
+        - low24h
+        - baseVolume24h
+        - quoteVolume24h
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        symbol:
+          $ref: "#/components/schemas/Symbol"
+        bid: &a5
+          $ref: "#/components/schemas/PositiveDecimalString"
+        ask: *a5
+        last: *a5
+        open24h: *a5
+        high24h: *a5
+        low24h: *a5
+        baseVolume24h: &a6
+          $ref: "#/components/schemas/NonNegativeDecimalString"
+        quoteVolume24h: *a6
+    Trade:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - tradeId
+        - symbol
+        - side
+        - price
+        - quantity
+        - quoteAmount
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        tradeId: *a3
+        symbol:
+          $ref: "#/components/schemas/Symbol"
+        side:
+          type: string
+          enum:
+            - buy
+            - sell
+        price: *a5
+        quantity: *a5
+        quoteAmount: *a5
+    CandleInterval:
+      type: string
+      enum:
+        - 1m
+        - 3m
+        - 5m
+        - 15m
+        - 30m
+        - 1h
+        - 2h
+        - 4h
+        - 6h
+        - 12h
+        - 1d
+        - 1w
+    Candle:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - symbol
+        - interval
+        - openTime
+        - closeTime
+        - open
+        - high
+        - low
+        - close
+        - volume
+        - quoteVolume
+        - closed
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        symbol:
+          $ref: "#/components/schemas/Symbol"
+        interval:
+          $ref: "#/components/schemas/CandleInterval"
+        openTime: *a4
+        closeTime: *a4
+        open: *a5
+        high: *a5
+        low: *a5
+        close: *a5
+        volume: *a6
+        quoteVolume: *a6
+        closed:
+          type: boolean
+    OrderBookLevel:
+      type: object
+      additionalProperties: false
+      required:
+        - price
+        - quantity
+      properties:
+        price: *a5
+        quantity: *a5
+    OrderBookSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - symbol
+        - tickSize
+        - bids
+        - asks
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        symbol:
+          $ref: "#/components/schemas/Symbol"
+        tickSize: *a5
+        bids:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderBookLevel"
+        asks:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderBookLevel"
+    MarketSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - symbol
+        - bid
+        - ask
+        - last
+        - baseVolume
+        - quoteVolume
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        symbol:
+          $ref: "#/components/schemas/Symbol"
+        bid: *a5
+        ask: *a5
+        last: *a5
+        baseVolume: *a6
+        quoteVolume: *a6
+    MarketEventEnvelope:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - eventType
+        - metadata
+        - payload
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        eventType:
+          type: string
+          enum:
+            - ticker
+            - trade
+            - candle
+            - orderBook
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        payload:
+          oneOf:
+            - $ref: "#/components/schemas/Ticker"
+            - $ref: "#/components/schemas/Trade"
+            - $ref: "#/components/schemas/Candle"
+            - $ref: "#/components/schemas/OrderBookSnapshot"
+    AccountAsset:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - accountId
+        - asset
+        - available
+        - locked
+        - total
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        accountId: *a3
+        asset:
+          type: string
+          pattern: ^[A-Z0-9]+$
+        available: *a6
+        locked: *a6
+        total: *a6
+    Position:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - positionId
+        - symbol
+        - side
+        - quantity
+        - averageEntryPrice
+        - marketPrice
+        - marketValue
+        - realizedPnl
+        - unrealizedPnl
+        - updatedAt
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        positionId: *a3
+        symbol:
+          $ref: "#/components/schemas/Symbol"
+        side:
+          const: long
+        quantity: *a6
+        averageEntryPrice:
+          anyOf:
+            - *a5
+            - type: "null"
+        marketPrice:
+          anyOf:
+            - *a5
+            - type: "null"
+        marketValue: *a6
+        realizedPnl: &a7
+          $ref: "#/components/schemas/DecimalString"
+        unrealizedPnl:
+          anyOf:
+            - *a7
+            - type: "null"
+        updatedAt: *a4
+    Reservation:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - reservationId
+        - accountId
+        - asset
+        - amount
+        - reason
+        - referenceId
+        - createdAt
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        reservationId: *a3
+        accountId: *a3
+        asset:
+          type: string
+          pattern: ^[A-Z0-9]+$
+        amount: *a5
+        reason:
+          type: string
+          enum:
+            - order
+            - fee
+            - settlement
+        referenceId: *a3
+        createdAt: *a4
+    AccountSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - accountId
+        - baseCurrency
+        - equity
+        - availableCash
+        - assets
+        - positions
+        - reservations
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        accountId: *a3
+        baseCurrency:
+          type: string
+          pattern: ^[A-Z0-9]+$
+        equity: *a6
+        availableCash: *a6
+        assets:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountAsset"
+        positions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Position"
+        reservations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reservation"
+    OrderSide:
+      type: string
+      enum:
+        - buy
+        - sell
+    OrderType:
+      type: string
+      enum:
+        - market
+        - limit
+        - stopMarket
+        - stopLimit
+    OrderStatus:
+      type: string
+      enum:
+        - draft
+        - validating
+        - reviewRequired
+        - submitting
+        - received
+        - accepted
+        - pending
+        - waitingTrigger
+        - partiallyFilled
+        - filled
+        - canceled
+        - expired
+        - rejected
+        - failed
+    OrderIntent:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - intentId
+        - symbol
+        - side
+        - type
+        - inputMode
+        - inputValue
+        - createdAt
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        intentId: *a3
+        symbol:
+          $ref: "#/components/schemas/Symbol"
+        side:
+          $ref: "#/components/schemas/OrderSide"
+        type:
+          $ref: "#/components/schemas/OrderType"
+        inputMode:
+          type: string
+          enum:
+            - quantity
+            - amount
+            - percentage
+        inputValue: *a5
+        limitPrice: *a5
+        stopPrice: *a5
+        createdAt: *a4
+    OrderEstimate:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - requestedQuantity
+        - filledQuantity
+        - unfilledQuantity
+        - grossAmount
+        - fee
+        - coverageRate
+        - requiredBalance
+        - availableBalance
+        - insufficientBalance
+        - depthInsufficient
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        requestedQuantity: *a5
+        filledQuantity: *a6
+        unfilledQuantity: *a6
+        grossAmount: *a6
+        vwap:
+          anyOf:
+            - *a5
+            - type: "null"
+        referencePrice:
+          anyOf:
+            - *a5
+            - type: "null"
+        slippageRate:
+          anyOf:
+            - *a7
+            - type: "null"
+        fee: *a6
+        coverageRate: *a6
+        requiredBalance: *a6
+        availableBalance: *a6
+        insufficientBalance:
+          type: boolean
+        depthInsufficient:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/DomainError"
+    OrderValidation:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - valid
+        - reviewRequired
+        - errors
+        - warnings
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        valid:
+          type: boolean
+        reviewRequired:
+          type: boolean
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/DomainError"
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/DomainError"
+    RiskAssessment:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - equity
+        - availableCash
+        - riskBudget
+        - stopDistance
+        - unitRisk
+        - quantityByRisk
+        - quantityByBalance
+        - suggestedQuantity
+        - notional
+        - entryFee
+        - exitFeeAtStop
+        - totalCapital
+        - riskAmount
+        - bindingConstraint
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        equity: *a6
+        availableCash: *a6
+        riskBudget: *a6
+        stopDistance: *a5
+        unitRisk: *a5
+        quantityByRisk: *a6
+        quantityByBalance: *a6
+        suggestedQuantity: *a6
+        notional: *a6
+        entryFee: *a6
+        exitFeeAtStop: *a6
+        totalCapital: *a6
+        riskAmount: *a6
+        targetPrice:
+          anyOf:
+            - *a5
+            - type: "null"
+        rewardAmount:
+          anyOf:
+            - *a6
+            - type: "null"
+        rewardRiskRatio:
+          anyOf:
+            - *a6
+            - type: "null"
+        bindingConstraint:
+          type: string
+          enum:
+            - risk
+            - balance
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/DomainError"
+    Strategy:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - strategyId
+        - name
+        - enabled
+        - symbols
+        - riskRate
+        - createdAt
+        - updatedAt
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        strategyId: *a3
+        name: *a3
+        enabled:
+          type: boolean
+        symbols:
+          type: array
+          items:
+            $ref: "#/components/schemas/Symbol"
+          uniqueItems: true
+        riskRate: *a5
+        createdAt: *a4
+        updatedAt: *a4
+    AlertRule:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - alertId
+        - symbol
+        - condition
+        - threshold
+        - enabled
+        - createdAt
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        alertId: *a3
+        symbol:
+          $ref: "#/components/schemas/Symbol"
+        condition:
+          type: string
+          enum:
+            - priceAbove
+            - priceBelow
+            - changeAbove
+            - changeBelow
+            - connectionState
+        threshold: *a7
+        enabled:
+          type: boolean
+        createdAt: *a4
+    DomainErrorCode:
+      type: string
+      enum:
+        - DECIMAL_INVALID
+        - SCHEMA_VERSION_UNSUPPORTED
+        - DATA_SOURCE_INVALID
+        - MARKET_OFFLINE
+        - MARKET_STALE
+        - MARKET_DEGRADED
+        - ORDER_INVALID
+        - ORDER_INSUFFICIENT_BALANCE
+        - ORDER_INSUFFICIENT_DEPTH
+        - ORDER_NOT_FOUND
+        - ORDER_ALREADY_FINAL
+        - RISK_INVALID_INPUT
+        - RISK_INVALID_STOP
+        - RISK_INVALID_TARGET
+        - RISK_INSUFFICIENT_EQUITY
+        - STORAGE_FAILURE
+        - INTERNAL_FAILURE
+    DomainError:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - code
+        - message
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        code:
+          $ref: "#/components/schemas/DomainErrorCode"
+        message: *a3
+        field: *a3
+        retryable:
+          type: boolean
+        details:
+          type: object
+          additionalProperties: true
+    ErrorObject:
+      $ref: "#/components/schemas/DomainError"
+    AuditEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - auditId
+        - action
+        - entityType
+        - entityId
+        - outcome
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        auditId: *a3
+        action: *a3
+        entityType: *a3
+        entityId: *a3
+        outcome:
+          type: string
+          enum:
+            - success
+            - rejected
+            - failed
+        error:
+          anyOf:
+            - $ref: "#/components/schemas/DomainError"
+            - type: "null"
+    AppSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - capturedAt
+        - marketConnection
+        - markets
+        - account
+        - orders
+        - fills
+        - strategies
+        - alerts
+      properties:
+        schemaVersion:
+          $ref: "#/components/schemas/SchemaVersion"
+        capturedAt: *a4
+        marketConnection:
+          $ref: "#/components/schemas/MarketConnection"
+        markets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ticker"
+        account:
+          $ref: "#/components/schemas/AccountSnapshot"
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        fills:
+          type: array
+          items:
+            $ref: "#/components/schemas/Fill"
+        strategies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Strategy"
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertRule"
+    MarketOrderDraft:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - clientOrderId
+        - symbol
+        - side
+        - quantity
+        - createdAt
+        - type
+      properties:
+        schemaVersion: &a8
+          $ref: "#/components/schemas/SchemaVersion"
+        clientOrderId: *a3
+        symbol: &a9
+          $ref: "#/components/schemas/Symbol"
+        side: &a10
+          $ref: "#/components/schemas/OrderSide"
+        quantity: *a5
+        createdAt: *a4
+        type:
+          const: market
+    LimitOrderDraft:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - clientOrderId
+        - symbol
+        - side
+        - quantity
+        - createdAt
+        - type
+        - price
+      properties:
+        schemaVersion: *a8
+        clientOrderId: *a3
+        symbol: *a9
+        side: *a10
+        quantity: *a5
+        createdAt: *a4
+        type:
+          const: limit
+        price: *a5
+    StopMarketOrderDraft:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - clientOrderId
+        - symbol
+        - side
+        - quantity
+        - createdAt
+        - type
+        - stopPrice
+      properties:
+        schemaVersion: *a8
+        clientOrderId: *a3
+        symbol: *a9
+        side: *a10
+        quantity: *a5
+        createdAt: *a4
+        type:
+          const: stopMarket
+        stopPrice: *a5
+    StopLimitOrderDraft:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - clientOrderId
+        - symbol
+        - side
+        - quantity
+        - createdAt
+        - type
+        - price
+        - stopPrice
+      properties:
+        schemaVersion: *a8
+        clientOrderId: *a3
+        symbol: *a9
+        side: *a10
+        quantity: *a5
+        createdAt: *a4
+        type:
+          const: stopLimit
+        price: *a5
+        stopPrice: *a5
+    OrderDraft:
+      oneOf:
+        - $ref: "#/components/schemas/MarketOrderDraft"
+        - $ref: "#/components/schemas/LimitOrderDraft"
+        - $ref: "#/components/schemas/StopMarketOrderDraft"
+        - $ref: "#/components/schemas/StopLimitOrderDraft"
+      discriminator:
+        propertyName: type
+    Order:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - orderId
+        - draft
+        - status
+        - filledQuantity
+        - remainingQuantity
+        - feePaid
+        - updatedAt
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        orderId: *a3
+        draft:
+          $ref: "#/components/schemas/OrderDraft"
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        filledQuantity: *a6
+        remainingQuantity: *a6
+        averageFillPrice:
+          anyOf:
+            - *a5
+            - type: "null"
+        feePaid: *a6
+        updatedAt: *a4
+        failure:
+          anyOf:
+            - $ref: "#/components/schemas/DomainError"
+            - type: "null"
+    Fill:
+      type: object
+      additionalProperties: false
+      required:
+        - metadata
+        - fillId
+        - orderId
+        - symbol
+        - side
+        - price
+        - quantity
+        - quoteAmount
+        - fee
+        - feeAsset
+      properties:
+        metadata:
+          $ref: "#/components/schemas/EventMetadata"
+        fillId: *a3
+        orderId: *a3
+        symbol:
+          $ref: "#/components/schemas/Symbol"
+        side:
+          $ref: "#/components/schemas/OrderSide"
+        price: *a5
+        quantity: *a5
+        quoteAmount: *a5
+        fee: *a6
+        feeAsset:
+          type: string
+          pattern: ^[A-Z0-9]+$

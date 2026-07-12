@@ -39,7 +39,7 @@ describe('OpenAPI 3.1 cross-platform contracts', () => {
     const validator = createOpenApiComponentValidator(components);
     const validSnapshot = {
       metadata: {
-        schemaVersion: '1.0.0',
+        schemaVersion: 'atlas.unified.v1',
         id: 'evt_market_btc_usdt_100',
         source: { provider: 'binance', truthfulness: 'real' },
         sequence: 100,
@@ -65,7 +65,7 @@ describe('OpenAPI 3.1 cross-platform contracts', () => {
     const components = (spec['components'] as { schemas: Record<string, unknown> }).schemas;
     const validator = createOpenApiComponentValidator(components);
     const draft = {
-      schemaVersion: '1.0.0',
+      schemaVersion: 'atlas.unified.v1',
       clientOrderId: 'client-001',
       symbol: 'BTC-USDT',
       side: 'buy',

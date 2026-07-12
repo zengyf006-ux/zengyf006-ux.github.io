@@ -1,1 +1,302 @@
-{"schemaVersion":"1.0.0","vectorVersion":"1.0.0","domain":"riskPosition","cases":[{"id":"risk-budget-binds","category":"normal","operation":"calculate","input":{"availableQuote":"1000","entryPrice":"100","stopPrice":"90","riskRate":"0.01","feeRate":"0"},"expected":{"riskBudget":"10","stopDistance":"10","unitRisk":"10","quantityByRisk":"1","quantityByBalance":"10","suggestedQuantity":"1","notional":"100","entryFee":"0","totalCapital":"100","bindingConstraint":"risk"}},{"id":"fees-reduce-position","category":"normal","operation":"calculate","input":{"availableQuote":"1000","entryPrice":"100","stopPrice":"90","riskRate":"0.01","feeRate":"0.001"},"expected":{"riskBudget":"10","stopDistance":"10","unitRisk":"10.19","quantityByRisk":"0.9813542688910696761530912659470068","quantityByBalance":"9.99000999000999000999000999000999","suggestedQuantity":"0.9813542688910696761530912659470068","notional":"98.13542688910696761530912659470068","entryFee":"0.09813542688910696761530912659470068","totalCapital":"98.23356231599607458292443572129538","bindingConstraint":"risk"}},{"id":"balance-cap-binds","category":"normal","operation":"calculate","input":{"availableQuote":"1000","entryPrice":"100","stopPrice":"99","riskRate":"1","feeRate":"0.001"},"expected":{"riskBudget":"1000","stopDistance":"1","unitRisk":"1.199","quantityByRisk":"834.0283569641367806505421184320266","quantityByBalance":"9.99000999000999000999000999000999","suggestedQuantity":"9.99000999000999000999000999000999","notional":"999.000999000999000999000999000999","entryFee":"0.999000999000999000999000999000999","totalCapital":"1000","bindingConstraint":"balance"}},{"id":"zero-balance","category":"boundary","operation":"calculate","input":{"availableQuote":"0","entryPrice":"100","stopPrice":"90","riskRate":"0.01","feeRate":"0.001"},"expected":{"riskBudget":"0","stopDistance":"10","unitRisk":"10.19","quantityByRisk":"0","quantityByBalance":"0","suggestedQuantity":"0","notional":"0","entryFee":"0","totalCapital":"0","bindingConstraint":"balance"}},{"id":"extreme-small-price","category":"boundary","operation":"calculate","input":{"availableQuote":"1","entryPrice":"0.00000001","stopPrice":"0.000000009","riskRate":"0.01","feeRate":"0"},"expected":{"riskBudget":"0.01","stopDistance":"0.000000001","unitRisk":"0.000000001","quantityByRisk":"10000000","quantityByBalance":"100000000","suggestedQuantity":"10000000","notional":"0.1","entryFee":"0","totalCapital":"0.1","bindingConstraint":"risk"}},{"id":"reject-stop-at-entry","category":"error","operation":"calculate","input":{"availableQuote":"1","entryPrice":"100","stopPrice":"100","riskRate":"0.01","feeRate":"0"},"errorPattern":"stop price"},{"id":"reject-zero-risk-rate","category":"error","operation":"calculate","input":{"availableQuote":"1","entryPrice":"100","stopPrice":"90","riskRate":"0","feeRate":"0"},"errorPattern":"risk rate"}]}
+{
+  "schemaVersion": "atlas.unified.v1",
+  "vectorVersion": "1.1.0",
+  "domain": "riskPosition",
+  "cases": [
+    {
+      "id": "risk-budget-binds",
+      "category": "normal",
+      "operation": "calculate",
+      "input": {
+        "availableQuote": "1000",
+        "entryPrice": "100",
+        "stopPrice": "90",
+        "riskRate": "0.01",
+        "feeRate": "0"
+      },
+      "expected": {
+        "riskBudget": "10",
+        "stopDistance": "10",
+        "unitRisk": "10",
+        "quantityByRisk": "1",
+        "quantityByBalance": "10",
+        "suggestedQuantity": "1",
+        "notional": "100",
+        "entryFee": "0",
+        "totalCapital": "100",
+        "bindingConstraint": "risk"
+      }
+    },
+    {
+      "id": "fees-reduce-position",
+      "category": "normal",
+      "operation": "calculate",
+      "input": {
+        "availableQuote": "1000",
+        "entryPrice": "100",
+        "stopPrice": "90",
+        "riskRate": "0.01",
+        "feeRate": "0.001"
+      },
+      "expected": {
+        "riskBudget": "10",
+        "stopDistance": "10",
+        "unitRisk": "10.19",
+        "quantityByRisk": "0.9813542688910696761530912659470068",
+        "quantityByBalance": "9.99000999000999000999000999000999",
+        "suggestedQuantity": "0.9813542688910696761530912659470068",
+        "notional": "98.13542688910696761530912659470068",
+        "entryFee": "0.09813542688910696761530912659470068",
+        "totalCapital": "98.23356231599607458292443572129538",
+        "bindingConstraint": "risk"
+      }
+    },
+    {
+      "id": "balance-cap-binds",
+      "category": "normal",
+      "operation": "calculate",
+      "input": {
+        "availableQuote": "1000",
+        "entryPrice": "100",
+        "stopPrice": "99",
+        "riskRate": "1",
+        "feeRate": "0.001"
+      },
+      "expected": {
+        "riskBudget": "1000",
+        "stopDistance": "1",
+        "unitRisk": "1.199",
+        "quantityByRisk": "834.0283569641367806505421184320266",
+        "quantityByBalance": "9.99000999000999000999000999000999",
+        "suggestedQuantity": "9.99000999000999000999000999000999",
+        "notional": "999.000999000999000999000999000999",
+        "entryFee": "0.999000999000999000999000999000999",
+        "totalCapital": "1000",
+        "bindingConstraint": "balance"
+      }
+    },
+    {
+      "id": "zero-balance",
+      "category": "boundary",
+      "operation": "calculate",
+      "input": {
+        "availableQuote": "0",
+        "entryPrice": "100",
+        "stopPrice": "90",
+        "riskRate": "0.01",
+        "feeRate": "0.001"
+      },
+      "expected": {
+        "riskBudget": "0",
+        "stopDistance": "10",
+        "unitRisk": "10.19",
+        "quantityByRisk": "0",
+        "quantityByBalance": "0",
+        "suggestedQuantity": "0",
+        "notional": "0",
+        "entryFee": "0",
+        "totalCapital": "0",
+        "bindingConstraint": "balance"
+      }
+    },
+    {
+      "id": "extreme-small-price",
+      "category": "boundary",
+      "operation": "calculate",
+      "input": {
+        "availableQuote": "1",
+        "entryPrice": "0.00000001",
+        "stopPrice": "0.000000009",
+        "riskRate": "0.01",
+        "feeRate": "0"
+      },
+      "expected": {
+        "riskBudget": "0.01",
+        "stopDistance": "0.000000001",
+        "unitRisk": "0.000000001",
+        "quantityByRisk": "10000000",
+        "quantityByBalance": "100000000",
+        "suggestedQuantity": "10000000",
+        "notional": "0.1",
+        "entryFee": "0",
+        "totalCapital": "0.1",
+        "bindingConstraint": "risk"
+      }
+    },
+    {
+      "id": "reject-stop-at-entry",
+      "category": "error",
+      "operation": "calculate",
+      "input": {
+        "availableQuote": "1",
+        "entryPrice": "100",
+        "stopPrice": "100",
+        "riskRate": "0.01",
+        "feeRate": "0"
+      },
+      "errorPattern": "stop price"
+    },
+    {
+      "id": "reject-zero-risk-rate",
+      "category": "error",
+      "operation": "calculate",
+      "input": {
+        "availableQuote": "1",
+        "entryPrice": "100",
+        "stopPrice": "90",
+        "riskRate": "0",
+        "feeRate": "0"
+      },
+      "errorPattern": "risk rate"
+    },
+    {
+      "id": "risk-equity-cash-fees",
+      "category": "normal",
+      "operation": "calculate",
+      "input": {
+        "equity": "1000",
+        "availableCash": "800",
+        "entryPrice": "100",
+        "stopPrice": "90",
+        "riskRate": "0.01",
+        "entryFeeRate": "0.001",
+        "exitFeeRate": "0.002"
+      },
+      "expected": {
+        "schemaVersion": "atlas.unified.v1",
+        "equity": "1000",
+        "availableCash": "800",
+        "riskBudget": "10",
+        "stopDistance": "10",
+        "unitRisk": "10.28",
+        "quantityByRisk": "0.972762645914396887159533073929961",
+        "quantityByBalance": "7.992007992007992007992007992007992",
+        "suggestedQuantity": "0.972762645914396887159533073929961",
+        "notional": "97.2762645914396887159533073929961",
+        "entryFee": "0.0972762645914396887159533073929961",
+        "exitFeeAtStop": "0.175097276264591439688715953307393",
+        "totalCapital": "97.3735408560311284046692607003891",
+        "riskAmount": "9.999999999999999999999999999999999",
+        "targetPrice": null,
+        "rewardAmount": null,
+        "rewardRiskRatio": null,
+        "bindingConstraint": "risk"
+      }
+    },
+    {
+      "id": "risk-target-reward-ratio",
+      "category": "normal",
+      "operation": "calculate",
+      "input": {
+        "equity": "1000",
+        "availableCash": "800",
+        "entryPrice": "100",
+        "stopPrice": "90",
+        "targetPrice": "130",
+        "riskRate": "0.01",
+        "entryFeeRate": "0.001",
+        "exitFeeRate": "0.002"
+      },
+      "expected": {
+        "schemaVersion": "atlas.unified.v1",
+        "equity": "1000",
+        "availableCash": "800",
+        "riskBudget": "10",
+        "stopDistance": "10",
+        "unitRisk": "10.28",
+        "quantityByRisk": "0.972762645914396887159533073929961",
+        "quantityByBalance": "7.992007992007992007992007992007992",
+        "suggestedQuantity": "0.972762645914396887159533073929961",
+        "notional": "97.2762645914396887159533073929961",
+        "entryFee": "0.0972762645914396887159533073929961",
+        "exitFeeAtStop": "0.175097276264591439688715953307393",
+        "totalCapital": "97.3735408560311284046692607003891",
+        "riskAmount": "9.999999999999999999999999999999999",
+        "targetPrice": "130",
+        "rewardAmount": "28.83268482490272373540856031128404",
+        "rewardRiskRatio": "2.883268482490272373540856031128405",
+        "bindingConstraint": "risk"
+      }
+    },
+    {
+      "id": "risk-zero-equity-cash",
+      "category": "boundary",
+      "operation": "calculate",
+      "input": {
+        "equity": "0",
+        "availableCash": "0",
+        "entryPrice": "100",
+        "stopPrice": "90",
+        "riskRate": "0.01",
+        "entryFeeRate": "0.001",
+        "exitFeeRate": "0.002"
+      },
+      "expected": {
+        "schemaVersion": "atlas.unified.v1",
+        "equity": "0",
+        "availableCash": "0",
+        "riskBudget": "0",
+        "stopDistance": "10",
+        "unitRisk": "10.28",
+        "quantityByRisk": "0",
+        "quantityByBalance": "0",
+        "suggestedQuantity": "0",
+        "notional": "0",
+        "entryFee": "0",
+        "exitFeeAtStop": "0",
+        "totalCapital": "0",
+        "riskAmount": "0",
+        "targetPrice": null,
+        "rewardAmount": null,
+        "rewardRiskRatio": null,
+        "bindingConstraint": "balance"
+      }
+    },
+    {
+      "id": "risk-invalid-target-direction",
+      "category": "error",
+      "operation": "calculate",
+      "input": {
+        "equity": "1000",
+        "availableCash": "800",
+        "entryPrice": "100",
+        "stopPrice": "90",
+        "targetPrice": "99",
+        "riskRate": "0.01",
+        "entryFeeRate": "0.001",
+        "exitFeeRate": "0.002"
+      },
+      "errorPattern": "target price"
+    },
+    {
+      "id": "risk-invalid-stop-direction-v2",
+      "category": "error",
+      "operation": "calculate",
+      "input": {
+        "equity": "1000",
+        "availableCash": "800",
+        "entryPrice": "100",
+        "stopPrice": "100",
+        "riskRate": "0.01",
+        "entryFeeRate": "0.001",
+        "exitFeeRate": "0.002"
+      },
+      "errorPattern": "stop price"
+    },
+    {
+      "id": "risk-cash-above-equity",
+      "category": "error",
+      "operation": "calculate",
+      "input": {
+        "equity": "10",
+        "availableCash": "11",
+        "entryPrice": "100",
+        "stopPrice": "90",
+        "riskRate": "0.01",
+        "entryFeeRate": "0",
+        "exitFeeRate": "0"
+      },
+      "errorPattern": "cash exceeds equity"
+    }
+  ]
+}

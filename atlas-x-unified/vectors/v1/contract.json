@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "atlas.unified.v1",
   "vectorVersion": "1.0.0",
   "domain": "contract",
   "cases": [
@@ -11,7 +11,7 @@
         "schemaName": "MarketSnapshot",
         "value": {
           "metadata": {
-            "schemaVersion": "1.0.0",
+            "schemaVersion": "atlas.unified.v1",
             "id": "evt-btc-100",
             "source": {
               "provider": "binance",
@@ -39,11 +39,12 @@
         "schemaName": "Candle",
         "value": {
           "metadata": {
-            "schemaVersion": "1.0.0",
+            "schemaVersion": "atlas.unified.v1",
             "id": "fixture-candle-1",
             "source": {
               "provider": "golden-vector",
-              "truthfulness": "fixture"
+              "truthfulness": "fixture",
+              "fixtureId": "golden-vector"
             },
             "sequence": 1,
             "serverTime": "2026-07-12T00:01:00.000Z",
@@ -71,7 +72,7 @@
       "input": {
         "schemaName": "OrderDraft",
         "value": {
-          "schemaVersion": "1.0.0",
+          "schemaVersion": "atlas.unified.v1",
           "clientOrderId": "client-001",
           "symbol": "BTC-USDT",
           "side": "buy",
@@ -91,7 +92,7 @@
         "schemaName": "OrderBookSnapshot",
         "value": {
           "metadata": {
-            "schemaVersion": "1.0.0",
+            "schemaVersion": "atlas.unified.v1",
             "id": "book-cache-1",
             "source": {
               "provider": "atlas-cache",
@@ -118,7 +119,7 @@
         "schemaName": "MarketSnapshot",
         "value": {
           "metadata": {
-            "schemaVersion": "1.0.0",
+            "schemaVersion": "atlas.unified.v1",
             "id": "evt-btc-101",
             "source": {
               "provider": "binance",
@@ -145,7 +146,7 @@
       "input": {
         "schemaName": "Order",
         "value": {
-          "schemaVersion": "1.0.0",
+          "schemaVersion": "atlas.unified.v1",
           "clientOrderId": "client-001",
           "symbol": "BTC-USDT",
           "side": "buy",

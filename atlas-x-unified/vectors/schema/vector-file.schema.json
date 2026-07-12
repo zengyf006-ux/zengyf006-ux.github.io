@@ -11,7 +11,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "1.0.0"
+      "const": "atlas.unified.v1"
     },
     "vectorVersion": {
       "type": "string",
