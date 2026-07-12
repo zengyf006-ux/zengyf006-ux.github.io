@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { Truthfulness } from '@atlas-x/contracts';
 import { multiplyDecimal } from '@atlas-x/domain';
 import {
   PRODUCT_PAGES,
@@ -12,6 +13,12 @@ import {
   type TicketOrderType,
   type TicketState,
 } from './model.js';
+import {
+  formatMarketDecimal,
+  tickerDisplayMetrics,
+  type MarketPresentationTone,
+} from './market.js';
+import { MarketDataProvider, useMarketData } from './useMarketData.js';
 import {
   PaperAccountProvider,
   RESET_PAPER_ACCOUNT_CONFIRMATION,
@@ -29,46 +36,109 @@ const orderTypes: readonly [TicketOrderType, string][] = [
 const inputModes: readonly [TicketInputMode, string][] = [
   ['quantity', '数量'], ['amount', '金额'], ['percentage', '比例'],
 ];
-const markets = [
+const fixtureMarkets = [
   ['BTC-USD', '118,420.35', '+2.18%'], ['ETH-USD', '4,286.14', '+1.42%'],
   ['SOL-USD', '184.72', '-0.64%'], ['LINK-USD', '21.48', '+3.06%'],
 ] as const;
+const fixtureTrades = [
+  ['118420.35', '0.024', 'buy'], ['118418.20', '0.180', 'sell'],
+  ['118430.10', '0.042', 'buy'], ['118405.00', '0.320', 'sell'],
+] as const;
 
-function SourceBadge() {
-  return <span className="source-badge" title="确定性回归数据，不是真实行情">测试数据 · fixture</span>;
+function truthfulnessLabel(value: Truthfulness): string {
+  switch (value) {
+    case 'real': return '实时真实';
+    case 'cachedReal': return '真实缓存';
+    case 'fixture': return '测试数据';
+    case 'simulated': return '模拟数据';
+    case 'unknown': return '来源未知';
+  }
 }
 
-function Chart({ interval }: { readonly interval: Interval }) {
+function truthfulnessTone(value: Truthfulness): MarketPresentationTone {
+  if (value === 'real') return 'positive';
+  if (value === 'unknown') return 'negative';
+  return 'warning';
+}
+
+function SourceBadge({
+  label = '测试数据 · fixture',
+  tone = 'warning',
+  title = '确定性回归数据，不是真实行情',
+}: {
+  readonly label?: string;
+  readonly tone?: MarketPresentationTone;
+  readonly title?: string;
+}) {
+  return <span className={`source-badge tone-${tone}`} title={title}>{label}</span>;
+}
+
+function Chart({ interval, last }: { readonly interval: Interval; readonly last: string }) {
   const bars = [42, 48, 44, 56, 52, 63, 59, 68, 72, 66, 78, 74, 82, 88, 84, 92];
   return (
     <section className="chart" aria-label={`${marketFixture.symbol} ${interval} K线图`}>
+      <span className="chart-source-note">K线图形 · fixture</span>
       <div className="chart-grid" aria-hidden="true" />
       <div className="candles" aria-hidden="true">
         {bars.map((value, index) => <i key={index} style={{ height: `${value}%` }} className={index % 3 === 0 ? 'down' : 'up'} />)}
       </div>
-      <div className="price-line"><span>118,420.35</span></div>
+      <div className="price-line"><span>{last}</span></div>
     </section>
   );
 }
 
 function OrderBook() {
+  const { orderBook, presentation } = useMarketData();
+  const publicBook = orderBook?.symbol === marketFixture.symbol ? orderBook : null;
+  const asks = publicBook === null
+    ? [...marketFixture.asks].reverse()
+    : [...publicBook.asks.slice(0, 8)].reverse();
+  const bids = publicBook === null ? marketFixture.bids : publicBook.bids.slice(0, 8);
+  const source = publicBook?.metadata.source.truthfulness ?? 'fixture';
+  const last = presentation.ticker?.last ?? marketFixture.last;
+
   return (
     <section className="panel book mobile-panel" aria-labelledby="book-title">
-      <header><h2 id="book-title">订单簿</h2><span>价格 · 数量</span></header>
-      <div className="book-side asks">{[...marketFixture.asks].reverse().map((row) => <div key={row.price}><b>{row.price}</b><span>{row.quantity}</span></div>)}</div>
-      <strong className="mid-price">118,420.35</strong>
-      <div className="book-side bids">{marketFixture.bids.map((row) => <div key={row.price}><b>{row.price}</b><span>{row.quantity}</span></div>)}</div>
+      <header>
+        <h2 id="book-title">订单簿</h2>
+        <span>{truthfulnessLabel(source)} · 价格 / 数量</span>
+      </header>
+      <div className="book-side asks">
+        {asks.map((row) => <div key={`ask-${row.price}`}><b>{formatMarketDecimal(row.price)}</b><span>{row.quantity}</span></div>)}
+      </div>
+      <strong className="mid-price">{formatMarketDecimal(last)}</strong>
+      <div className="book-side bids">
+        {bids.map((row) => <div key={`bid-${row.price}`}><b>{formatMarketDecimal(row.price)}</b><span>{row.quantity}</span></div>)}
+      </div>
+      {publicBook === null ? <p className="panel-source-warning">尚未收到公共盘口，当前显示 fixture。</p> : null}
     </section>
   );
 }
 
 function RecentTrades() {
+  const { trades } = useMarketData();
+  const publicTrades = trades.filter((trade) => trade.symbol === marketFixture.symbol).slice(0, 12);
+  const source = publicTrades[0]?.metadata.source.truthfulness ?? 'fixture';
+
   return (
     <section className="panel trades mobile-panel">
-      <header><h2>最近成交</h2><span>测试序列</span></header>
-      {[['118420.35', '0.024'], ['118418.20', '0.180'], ['118430.10', '0.042'], ['118405.00', '0.320']].map(([price, quantity], index) => (
-        <div key={`${price}-${index}`}><b className={index % 2 === 0 ? 'positive' : 'negative'}>{price}</b><span>{quantity}</span><time>刚刚</time></div>
-      ))}
+      <header><h2>最近成交</h2><span>{truthfulnessLabel(source)}</span></header>
+      {publicTrades.length > 0
+        ? publicTrades.map((trade) => (
+          <div key={trade.tradeId}>
+            <b className={trade.side === 'buy' ? 'positive' : 'negative'}>{formatMarketDecimal(trade.price)}</b>
+            <span>{trade.quantity}</span>
+            <time>{trade.metadata.receivedAt.slice(11, 19)}</time>
+          </div>
+        ))
+        : fixtureTrades.map(([price, quantity, side], index) => (
+          <div key={`${price}-${index}`}>
+            <b className={side === 'buy' ? 'positive' : 'negative'}>{price}</b>
+            <span>{quantity}</span>
+            <time>fixture</time>
+          </div>
+        ))}
+      {publicTrades.length === 0 ? <p className="panel-source-warning">尚未收到公共成交，当前显示 fixture。</p> : null}
     </section>
   );
 }
@@ -115,7 +185,7 @@ function OrderTicket() {
 
   return (
     <section className="panel ticket mobile-panel" aria-labelledby="ticket-title">
-      <header><h2 id="ticket-title">模拟下单</h2><span>可用 USD {cash}</span></header>
+      <header><h2 id="ticket-title">模拟下单</h2><span>预估 · fixture · 可用 USD {cash}</span></header>
       <div className="segmented" aria-label="买卖方向">
         {(['buy', 'sell'] as const).map((side) => <button key={side} className={ticket.side === side ? 'active' : ''} onClick={() => updateTicket({ ...ticket, side })}>{side === 'buy' ? '买入' : '卖出'}</button>)}
       </div>
@@ -134,6 +204,7 @@ function OrderTicket() {
         <div><span>手续费</span><b>{estimate?.fee ?? '—'} USD</b></div>
         <div><span>深度覆盖</span><b>{coverage}</b></div>
       </div>
+      <p className="panel-source-warning">预估使用确定性 fixture 盘口，不代表公共实时深度。</p>
       {estimate?.depthInsufficient === true ? <p className="warning">盘口深度不足，订单可能部分成交。</p> : null}
       {ticketError !== '' ? <p className="warning" role="alert">{ticketError}</p> : null}
       <button className={`submit ${ticket.side}`} disabled={estimate === null || snapshot === null} onClick={() => setConfirming(true)}>{ticket.side === 'buy' ? '复核买入' : '复核卖出'}</button>
@@ -146,6 +217,10 @@ function OrderTicket() {
 function Terminal() {
   const [interval, setInterval] = useState<Interval>('15m');
   const [mobilePane, setMobilePane] = useState<MobileTerminalPane>('chart');
+  const { presentation } = useMarketData();
+  const ticker = presentation.ticker;
+  const metrics = ticker === null ? null : tickerDisplayMetrics(ticker);
+
   return (
     <>
       <div className="mobile-task-switch" aria-label="手机交易任务">
@@ -153,9 +228,16 @@ function Terminal() {
       </div>
       <div className={`terminal-grid mobile-${mobilePane}`}>
         <section className="market-stage mobile-panel">
-          <div className="market-heading"><div><p>{marketFixture.symbol}</p><h1>118,420.35</h1><strong>+2,526.20 · +2.18%</strong></div><SourceBadge /></div>
+          <div className="market-heading">
+            <div>
+              <p>{ticker?.symbol ?? marketFixture.symbol}</p>
+              <h1>{metrics?.price ?? formatMarketDecimal(marketFixture.last)}</h1>
+              <strong className={metrics?.direction ?? 'positive'}>{metrics === null ? marketFixture.change : `${metrics.changeAmount} · ${metrics.changePercent}`}</strong>
+            </div>
+            <SourceBadge label={presentation.label} tone={presentation.tone} title={presentation.detail} />
+          </div>
           <div className="intervals">{intervals.map((item) => <button key={item} className={item === interval ? 'active' : ''} onClick={() => setInterval(item)}>{item}</button>)}</div>
-          <Chart interval={interval} />
+          <Chart interval={interval} last={metrics?.price ?? formatMarketDecimal(marketFixture.last)} />
         </section>
         <OrderBook />
         <OrderTicket />
@@ -166,8 +248,25 @@ function Terminal() {
 }
 
 function Markets({ watchlistOnly = false }: { readonly watchlistOnly?: boolean }) {
-  const rows = watchlistOnly ? markets.slice(0, 2) : markets;
-  return <section className="page"><header className="page-title"><div><h1>{watchlistOnly ? '自选' : '市场'}</h1><p>当前为确定性 fixture；接入公共行情后仍会逐行显示真实性与延迟。</p></div><SourceBadge /></header><div className="market-table"><div className="table-head"><span>市场</span><span>最新价</span><span>24h</span></div>{rows.map(([symbol, price, change]) => <button key={symbol}><b>{symbol}</b><span>{price}</span><strong className={change.startsWith('+') ? 'positive' : 'negative'}>{change}</strong></button>)}</div></section>;
+  const { snapshot, presentation } = useMarketData();
+  const publicRows = snapshot.tickers.map((ticker) => ({ ticker, metrics: tickerDisplayMetrics(ticker) }));
+  const rows = watchlistOnly ? publicRows.slice(0, 2) : publicRows;
+  const fixtureRows = watchlistOnly ? fixtureMarkets.slice(0, 2) : fixtureMarkets;
+
+  return (
+    <section className="page">
+      <header className="page-title">
+        <div><h1>{watchlistOnly ? '自选' : '市场'}</h1><p>{presentation.detail}</p></div>
+        <SourceBadge label={presentation.label} tone={presentation.tone} title={presentation.detail} />
+      </header>
+      <div className="market-table">
+        <div className="table-head"><span>市场</span><span>最新价</span><span>24h</span></div>
+        {rows.length > 0
+          ? rows.map(({ ticker, metrics }) => <button key={ticker.symbol}><b>{ticker.symbol}</b><span>{metrics.price}</span><strong className={metrics.direction}>{metrics.changePercent}</strong></button>)
+          : fixtureRows.map(([symbol, price, change]) => <button key={symbol}><b>{symbol}</b><span>{price}</span><strong className={change.startsWith('+') ? 'positive' : 'negative'}>{change}</strong></button>)}
+      </div>
+    </section>
+  );
 }
 
 function AccountPage({ page }: { readonly page: ProductPage }) {
@@ -192,23 +291,25 @@ function SettingsPage() {
 
 function InformationPage({ page }: { readonly page: ProductPage }) {
   const { persistence } = usePaperAccount();
+  const { presentation, fallbackReason } = useMarketData();
   if (page === 'alerts') return <AlertsPage />;
   if (page === 'settings') return <SettingsPage />;
   const title = page === 'health' ? '数据健康与来源' : '使用说明与风险';
-  return <section className="page"><header className="page-title"><div><h1>{title}</h1><p>{page === 'health' ? '任何缓存、模拟或测试数据都不会伪装成实时行情。' : 'ATLAS X Unified Pro 当前仅支持模拟交易。'}</p></div>{page === 'health' ? <SourceBadge /> : null}</header><div className="info-grid"><article><h2>行情真实性</h2><p>当前终端为 fixture。公共 Coinbase 链路由独立 smoke 验证，尚未在本屏冒充实时数据。</p></article><article><h2>账本状态</h2><p>{persistence === 'indexeddb' ? '模拟事件已持久化到 IndexedDB。' : '模拟事件当前使用会话内存。'}</p></article><article><h2>安全边界</h2><p>不接入真实资金，不自动部署，不修改生产网关或 Supabase。</p></article></div></section>;
+  return <section className="page"><header className="page-title"><div><h1>{title}</h1><p>{page === 'health' ? '任何缓存、模拟或测试数据都不会伪装成实时行情。' : 'ATLAS X Unified Pro 当前仅支持模拟交易。'}</p></div>{page === 'health' ? <SourceBadge label={presentation.label} tone={presentation.tone} title={presentation.detail} /> : null}</header><div className="info-grid"><article><h2>行情真实性</h2><p>{presentation.detail}</p><p>{fallbackReason ?? '公共连接未报告额外错误。'}</p></article><article><h2>账本状态</h2><p>{persistence === 'indexeddb' ? '模拟事件已持久化到 IndexedDB。' : '模拟事件当前使用会话内存。'}</p></article><article><h2>安全边界</h2><p>不接入真实资金，不自动部署，不修改生产网关或 Supabase。</p></article></div></section>;
 }
 
 function ProductShell() {
   const [page, setPage] = useState<ProductPage>('terminal');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { presentation } = useMarketData();
   const navigate = (next: ProductPage) => {
     setPage(next);
     setMobileMenuOpen(false);
   };
   const content = page === 'terminal' ? <Terminal /> : page === 'markets' ? <Markets /> : page === 'watchlist' ? <Markets watchlistOnly /> : ['assets', 'orders', 'fills'].includes(page) ? <AccountPage page={page} /> : <InformationPage page={page} />;
-  return <div className="app-shell"><header className="topbar"><button className="brand" onClick={() => navigate('terminal')} aria-label="返回交易终端"><span>AX</span><b>ATLAS X</b></button><nav aria-label="主要导航">{PRODUCT_PAGES.map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav><button className="mobile-more" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>更多</button><div className="top-actions"><SourceBadge /><button onClick={() => navigate('health')}>数据状态</button></div></header><main>{content}</main>{mobileMenuOpen ? <nav className="mobile-more-sheet" aria-label="更多页面">{PRODUCT_PAGES.slice(5).map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav> : null}<nav className="mobile-nav" aria-label="手机导航">{PRODUCT_PAGES.slice(0, 5).map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav></div>;
+  return <div className="app-shell"><header className="topbar"><button className="brand" onClick={() => navigate('terminal')} aria-label="返回交易终端"><span>AX</span><b>ATLAS X</b></button><nav aria-label="主要导航">{PRODUCT_PAGES.map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav><button className="mobile-more" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>更多</button><div className="top-actions"><SourceBadge label={presentation.label} tone={presentation.tone} title={presentation.detail} /><button onClick={() => navigate('health')}>数据状态</button></div></header><main>{content}</main>{mobileMenuOpen ? <nav className="mobile-more-sheet" aria-label="更多页面">{PRODUCT_PAGES.slice(5).map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav> : null}<nav className="mobile-nav" aria-label="手机导航">{PRODUCT_PAGES.slice(0, 5).map(([id, label]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav></div>;
 }
 
 export function App() {
-  return <PaperAccountProvider><ProductShell /></PaperAccountProvider>;
+  return <MarketDataProvider><PaperAccountProvider><ProductShell /></PaperAccountProvider></MarketDataProvider>;
 }
