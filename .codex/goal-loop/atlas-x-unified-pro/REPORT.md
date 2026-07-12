@@ -114,6 +114,25 @@
 - CI diagnostics Artifact ID `8262186688`, digest `sha256:13b1610de9b3e1b6501829ca657b4517ff49c5b09e63988148f5f08c31512df7`.
 - G6 is accepted.
 
+## G7 — Browser-driven quality gates
+
+- Added pinned Python Playwright dependencies and a system-Chrome browser-quality runner without changing application dependencies.
+- Added deterministic paper order E2E, cross-page shared state, IndexedDB reload persistence, service-worker offline shell and recovery checks.
+- Added DOM and accessibility-tree audits, keyboard traversal with focus visibility, performance budgets and four required viewport screenshots.
+- Browser traffic is isolated from external market services while the independent Coinbase public smoke remains a separate live job.
+- Initial failures exposed three defects in the test harness itself: a WebSocket route deadlock, an order-button visibility assumption on the mobile chart pane and synthetic HTTP 503 console noise. Each was repaired without weakening product assertions.
+- Exact verified implementation Head: `3cf2c80aee74337c5571154b6e1c392bf765b563`.
+- Actions Run `29201636493`: `verify`, `public-market-smoke` and `web-quality` all passed.
+- Retained 25 test files / 168 tests; strict typecheck, production build, PWA verification and audit passed.
+- Browser evidence: paper position persisted after reload; service worker controlled the page, offline shell rendered and recovery notice appeared.
+- Accessibility evidence: zero unnamed visible controls, unlabeled inputs, duplicate IDs, missing image alternatives or unnamed accessibility-tree controls; 18 unique keyboard controls with 18 visible focus stops.
+- Performance evidence: FCP `532 ms`, load `295.1 ms`, transfer `102,575 B`, JavaScript `96,879 B`, CSS `4,366 B`, DOM `256`, CLS `0.000527`, long tasks `300 ms`; all under budget.
+- Four viewports passed without horizontal overflow: desktop 1440×900, laptop 1024×768, tablet 768×1024 and mobile 390×844.
+- Browser quality Artifact ID `8262563434`, digest `sha256:8be42c52637dca17f633a499e675ed6f68ef925b0541ac225e69e3cf9e2a9e25`.
+- Web Artifact ID `8262557566`, digest `sha256:c7e254c003e840416975b878b216646629cf9b9fd8a70eac11fb25a49f5f95c9`.
+- CI diagnostics Artifact ID `8262557472`, digest `sha256:5bc9762d657a0dd4e0c9fd1ee14904bca9ba45c19765159ea1873d256dc14873`.
+- G7 is accepted.
+
 ## Current work
 
-G7 is running. The next batch adds a browser-driven quality job covering shared paper state, IndexedDB reload persistence, offline/recovery, accessibility tree, keyboard operation, deterministic performance budgets and four required viewport screenshots.
+G8 is running. The exact G7 screenshots show a functionally complete but visually under-resolved terminal: desktop hierarchy is too flat, laptop/tablet panel balance pushes key controls below the fold, and CI screenshots lack readable CJK fonts. The next batch installs screenshot fonts in CI and performs the first screenshot-driven structural/interaction refinement while preserving every G7 gate.
