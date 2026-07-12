@@ -1,4 +1,11 @@
 import { SCHEMA_VERSION, type Ticker } from '@atlas-x/contracts';
+import {
+  decimalString,
+  divideDecimal,
+  multiplyDecimal,
+  parseDecimal,
+  subtractDecimal,
+} from '@atlas-x/domain';
 import type { MarketDataSnapshot } from '@atlas-x/market-data';
 import { marketFixture } from './model.js';
 
@@ -10,6 +17,13 @@ export interface MarketPresentation {
   readonly tone: MarketPresentationTone;
   readonly connectionLabel: string;
   readonly ticker: Ticker | null;
+}
+
+export interface TickerDisplayMetrics {
+  readonly price: string;
+  readonly changeAmount: string;
+  readonly changePercent: string;
+  readonly direction: 'positive' | 'negative' | 'neutral';
 }
 
 const CONNECTION_LABELS: Readonly<Record<MarketDataSnapshot['connection']['state'], string>> = {
@@ -28,6 +42,30 @@ function providerName(provider: string | undefined): string {
   if (provider === undefined) return '未知来源';
   if (provider.toLowerCase() === 'coinbase') return 'Coinbase';
   return provider;
+}
+
+export function formatMarketDecimal(value: string): string {
+  const canonical = decimalString(parseDecimal(value));
+  const negative = canonical.startsWith('-');
+  const unsigned = negative ? canonical.slice(1) : canonical;
+  const [integer = '0', fraction] = unsigned.split('.');
+  const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${negative ? '-' : ''}${grouped}${fraction === undefined ? '' : `.${fraction}`}`;
+}
+
+export function tickerDisplayMetrics(ticker: Ticker): TickerDisplayMetrics {
+  const changeAmount = subtractDecimal(ticker.last, ticker.open24h);
+  const changePercent = multiplyDecimal(divideDecimal(changeAmount, ticker.open24h), '100');
+  const roundedPercent = decimalString(parseDecimal(changePercent).toDecimalPlaces(2));
+  const comparison = parseDecimal(changeAmount).comparedTo(0);
+  const direction = comparison > 0 ? 'positive' : comparison < 0 ? 'negative' : 'neutral';
+  const prefix = comparison > 0 ? '+' : '';
+  return {
+    price: formatMarketDecimal(ticker.last),
+    changeAmount: `${prefix}${formatMarketDecimal(changeAmount)}`,
+    changePercent: `${prefix}${roundedPercent}%`,
+    direction,
+  };
 }
 
 export function createFixtureMarketSnapshot(): MarketDataSnapshot {
