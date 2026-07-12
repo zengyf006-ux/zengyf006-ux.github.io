@@ -26,6 +26,7 @@ jobs:
     defaults:
       run:
         working-directory: atlas-x-unified
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,17 +36,36 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: atlas-x-unified/package-lock.json
+      - name: Prepare diagnostic logs
+        run: mkdir -p ci-logs
       - name: Install locked dependencies
-        run: npm ci
+        run: set -o pipefail; npm ci 2>&1 | tee ci-logs/npm-ci.log
       - name: Rebuild deterministic foundation artifacts
         run: |
-          node scripts/apply-foundation-rework.mjs
-          npm run generate:contracts
+          set -o pipefail
+          {
+            node scripts/apply-foundation-rework.mjs
+            npm run generate:contracts
+          } 2>&1 | tee ci-logs/generated.log
       - name: Reject generated drift
         working-directory: ${{ github.workspace }}
         run: git diff --exit-code -- atlas-x-unified/openapi atlas-x-unified/src/generated atlas-x-unified/vectors atlas-x-unified/test/contracts.test.ts atlas-x-unified/test/golden-vectors.test.ts atlas-x-unified/package-lock.json
-      - name: Verify deterministic unified workspaces and Web build
-        run: npm run verify
+      - name: Strict TypeScript
+        run: set -o pipefail; npm run typecheck 2>&1 | tee ci-logs/typecheck.log
+      - name: Unit contract and vector tests
+        run: set -o pipefail; npm test 2>&1 | tee ci-logs/tests.log
+      - name: Production Web build
+        run: set -o pipefail; npm run build:web 2>&1 | tee ci-logs/build.log
+      - name: Dependency audit
+        run: set -o pipefail; npm run audit 2>&1 | tee ci-logs/audit.log
+      - name: Upload CI diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-x-unified-ci-logs-${{ github.sha }}
+          path: atlas-x-unified/ci-logs
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload production Web build
         uses: actions/upload-artifact@v4
         with:
