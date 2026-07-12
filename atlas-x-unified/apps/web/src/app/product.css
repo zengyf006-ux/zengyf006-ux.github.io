@@ -1,4 +1,29 @@
-.chart { background: #fff; }
+.chart { position: relative; background: #fff; }
+.chart-source-note {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  right: 12px;
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 3px 8px;
+  border: 1px solid #d9b86f;
+  border-radius: 999px;
+  background: rgba(255, 249, 234, .94);
+  color: #795600;
+  font-size: 10px;
+  font-weight: 760;
+}
+.source-badge.tone-positive { border-color: #98cbb8; background: #eefaf5; color: var(--green); }
+.source-badge.tone-warning { border-color: #d9b86f; background: #fff9ea; color: #795600; }
+.source-badge.tone-negative { border-color: #e1a5a1; background: #fff2f1; color: var(--red); }
+.panel-source-warning {
+  margin: 10px 14px 14px;
+  color: #795600;
+  font-size: 10px;
+  line-height: 1.45;
+}
 .order-types { flex-wrap: wrap; }
 .order-types button { min-height: 34px; }
 .input-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 0 14px 12px; padding: 3px; border-radius: 8px; background: var(--soft); }
@@ -31,6 +56,7 @@
   .terminal-grid .book, .terminal-grid .ticket, .terminal-grid .trades { border-top: 0; }
   .market-stage { min-height: calc(100vh - 160px); }
   .chart { min-height: 0; }
+  .chart-source-note { top: 8px; right: 8px; }
   .order-types button { flex: 1 1 calc(50% - 4px); }
   .settings-grid { grid-template-columns: 1fr; }
   .settings-grid article { padding: 18px; }
