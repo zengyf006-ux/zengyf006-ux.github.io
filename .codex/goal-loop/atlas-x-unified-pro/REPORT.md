@@ -70,6 +70,20 @@
 - Actions Run `29198256110`: `verify` success; production Web build Artifact success; `public-market-smoke` success.
 - Artifact ID `8261621959`, digest `sha256:619ee936aa5b21dfdb5a7f05c481f1cc7980998e514d737b219e287b44262888`.
 
+## G5 — Web product, batch 3 truthful market rendering
+
+- Added a persistent IndexedDB cache that accepts only `real` public market snapshots.
+- Connected the injected Coinbase adapter to a React market provider without replacing global WebSocket or fetch.
+- Rendered explicit `real`, `cachedReal`, `fixture`, offline, delayed, stale and error status with source and latency detail.
+- Public ticker price, amount change and percentage change use shared decimal-safe calculations.
+- Public order-book and trade events now drive the terminal; fixture data is used only before public events arrive and is visibly labeled.
+- Retained order-book/trade data is relabeled `cachedReal` when the connection falls back to cache; unknown offline state clears retained public events.
+- Split CI into install, generation, drift, strict typecheck, tests, production build and audit steps with downloadable diagnostic logs.
+- Exact verified Head: `37cca57090a7519fbf6e6423b03da71d8112a63e`.
+- Actions Run `29199258526`: 143 tests, strict typecheck, production build, audit, diagnostics, build Artifact and public market smoke all success.
+- Web Artifact ID `8261899305`, digest `sha256:496c73381c678494913138cc1ccbf95c2415324f441de830ae6794a372fc3c4b`.
+- CI diagnostics Artifact ID `8261899047`, digest `sha256:26a219e31b8dc8854b3230d30a27ef8edb35998ba644e6be731db474825365ec`.
+
 ## Current work
 
-G5 remains running. The next batch connects the existing real/cached/fixture market-data state machine to the React application through injected services, without allowing fixture data to appear as real.
+G5 remains running. The next batch adds a read-only public candle adapter and replaces the fixture chart while preserving exact source, cache and offline labels.
