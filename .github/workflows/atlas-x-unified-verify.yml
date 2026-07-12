@@ -22,6 +22,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: atlas-x-unified
@@ -45,6 +46,13 @@ jobs:
         run: git diff --exit-code -- atlas-x-unified/openapi atlas-x-unified/src/generated atlas-x-unified/vectors atlas-x-unified/test/contracts.test.ts atlas-x-unified/test/golden-vectors.test.ts atlas-x-unified/package-lock.json
       - name: Verify deterministic unified workspaces and Web build
         run: npm run verify
+      - name: Upload production Web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-x-unified-web-${{ github.sha }}
+          path: atlas-x-unified/apps/web/dist
+          if-no-files-found: error
+          retention-days: 14
 
   public-market-smoke:
     needs: verify
