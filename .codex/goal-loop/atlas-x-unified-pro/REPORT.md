@@ -1,155 +1,98 @@
 # ATLAS X Unified Pro — Work Report
 
-## Baseline: 2026-07-12
+## Repository boundary
 
 - Repository: `zengyf006-ux/zengyf006-ux.github.io`
 - Branch: `atlas-x-unified-pro`
-- Draft PR: #15
-- Base: `main` at `3a5b2d7120c46b000abb4767f09b190ecb203d03`
+- Draft PR: #15 → `main`
+- Base at project start: `3a5b2d7120c46b000abb4767f09b190ecb203d03`
+- No merge, production deployment, real-fund integration, Supabase/gateway modification or perpetual-contract implementation was performed.
+
+## Baseline
+
 - Starting Head: `2f9f4993296eeee55d25f58248682cc7d48ee43a`
-- Starting Actions: `ATLAS X Unified Verify`, Run `29190101359`, success
-- Starting baseline: 63 Vitest tests and 38 Golden Vectors.
+- Starting Run: `29190101359`
+- Starting tests: 63 Vitest tests and 38 Golden Vectors.
 
-## G0 — Goal loop
+## G0–G2 — goal loop, contracts and workspace architecture
 
-- `41b8243` — durable goal, graph, report, acceptance, current status and evidence directory.
+- Durable goal-loop state was established under `.codex/goal-loop/atlas-x-unified-pro/`.
+- Contract generation, decimal format, truthfulness variants, statuses, stable errors and risk rules were corrected.
+- Six strict workspaces were established with tested one-way dependencies and typed ports.
+- G1 exact Head `e874c3275f69e3f1e35ba763ae97250f983c05d5`, Run `29192009639`.
+- G2 exact Head `51e9d1b754701e2b890de0ee572b6a359869a576`, Run `29192393389`.
 
-## G1 — Foundation rework
+## G3 — truthful resilient market data
 
-- Commits: `9842891`, `5985e58`, `8d3f8c4`, `c84c7dc`, `53ad963`, `e874c32`.
-- Fixed `atlas.unified.v1`, `atlas-decimal-34`, strict DataSource variants, complete statuses, stable errors, fee-aware risk and multiline contract docs.
-- Exact verified Head: `e874c3275f69e3f1e35ba763ae97250f983c05d5`; Run `29192009639` success.
+- Added deterministic fixture mode, injected Coinbase public adapter/parser, strict source truthfulness, bounded reconnect, sequence/staleness degradation and truthful cached-real fallback.
+- Exact Head `6e1e98ead4e157311571a05d29445c344f6deafb`, Run `29193464887`.
 
-## G2 — Workspace boundaries
+## G4 — event-sourced paper ledger
 
-- Commits: `345f9e5`, `2935702`, `c7e7de3`, `51e9d1b`.
-- Six strict workspaces with tested one-way dependencies and typed ports.
-- Exact verified Head: `51e9d1b754701e2b890de0ee572b6a359869a576`; Run `29192393389` success.
+- Added deterministic replay, idempotent commands/events, reservations, market/limit/stopMarket/stopLimit lifecycle, partial/full fills, cancellation, fees, cost/PnL and confirmation-gated reset.
+- Added memory and IndexedDB stores; persistence failures do not mutate in-memory truth.
+- Exact Head `7a279fa0552924b990f64bd61cc876baace0bf40`, Run `29195070635`.
 
-## Contract generation correction
+## G5 — complete Web product and public candles
 
-- `a0231a7` added the regression proving `openapi-typescript` was replacing business const values with schema names.
-- `9a29aa5` retained strict `oneOf` + `const` validation while restoring generated values such as `real`, `market` and `stopLimit`.
-- `21b9082` restored read-only verification.
+- Delivered terminal, markets, watchlist, assets, orders, fills, alerts, settings, data health and help.
+- Added all four paper order types and quantity/amount/percentage sizing with decimal-safe estimates and confirmation.
+- Replaced isolated component ledgers with one shared event-sourced account and IndexedDB persistence.
+- Added mobile chart/book/order/trades task navigation.
+- Connected public ticker, order book and trade rendering with explicit `real`, `cachedReal`, fixture, offline, delayed, stale and error states.
+- Added strict Coinbase candles for 1m, 5m, 15m, 1h, exact synthetic 4h and 1d; candle geometry remains decimal-safe.
+- Added truthful candle cache, request latency, browser online/offline recovery and duplicate-refresh suppression.
+- Exact accepted Head `822c8cc06c5e6a4b7fbae81d65d628f86ea0f6d6`, Run `29199915453`, 24 files / 164 tests.
 
-## G3 — Truthful resilient market data
+## G6 — installable PWA
 
-- Commits: `f704aab`, `5122e41`, `6e1e98e`, `ffbf559`.
-- Injected public WebSocket adapter, Coinbase parser, explicit truthfulness, bounded reconnect, sequence/staleness degradation and truthful cache fallback.
-- Local clean verification: 12 test files / 115 tests, all workspace strict typechecks, drift and audit passed.
-- Exact verified implementation Head: `6e1e98ead4e157311571a05d29445c344f6deafb`.
-- Run `29193464887`: `verify` and `public-market-smoke` success.
+- Added standalone manifest, normal/maskable icons and application identity.
+- Added a versioned same-origin service worker limited to eligible GET application-shell/static resources.
+- Excluded authorization, cookie, API, auth, order, account and cross-origin market traffic from caching.
+- Added explicit install, offline, recovery and update-ready UI; update activation remains user-approved.
+- Exact Head `1ac0bb07ef94010712569237846a9fe52592140b`, Run `29200295123`, 25 files / 168 tests.
 
-## G4 — Event-sourced paper trading ledger
+## G7 — browser and quality gates
 
-- `6ecbd3b` — event-sourced ledger, memory/IndexedDB stores, lifecycle, reservations, fills, fees, cost/PnL and reset safety.
-- `794692c` — removed temporary materialization workflow and restored read-only CI.
-- `7a279fa` — paper trading architecture and milestone evidence.
-- Deterministic replay, idempotent commands/events, sequence integrity, exact cash/asset reservations, partial/full fills, cancellation, stop triggers and stable domain errors.
-- IndexedDB reload is tested across instances; persistence failures do not mutate in-memory truth.
-- Local verification: 14 test files / 137 tests, 56 Golden Vectors, all workspace strict typechecks, generated drift clean, audit 0.
-- Exact verified Head: `7a279fa0552924b990f64bd61cc876baace0bf40`.
-- Actions Run `29195070635`: `verify` success; `public-market-smoke` success; workflow permissions read-only.
+- Added pinned Playwright browser tooling and a read-only CI quality job.
+- Added paper-flow E2E, shared-state checks, IndexedDB reload persistence, PWA offline/recovery, DOM/accessibility-tree audit, keyboard traversal, performance budgets and four screenshots.
+- External browser market traffic is isolated in deterministic browser tests; independent live Coinbase smoke remains separate.
+- Exact Head `3cf2c80aee74337c5571154b6e1c392bf765b563`, Run `29201636493`.
+- Evidence: 18 keyboard controls with visible focus; no unnamed/unlabeled accessibility defects; four viewports without horizontal overflow.
 
-## G5 — Web product, batches 1-2
+## G8 — screenshot-driven structural redesign
 
-- `2a8f32a` — established the React/Vite professional trading shell and product pages.
-- `a757165` — locked React/Vite dependencies after full verification.
-- `962b151` — restored read-only Web verification and public market smoke.
-- `bb6294c` / `8fa22db` — expanded Web acceptance for all four order types and exact input modes.
-- `679eded` / `fd32fec` — implemented decimal-safe quantity, amount and buy/sell percentage sizing plus four draft variants.
-- `2333d59` / `3e06dff` / `418f0db` — replaced per-component memory ledgers with one shared Context ledger and IndexedDB persistence with truthful memory fallback.
-- `08e70ce` / `da05fc3` — completed the first paper trading workflow, assets/orders/fills pages, alerts, settings, reset confirmation and mobile reachability.
-- `940ea4f`, `3ec244d`, `050306a`, `4fae14e` — dedicated mobile task switching, responsive product styles and complete mobile navigation.
-- `92adbce` — added production build Artifact publication while retaining read-only permissions.
-- Fixture remains visibly labeled and cannot satisfy the independent public Coinbase smoke.
-- Market, limit, stopMarket and stopLimit are available with quantity, amount and percentage input modes, decimal-safe estimates and confirmation.
-- A single event-sourced account is shared across terminal, assets, orders, fills and settings; IndexedDB reload is used where available.
-- Mobile trading uses task panes for chart, book, order and trades rather than one unbounded vertical terminal.
-- Exact verified Head: `371b94bd7d0cccb13f13dad24703def13a08aba6`.
-- Actions Run `29198256110`: `verify` success; production Web build Artifact success; `public-market-smoke` success.
-- Artifact ID `8261621959`, digest `sha256:619ee936aa5b21dfdb5a7f05c481f1cc7980998e514d737b219e287b44262888`.
+- Installed Noto CJK for readable Chinese CI screenshots.
+- Reworked desktop into a chart-led workspace with a market rail and full-height paper ticket.
+- Kept chart and ticket above the laptop fold; enabled explicit task panes on tablet/mobile.
+- Exact Head `dbf2b24d6db2ff0364aa85dc76a63adb6e237448`, Run `29201931971`.
+- All prior functional, accessibility, persistence, recovery, performance and viewport gates remained green.
 
-## G5 — Web product, batch 3 truthful market rendering
+## G9 — screenshot-driven final polish
 
-- Added a persistent IndexedDB cache that accepts only `real` public market snapshots.
-- Connected the injected Coinbase adapter to a React market provider without replacing global WebSocket or fetch.
-- Rendered explicit `real`, `cachedReal`, `fixture`, offline, delayed, stale and error status with source and latency detail.
-- Public ticker price, amount change and percentage change use shared decimal-safe calculations.
-- Public order-book and trade events now drive the terminal; fixture data is used only before public events arrive and is visibly labeled.
-- Retained order-book/trade data is relabeled `cachedReal` when the connection falls back to cache; unknown offline state clears retained public events.
-- Split CI into install, generation, drift, strict typecheck, tests, production build and audit steps with downloadable diagnostic logs.
-- Exact verified Head: `37cca57090a7519fbf6e6423b03da71d8112a63e`.
-- Actions Run `29199258526`: 143 tests, strict typecheck, production build, audit, diagnostics, build Artifact and public market smoke all success.
-- Web Artifact ID `8261899305`, digest `sha256:496c73381c678494913138cc1ccbf95c2415324f441de830ae6794a372fc3c4b`.
-- CI diagnostics Artifact ID `8261899047`, digest `sha256:26a219e31b8dc8854b3230d30a27ef8edb35998ba644e6be731db474825365ec`.
+- Removed duplicated desktop source emphasis without hiding truthfulness.
+- Replaced ticket dead space with an explicit local-paper/no-real-funds boundary.
+- Compressed and corrected mobile runtime/header/task/bottom navigation.
+- Exact Head `2643b59313af011fe5e08afbab0171c24fa0cab4`, Run `29202179426`.
+- Performance: FCP `296 ms`, load `115.1 ms`, transfer `104,362 B`, JS `96,878 B`, CSS `6,154 B`, DOM `256`, CLS `0.000438`, long tasks `186 ms`.
 
-## G5 — Web product, batch 4 public candles and recovery
+## G10 — exact-Head evidence and independent review package
 
-- Added a strict Coinbase public candle adapter for 1m, 5m, 15m, 1h, synthetic exact 4h and 1d intervals.
-- Added IndexedDB candle persistence that accepts only matching `real` public candles.
-- Replaced the prototype bar chart with decimal-safe candle bodies and wicks derived from contract strings without native floating-point financial calculations.
-- The rendered chart identifies `real`, `cachedReal` and fixture data, exposes provider, interval, count and request latency, and preserves the latest real candle cache during outages.
-- Browser online/offline events now cause immediate candle fallback and recovery; overlapping refresh requests are suppressed.
-- Added parser, aggregation, malformed-data, cache, chart-geometry, latency and offline-presentation tests.
-- Exact verified implementation Head: `822c8cc06c5e6a4b7fbae81d65d628f86ea0f6d6`.
-- Actions Run `29199915453`: 24 test files / 164 tests, all strict typechecks, production build, audit, diagnostics, Web Artifact and public market smoke passed.
-- Web Artifact ID `8262077478`, digest `sha256:692f16eea83aa70678f50fc56fd26e9ee3d9199f6bc221b7276ebab0f12db3cd`.
-- CI diagnostics Artifact ID `8262077374`, digest `sha256:e9ebcac2e5273f762a8fadca87a57fb6e7d16d2e69d20faddf9785a3aa5cb398`.
-- G5 is accepted. E2E/a11y/performance gates remain assigned to G7; screenshot-led redesign remains assigned to G8 and G9.
+- Changed every workflow job to checkout and assert the exact PR Head rather than a synthetic merge ref.
+- Added final-evidence validation tests and a production evidence builder.
+- The final package validates the exact Head, PWA build, browser report, four screenshots, goal-loop state and checksum set.
+- It contains `MANIFEST.json`, `EXACT-HEAD.txt`, `REVIEW.md`, `CHECKSUMS.sha256`, production build, browser evidence/trace, CI logs, source proof and goal-loop state.
+- Initial strict failures were fixed without weakening gates: missing `.mjs` declaration and an overflow regression test that did not exceed the intentional one-pixel rendering tolerance.
+- Exact implementation/evidence Head `beb641e63ee006e3683544185cbdd71edc0b228e`, Run `29202495984`.
+- All four jobs passed: `verify`, `public-market-smoke`, `web-quality`, `final-evidence`.
+- Final result: 26 Vitest files / 171 tests plus exact-Head browser and artifact validation.
+- Final browser performance: FCP `308 ms`, load `106.8 ms`, transfer `103,632 B`, JS `96,878 B`, CSS `6,154 B`, DOM `256`, CLS `0.0004443`, long tasks `84 ms`.
+- Independent review Artifact `8262801676`, digest `sha256:9f6603ab5d9a160ea707aa82aac007cbff47f7bc74c22501a83f83da0a438f23`.
+- Browser quality Artifact `8262799335`, digest `sha256:8efe85eb40cbadc1c88fe07ff1e794740f1a4fab51802545fdb61e0c1cb35ce5`.
+- Production Web Artifact `8262792751`, digest `sha256:0be856e70b58879b9301fc70e55052f21f2d121042cc072dad60eebebe78d988`.
+- CI diagnostics Artifact `8262792562`, digest `sha256:d22e4ce43f4e2e95481cbf2ee70ac4c69637309213f64ba876b407de486b31cc`.
+- The Draft PR title/body were corrected to the actual Unified Web/PWA scope and safety boundary.
 
-## G6 — Installable PWA and safe offline shell
+## Current state
 
-- Added a standalone Web App Manifest, application metadata, normal SVG icon and maskable SVG icon.
-- Added a versioned service worker that installs the public application shell, uses network-first navigation, caches same-origin static GET responses and does not intercept cross-origin public market traffic.
-- Explicitly excludes authorization, cookie, API, auth, orders and accounts requests from service-worker caching.
-- Added browser-visible install, offline, recovery and update states.
-- Updates remain waiting until the user chooses `安全更新`; a controller replacement reload occurs only after that explicit action.
-- Added deterministic PWA state and policy tests plus a production artifact gate for manifest, shell, registration and activation boundaries.
-- An initial gate failure at `dd1cba9` exposed a wrong `dist/assets` path in the verifier; the verifier was corrected without weakening any assertion.
-- Exact verified implementation Head: `1ac0bb07ef94010712569237846a9fe52592140b`.
-- Actions Run `29200295123`: 25 test files / 168 tests, all strict typechecks, production build, PWA artifact gate, audit and public market smoke passed.
-- PWA gate evidence: `[pwa-build] shell=5 js=1 css=1 manifest=standalone update=user-approved`.
-- Web Artifact ID `8262186843`, digest `sha256:cc0f4465e1c853430e82cc3531d5a81f761c06c7035a403c0565f4b91041b7de`.
-- CI diagnostics Artifact ID `8262186688`, digest `sha256:13b1610de9b3e1b6501829ca657b4517ff49c5b09e63988148f5f08c31512df7`.
-- G6 is accepted.
-
-## G7 — Browser-driven quality gates
-
-- Added pinned Python Playwright dependencies and a system-Chrome browser-quality runner without changing application dependencies.
-- Added deterministic paper order E2E, cross-page shared state, IndexedDB reload persistence, service-worker offline shell and recovery checks.
-- Added DOM and accessibility-tree audits, keyboard traversal with focus visibility, performance budgets and four required viewport screenshots.
-- Browser traffic is isolated from external market services while the independent Coinbase public smoke remains a separate live job.
-- Initial failures exposed three defects in the test harness itself: a WebSocket route deadlock, an order-button visibility assumption on the mobile chart pane and synthetic HTTP 503 console noise. Each was repaired without weakening product assertions.
-- Exact verified implementation Head: `3cf2c80aee74337c5571154b6e1c392bf765b563`.
-- Actions Run `29201636493`: `verify`, `public-market-smoke` and `web-quality` all passed.
-- Retained 25 test files / 168 tests; strict typecheck, production build, PWA verification and audit passed.
-- Browser evidence: paper position persisted after reload; service worker controlled the page, offline shell rendered and recovery notice appeared.
-- Accessibility evidence: zero unnamed visible controls, unlabeled inputs, duplicate IDs, missing image alternatives or unnamed accessibility-tree controls; 18 unique keyboard controls with 18 visible focus stops.
-- Performance evidence: FCP `532 ms`, load `295.1 ms`, transfer `102,575 B`, JavaScript `96,879 B`, CSS `4,366 B`, DOM `256`, CLS `0.000527`, long tasks `300 ms`; all under budget.
-- Four viewports passed without horizontal overflow: desktop 1440×900, laptop 1024×768, tablet 768×1024 and mobile 390×844.
-- Browser quality Artifact ID `8262563434`, digest `sha256:8be42c52637dca17f633a499e675ed6f68ef925b0541ac225e69e3cf9e2a9e25`.
-- Web Artifact ID `8262557566`, digest `sha256:c7e254c003e840416975b878b216646629cf9b9fd8a70eac11fb25a49f5f95c9`.
-- CI diagnostics Artifact ID `8262557472`, digest `sha256:5bc9762d657a0dd4e0c9fd1ee14904bca9ba45c19765159ea1873d256dc14873`.
-- G7 is accepted.
-
-## G8 — Screenshot-driven structure and interaction
-
-- Installed Noto CJK in the browser-quality runner so screenshots contain reviewable Chinese text.
-- Added a screenshot-specific visual layer without removing the previously verified product behavior.
-- Desktop became a chart-led workspace with a center market rail and full-height paper order ticket.
-- Laptop keeps chart and ticket above the fold; order book and trades continue below.
-- Tablet and mobile use explicit task panes; the browser gate now verifies the order pane at both widths before capturing the chart.
-- Exact verified implementation Head: `dbf2b24d6db2ff0364aa85dc76a63adb6e237448`.
-- Actions Run `29201931971`: `verify`, `public-market-smoke` and `web-quality` all passed.
-- Retained 25 test files / 168 tests plus paper flow, reload persistence, offline recovery, accessibility, keyboard and four-viewport gates.
-- Performance evidence: FCP `412 ms`, load `119.9 ms`, transfer `103,062 B`, JavaScript `96,879 B`, CSS `5,583 B`, DOM `256`, CLS `0.000781`, long tasks `175 ms`; all under budget.
-- Exact readable screenshots show no horizontal overflow at 1440×900, 1024×768, 768×1024 and 390×844; console and page errors are zero.
-- Browser quality Artifact ID `8262648834`, digest `sha256:5b1f7eaea508c6e569d2d94f094f6033455c002f8e147658cc6ed03c8fc0b7c9`.
-- Web Artifact ID `8262641527`, digest `sha256:971ef1aaabf938c488e9552ad6b88cc3217f9bb6f042437630fe2be4ed3681e4`.
-- CI diagnostics Artifact ID `8262641291`, digest `sha256:51ccf168f97eab55fae4c0fdec3c653264b2a29f6fa58d8a7a97563ad7f75771`.
-- G8 is accepted.
-
-## Current work
-
-G9 is running. The G8 screenshots are structurally sound, but still show duplicated source-status emphasis, unused lower space in the desktop/laptop ticket and a dense stacked status/header/task area on mobile. The second iteration will polish those areas without hiding truthfulness or weakening any quality gate.
+G0–G10 are complete. This final state-only synchronization commit is revalidated by the same exact-Head workflow; GitHub’s latest PR Head and successful run supersede the historical evidence Head above. G11 remains a permission gate only: PR #15 stays Draft, open and unmerged until explicit authorization identifies a permitted merge or deployment action.
