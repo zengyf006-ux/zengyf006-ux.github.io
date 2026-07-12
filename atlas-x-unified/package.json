@@ -12,9 +12,10 @@
     "typecheck:workspaces": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
     "build:web": "npm run build --workspace @atlas-x/web",
+    "verify:pwa": "node scripts/verify-pwa-build.mjs",
     "audit": "npm audit --audit-level=high",
     "smoke:public": "node scripts/smoke-public-market.mjs",
-    "verify": "npm run check:generated && npm run typecheck && npm test && npm run build:web && npm run audit"
+    "verify": "npm run check:generated && npm run typecheck && npm test && npm run build:web && npm run verify:pwa && npm run audit"
   },
   "dependencies": {
     "ajv": "8.20.0",
