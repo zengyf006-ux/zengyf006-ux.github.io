@@ -1,0 +1,64 @@
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const canvas=$('game');
+const ctx=canvas.getContext('2d',{alpha:false,desynchronized:true});
+const ui={
+ score:$('score'),combo:$('combo'),level:$('level'),waveName:$('waveName'),mission:$('mission'),xpLabel:$('xpLabel'),xpFill:$('xpFill'),
+ weaponName:$('weaponName'),damageValue:$('damageValue'),critValue:$('critValue'),chainValue:$('chainValue'),skillBtn:$('skillBtn'),skillText:$('skillText'),
+ voiceBtn:$('voiceBtn'),voiceState:$('voiceState'),pauseBtn:$('pauseBtn'),message:$('message'),voiceBubble:$('voiceBubble'),voiceText:$('voiceText'),
+ intro:$('intro'),startBtn:$('startBtn'),quietBtn:$('quietBtn'),upgrade:$('upgrade'),upgradeCards:$('upgradeCards'),pause:$('pause'),resumeBtn:$('resumeBtn'),restartBtn:$('restartBtn'),
+ bossHud:$('bossHud'),bossName:$('bossName'),bossPhase:$('bossPhase'),bossFill:$('bossFill')
+};
+const TAU=Math.PI*2;
+let W=0,H=0,DPR=1,last=0,clock=0;
+const state={running:false,paused:false,choosing:false,sound:true,voice:true,wave:1,waveTime:0,waveDuration:36,waveCleared:false,score:0,combo:1,chain:0,comboTimer:0,kills:0,level:1,xp:0,xpNeed:40,skill:100,skillCooldown:0,shake:0,flash:0,misses:0};
+const player={damage:1,slashWidth:13,crit:.05,chain:0,pulse:0,slow:.0,xpGain:1,skillGain:1,comboGrace:1.45,weapon:'裂影刃',attackCd:.08};
+const input={down:false,x:0,y:0,px:0,py:0,lastHit:0};
+let monsters=[],particles=[],rings=[],trails=[],texts=[],boss=null,stars=[];
+const MAX_MONSTERS=28,MAX_PARTICLES=220;
+const colors={ink:'#f7f5ef',amber:'#f5b45f',red:'#e45f67',cyan:'#6eddec',violet:'#9178e8',green:'#65d69b',blue:'#76a8ff',mud:'#b38a63'};
+const waveNames=['游荡潮','地底躁动','异化感染','王座降临'];const modifiers=[{id:'normal',name:'标准夜',speed:1,hp:1,xp:1,spawn:1},{id:'swarm',name:'群潮',speed:1.08,hp:.82,xp:1,spawn:1.35},{id:'armor',name:'重甲夜',speed:.92,hp:1.28,xp:1.18,spawn:.9},{id:'rush',name:'狂奔',speed:1.34,hp:.92,xp:1.25,spawn:1.08},{id:'plague',name:'治愈瘴',speed:1,hp:1.08,xp:1.15,spawn:1.08}];let currentModifier=modifiers[0];
+const monsterInfo={
+ slime:{name:'软泥怪',xp:7,score:8,hp:2,speed:24},
+ bat:{name:'蝠翼兽',xp:8,score:10,hp:1,speed:50},
+ burrow:{name:'地穴兽',xp:10,score:14,hp:3,speed:30},
+ beetle:{name:'甲壳兽',xp:12,score:16,hp:4,speed:22},
+ healer:{name:'治愈灵',xp:14,score:18,hp:3,speed:18},
+ mimic:{name:'宝箱怪',xp:16,score:22,hp:5,speed:20},
+ leech:{name:'噬能虫',xp:9,score:12,hp:2,speed:42}
+};
+const voiceLines={
+ start:['猎场开启。先别想太多，让手指接管。','锋哥，第一波来了。把烦躁全部留在这里。','夜渊已经打开。今天只管猎杀，不管别的。'],
+ combo10:['十连击。节奏已经起来了。','漂亮，十连击。继续压住它们。','手感来了。保持现在这个速度。'],
+ combo25:['二十五连击。你已经彻底进入状态。','这波很稳。怪物已经跟不上你了。','别停，猎场现在完全属于你。'],
+ level:['升级完成。你的攻击方式已经变了。','新的能力已经装上。现在更狠一点。','进化完成。下一波会更有意思。'],
+ wave:['新一波开始。怪物的动作和能力已经变化。','猎场升压。注意新的怪物组合。','下一波来了。别用上一波的打法。'],
+ boss:['王座怪物出现。它会变形、召唤和转移弱点。','Boss降临。先观察动作，再把它拆开。','高压目标出现。稳住节奏，逐层击穿。'],
+ bossKill:['王座已经崩塌。这一轮，你赢得很干净。','Boss击破。漂亮，这不是运气。','空洞王倒下了。你的进化路线已经成型。'],
+ skill:['震荡脉冲释放。把这一片全部推回去。','脉冲展开。现在轮到怪物后退。','猎场震荡。清掉眼前这一波。'],
+ danger:['别急，漏掉几个不算什么。把节奏重新接回来。','不用追每一只。稳住，比乱点更强。'],
+ elite:['异化怪物出现。先处理它，别让它带动全场。','精英目标进场。它的行为和普通怪不一样。']
+};
+let speechVoice=null,speechCooldown=0,recentVoice=[],humanPack=null;const seenTypes=new Set();const monsterTips={burrow:'注意地面。地穴兽露头时才是攻击窗口。',beetle:'甲壳兽正面有护甲，先把外壳打碎。',healer:'蓝色治愈灵会给怪物回血，优先清除。',mimic:'宝箱怪只是伪装。它张嘴后会突然冲刺。',leech:'噬能虫会偷走技能能量，别让它靠近出口。'};
+
+function resize(){
+ W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,1.35);
+ canvas.width=Math.floor(W*DPR);canvas.height=Math.floor(H*DPR);canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);
+ if(!stars.length){for(let i=0;i<54;i++)stars.push({x:Math.random(),y:Math.random(),z:Math.random()});}
+}
+addEventListener('resize',resize,{passive:true});resize();
+const rand=(a,b)=>Math.random()*(b-a)+a;const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
+function segDist(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy||1;let t=((px-ax)*dx+(py-ay)*dy)/l;t=clamp(t,0,1);return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));}
+
+function initAudio(){if(!state.sound)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!initAudio.ctx)initAudio.ctx=new AC();if(initAudio.ctx.state==='suspended')initAudio.ctx.resume();}
+function tone(f,d=.07,type='sine',gain=.025,slide=0,delay=0){const a=initAudio.ctx;if(!state.sound||!a)return;const t=a.currentTime+delay,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(45,f+slide),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(gain,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.03);}
+function noise(d=.055,g=.012,cut=1800){const a=initAudio.ctx;if(!state.sound||!a)return;const len=Math.floor(a.sampleRate*d),buf=a.createBuffer(1,len,a.sampleRate),data=buf.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*(1-i/len);const s=a.createBufferSource(),f=a.createBiquadFilter(),v=a.createGain();s.buffer=buf;f.type='lowpass';f.frequency.value=cut;v.gain.setValueAtTime(g,a.currentTime);v.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);s.connect(f).connect(v).connect(a.destination);s.start();}
+function sfx(kind,weight=1){
+ if(kind==='slash'){tone(250,.06,'triangle',.022,260);noise(.045,.009,2300)}
+ if(kind==='hit'){tone(185+weight*35,.065,'triangle',.025,-70);tone(520+weight*60,.05,'sine',.015,-130,.012);noise(.05,.012,1700)}
+ if(kind==='crit'){tone(420,.07,'triangle',.03,260);tone(760,.1,'sine',.023,160,.035);noise(.065,.014,2300)}
+ if(kind==='chain'){tone(300,.08,'sawtooth',.02,380);tone(690,.09,'triangle',.023,160,.035)}
+ if(kind==='level'){tone(330,.12,'triangle',.025,180);tone(560,.13,'sine',.025,260,.08);tone(920,.16,'sine',.02,-100,.16)}
+ if(kind==='skill'){tone(72,.32,'sawtooth',.045,380);tone(220,.26,'triangle',.03,520,.09);noise(.2
