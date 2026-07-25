@@ -1,0 +1,43 @@
+cks[currentUpgradePicks.length-1]=route[(Math.random()*route.length)|0];}
+ ui.upgradeCards.innerHTML='';
+ currentUpgradePicks.forEach(u=>{const level=upLevel[u.id]||0,rarity=rarityForUpgrade();const maxSteps=u.max>=999?1:Math.max(1,Math.min(rarity.steps,u.max-level));const b=document.createElement('button');b.className='upgradeCard '+rarity.id;b.style.setProperty('--cardColor',u.color);b.style.setProperty('--cardGlow',u.color);b.innerHTML=`<span class="tag">${u.tag}</span><span class="rarity">${rarity.name}</span><div class="glyph">${u.glyph}</div><h3>${u.title}</h3><p>${u.desc}</p><small>${u.max>=999?'一次性补给':'当前 '+level+' / '+u.max}${maxSteps>1?' · 强化 ×'+maxSteps:''}</small>`;b.addEventListener('click',()=>{for(let i=0;i<maxSteps;i++)u.apply();if(u.max<999)upLevel[u.id]=Math.min(u.max,level+maxSteps);ui.upgrade.classList.add('hidden');state.choosing=false;state.paused=false;maybeEvolve();updateHUD();voice('level',true);last=performance.now();if(state.xp>=state.xpNeed)setTimeout(()=>gainXp(0),60);});ui.upgradeCards.appendChild(b);});
+ ui.rerollBtn.disabled=state.rerolls<=0;ui.rerollBtn.textContent=state.rerolls>0?'重铸一次':'本次重铸已用';
+}
+function openUpgrade(){if(state.choosing||state.gameOver)return;state.choosing=true;state.paused=true;state.rerolls=1;sfx('level');const recipe=selectedLoadout==='arc'?'弧光跳跃 2 + 致命直觉 2 → 雷狱猎刃':selectedLoadout==='pulse'?'余震核心 2 + 快速蓄能 2 → 虚空震刃':'锋刃加压 3 + 宽幅斩击 2 → 月蚀巨刃';ui.upgradeHint.textContent=player.evolution?'武器已进化为 '+player.weapon+'，继续强化它的优势。':recipe;renderUpgradeChoices();ui.upgrade.classList.remove('hidden');}
+function useSkill(){if(!state.running||state.paused)return;if(state.skill<100){message('震荡脉冲还没充满');return;}state.skill=0;state.flash=.65;state.shake=13;sfx('skill');vibrate([18,26,18]);voice('skill');for(const m of monsters){if(!m.dead){m.hp-=Math.max(2,player.damage*2);m.y-=70;addParticles(m.x,m.y,m.color,16,1.7);addRing(m.x,m.y,colors.amber,22,3);if(m.hp<=0)m.kill();}}if(boss){const raw=Math.max(8,player.damage*4),result=applyBossDirectDamage(boss,raw);state.score+=Math.round(result.damage*2*state.combo);boss.flash=1;if(boss.attackState==='charge'){boss.attackState='idle';boss.attackTimer=3.2;message('震荡脉冲打断蓄力',1000);}addParticles(boss.x,boss.y,colors.amber,36,1.8);if(result.killed)finishBoss();} }
+
+function finishRun(){
+ if(state.gameOver)return;
+ state.gameOver=true;state.paused=true;state.running=false;input.down=false;document.getElementById('app').classList.add('danger');
+ if(!state.sessionKillsSaved){profile.totalKills+=state.kills;state.sessionKillsSaved=true;}
+ profile.bestScore=Math.max(profile.bestScore,state.score|0);profile.bestWave=Math.max(profile.bestWave,state.wave|0);profile.sound=state.sound;profile.voice=state.voice;
+ try{localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch(_){}
+ ui.resultScore.textContent=state.score;ui.resultWave.textContent=state.wave;ui.resultKills.textContent=state.kills;ui.resultBest.textContent=profile.bestScore;
+ ui.resultTitle.textContent=state.wave>=8?'猎场极限已记录':'夜门失守';
+ ui.resultSummary.textContent=player.evolution?'本局完成 '+player.evolution+' 进化。下一局可以尝试另一条路线。':'你已经留下最佳记录和击杀统计，下一局会更快进入进化。';
+ ui.gameOver.classList.remove('hidden');voice('gameOver',true);sfx('boss');vibrate([20,35,20]);
+}
+function startWave(){if(state.gameOver)return;state.waveTime=0;state.waveCleared=false;state.transitionPending=false;state.waveEnding=false;state.spawnClock=.55;state.misses=0;monsters.length=0;boss=null;ui.bossHud.classList.add('hidden');const idx=(state.wave-1)%4;currentModifier=idx===3?modifiers[0]:modifiers[(Math.random()*modifiers.length)|0];ui.waveName.textContent=waveNames[idx]+' · '+currentModifier.name+' · WAVE '+String(state.wave).padStart(2,'0');ui.mission.textContent=idx===0?'清理跳跃与飞行怪物':idx===1?'地穴兽会钻地，露头时再攻击':idx===2?'优先击杀治愈灵与甲壳兽': '打断蓄力并攻击发光弱点';state.waveDuration=idx===3?70:38;if(idx===3)spawnBoss();else{for(let i=0;i<6;i++)spawnMonster();if(state.wave>1)voice('wave');}}
+function endWave(){if(state.gameOver||!endWaveOnce(state))return;monsters.length=0;state.score+=100+state.wave*15;state.gate=Math.min(state.maxGate,state.gate+1);message('波次完成 · 夜门修复 1',1100);persistBest();const token=runToken;setTimeout(()=>{if(token===runToken&&!state.gameOver)startWave();},900);}
+function applyLoadout(){if(selectedLoadout==='arc'){player.weapon='雷引刃';player.slashWidth=11;player.chain=1;player.chainChance=.34;player.crit=.08;}else if(selectedLoadout==='pulse'){player.weapon='震核刃';player.pulse=1;player.pulseChance=.2;player.skillGain=1.25;state.skill=55;}else{player.weapon='裂影刃';player.slashWidth=15;player.damage=1;}}
+function resetAll(){runToken++;state.wave=1;state.score=0;state.combo=1;state.chain=0;state.comboTimer=0;state.level=1;state.xp=0;state.xpNeed=40;state.skill=35;state.kills=0;state.paused=false;state.choosing=false;state.gameOver=false;state.sessionKillsSaved=false;state.gate=6;state.maxGate=6;state.fever=0;state.feverUntil=0;state.transitionPending=false;state.waveEnding=false;state.spawnClock=0;seenTypes.clear();player.damage=1;player.slashWidth=13;player.crit=.05;player.chain=0;player.pulse=0;player.slow=0;player.execute=0;player.xpGain=1;player.skillGain=1;player.comboGrace=1.45;player.weapon='裂影刃';player.evolution=null;player.bossDamage=1;player.chainChance=.22;player.pulseChance=.14;applyLoadout();Object.keys(upLevel).forEach(k=>delete upLevel[k]);monsters.length=particles.length=rings.length=trails.length=texts.length=0;document.getElementById('app').classList.remove('fever','danger');ui.gameOver.classList.add('hidden');ui.upgrade.classList.add('hidden');ui.pause.classList.add('hidden');startWave();updateHUD();}
+
+function addParticles(x,y,color,count=12,speed=1){const room=MAX_PARTICLES-particles.length;count=Math.max(0,Math.min(count,room));for(let i=0;i<count;i++){const a=rand(0,TAU),s=rand(1.6,6.2)*speed;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,size:rand(1.5,4.6),color});}}
+function addRing(x,y,color,r=8,w=2){if(rings.length>30)rings.shift();rings.push({x,y,r,life:1,color,w});}
+function addTrail(ax,ay,bx,by){if(trails.length>16)trails.shift();trails.push({ax,ay,bx,by,life:1});}
+function addLightning(ax,ay,bx,by){if(trails.length>20)trails.shift();trails.push({ax,ay,bx,by,life:1,lightning:true});}
+function addText(x,y,text,color=colors.ink,size=12){if(texts.length>30)texts.shift();texts.push({x,y,text,color,size,life:1,vy:-22});}
+
+function pointerPos(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+function onDown(e){if(!state.running||state.paused)return;e.preventDefault();initAudio();const p=pointerPos(e);input.down=true;input.x=input.px=p.x;input.y=input.py=p.y;doAttack(p.x,p.y,p.x,p.y,true);}
+function onMove(e){if(!state.running||state.paused||!input.down)return;e.preventDefault();const p=pointerPos(e);addTrail(input.x,input.y,p.x,p.y);doAttack(input.x,input.y,p.x,p.y,false);input.px=input.x;input.py=input.y;input.x=p.x;input.y=p.y;}
+function onUp(){input.down=false;}
+function doAttack(ax,ay,bx,by,tap){
+ const ang=Math.atan2(by-ay,bx-ax);let hit=false;
+ if(boss&&dist(bx,by,boss.x,boss.y)<boss.r+18){hitBoss(bx,by,player.damage);hit=true;}
+ for(let i=monsters.length-1;i>=0;i--){const m=monsters[i];if(m.dead)continue;const d=tap?dist(bx,by,m.x,m.y):segDist(m.x,m.y,ax,ay,bx,by);if(d<m.r+player.slashWidth){attackMonster(m,ang);hit=true;}}
+ if(hit)sfx('slash');
+}
+canvas.addEventListener('pointerdown',onDown,{passive:false});canvas.addEventListener('pointermove',onMove,{passive:false});addEventListener('pointerup',onUp,{passive:true});addEventListener('pointercancel',onUp,{passive:true});
+
+function drawBackground(){ctx.fillStyle=bgGradient||'#08090d';ctx.fillRect(0,0,W,H);ctx.fillStyle=moonGradient||'rgba(194,151,106,.05)';ctx.fillRect(0,0,W,H);ctx.globalAlpha=.28;for(const s of stars){const x=s.x*W,y=(s.y*H+clock*(3+s.z*5))%H;ctx.fillStyle=s.z>.7?'#c7b993':'#fff';ctx.fillRect(x,y,1+s.z,1+s.z);}ctx.globalAlpha=1;ctx.strokeStyle='rgba(255,255,255,.022)';ctx.lineWidth=1;const step=54;ctx.beginPath();for(let y=120;y<H-110;y+=step){ctx.moveTo(0,y);ctx.lineTo(W,y)}ctx.stroke();ctx.fillStyle='rgba(245,180,95,.035)';ctx.beginPath();ctx.arc(W*.5,H-105,60,Math.PI,TAU);ctx.fill();ctx.strokeStyle='rg
