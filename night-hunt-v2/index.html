@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#08090d" />
+  <title>夜渊猎场</title>
+  <link rel="stylesheet" href="style.css?v=2" />
+</head>
+<body>
+<main id="app">
+  <canvas id="game" aria-label="夜渊猎场游戏区域"></canvas>
+  <div class="vignette"></div>
+
+  <header id="hudTop">
+    <div class="identity">
+      <div class="sigil" aria-hidden="true">
+        <svg viewBox="0 0 36 36" fill="none"><path d="M18 3.5 30.5 10v16L18 32.5 5.5 26V10L18 3.5Z" stroke="currentColor" stroke-width="1.2"/><path d="M11 23.5c2.8-8.7 11.2-8.7 14 0M13.2 14.6l2.4 2.1M22.8 14.6l-2.4 2.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div class="gameName">夜渊猎场</div>
+        <div id="waveName" class="waveName">游荡潮 · WAVE 01</div>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><b id="score">0</b><span>猎杀分</span></div>
+      <div class="metric"><b id="combo">×1</b><span>连击</span></div>
+      <div class="metric"><b id="level">1</b><span>等级</span></div>
+      <div class="metric gateMetric"><b id="gateValue">6</b><span>夜门</span></div>
+    </div>
+  </header>
+
+  <section id="bossHud" class="bossHud hidden">
+    <div class="bossMeta"><span id="bossName">空洞王</span><small id="bossPhase">第一形态</small></div>
+    <div class="bossTrack"><div id="bossFill"></div></div>
+  </section>
+
+  <div id="message" class="message"></div>
+  <div id="voiceBubble" class="voiceBubble"><span>猎场播报</span><b id="voiceText"></b></div>
+
+  <footer id="hudBottom">
+    <div class="progressPanel">
+      <div class="row"><span id="mission">击退怪物，积攒猎场经验</span><span id="xpLabel">0 / 40 XP</span></div>
+      <div class="track"><div id="xpFill"></div></div>
+      <div class="combatTrack"><span id="gateLabel">夜门 6/6 · 狂热</span><div class="track feverTrack"><div id="feverFill"></div></div><b id="feverLabel">0%</b></div>
+      <div class="weaponRow">
+        <div class="weapon"><span>主武器</span><b id="weaponName">裂影刃</b></div>
+        <div class="perk"><span>攻击</span><b id="damageValue">1</b></div>
+        <div class="perk"><span>暴击</span><b id="critValue">5%</b></div>
+        <div class="perk"><span>连锁</span><b id="chainValue">0</b></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="skillBtn" class="action skill"><span class="icon">◈</span><span><b>震荡脉冲</b><small id="skillText">可以使用</small></span></button>
+      <button id="voiceBtn" class="action compact" aria-label="切换语音"><span class="icon">◖</span><small id="voiceState">自然语音</small></button>
+      <button id="pauseBtn" class="action compact" aria-label="暂停"><span class="icon">Ⅱ</span><small>暂停</small></button>
+    </div>
+  </footer>
+
+  <section id="intro" class="overlay introOverlay">
+    <div class="introGrid">
+      <div class="introCopy">
+        <div class="eyebrow">TACTILE MONSTER HUNT</div>
+        <h1>把烦躁，<br>喂给怪物。</h1>
+        <p>怪物会跳、飞、钻地、格挡、治疗和伪装。你会升级、选技能、改变武器路线，再击穿不断进化的 Boss。</p>
+        <div class="featureLine"><span>8 类怪物 AI</span><span>4 种精英词缀</span><span>3 条武器进化</span></div>
+        <div class="loadoutTitle">选择初始流派</div>
+        <div class="loadoutRow">
+          <button class="loadout active" data-loadout="blade"><b>裂影</b><small>宽斩 · 均衡</small></button>
+          <button class="loadout" data-loadout="arc"><b>雷引</b><small>连锁 · 暴击</small></button>
+          <button class="loadout" data-loadout="pulse"><b>震核</b><small>余震 · 技能</small></button>
+        </div>
+        <div id="bestLine" class="bestLine">最佳记录：0 分 · WAVE 01</div>
+        <div class="startRow"><button id="startBtn" class="primaryBtn">进入猎场</button><button id="quietBtn" class="ghostBtn">静音进入</button></div>
+        <div class="notice">免登录 · iPhone 优化 · 最佳记录保存在本机</div>
+      </div>
+      <div class="monsterPreview" aria-hidden="true">
+        <div class="moon"></div>
+        <div class="previewMonster">
+          <i class="horn h1"></i><i class="horn h2"></i><i class="eye e1"></i><i class="eye e2"></i><i class="mouth"></i><i class="arm a1"></i><i class="arm a2"></i>
+        </div>
+        <div class="previewLabel"><b>空洞王</b><span>会召唤、护盾、转移弱点</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="upgrade" class="overlay hidden">
+    <div class="upgradePanel">
+      <div class="upgradeHeading"><span>LEVEL UP</span><h2>选择一种进化</h2><p id="upgradeHint">升级会改变手感和玩法，不只是增加分数。</p></div>
+      <div id="upgradeCards" class="upgradeCards"></div>
+      <button id="rerollBtn" class="rerollBtn">重铸一次</button>
+    </div>
+  </section>
+
+  <section id="pause" class="overlay hidden">
+    <div class="pausePanel"><span>PAUSED</span><h2>猎场暂停</h2><p>先缓一下。你的进度还在。</p><button id="resumeBtn" class="primaryBtn">继续猎杀</button><button id="restartBtn" class="ghostBtn">重新开始</button></div>
+  </section>
+
+  <section id="gameOver" class="overlay hidden">
+    <div class="resultPanel">
+      <span>RUN COMPLETE</span>
+      <h2 id="resultTitle">夜门失守</h2>
+      <p id="resultSummary">这局结束了，但进化路线和记录已经留下。</p>
+      <div class="resultStats">
+        <div><b id="resultScore">0</b><small>猎杀分</small></div>
+        <div><b id="resultWave">1</b><small>抵达波次</small></div>
+        <div><b id="resultKills">0</b><small>击杀</small></div>
+        <div><b id="resultBest">0</b><small>最佳记录</small></div>
+      </div>
+      <button id="againBtn" class="primaryBtn">重新进入猎场</button>
+    </div>
+  </section>
+</main>
+<script>Promise.all(['publish.1.txt','publish.2.txt','publish.3.txt','publish.4.txt','publish.5.txt','publish.6.txt','publish.7.txt'] .map(u=>fetch(u,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(u);return r.text()}))).then(parts=>(0,Function)(parts.join(''))()).catch(error=>{console.error(error);document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;background:#08090d;color:#fff;font-family:-apple-system;padding:24px;text-align:center"><div><h1>猎场加载失败</h1><p>请刷新页面后重试。</p></div></main>'})</script>
+</body>
+</html>
