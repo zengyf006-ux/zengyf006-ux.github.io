@@ -1,0 +1,238 @@
+/* G9: second screenshot-led polish. Keeps every source and safety state visible while reducing duplicate emphasis. */
+
+@media (min-width: 901px) {
+  .top-actions .source-badge,
+  .market-heading > .source-badge {
+    display: none;
+  }
+
+  .ticket {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ticket::after {
+    content: "本地模拟账本 · 不连接真实账户或资金";
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    margin: auto 14px 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: .025em;
+  }
+
+  .ticket .status {
+    margin-bottom: 8px;
+  }
+
+  .book-side div,
+  .trades > div {
+    transition: background-color .14s ease;
+  }
+
+  .book-side div:hover,
+  .trades > div:hover {
+    background: #f7f8f6;
+  }
+}
+
+.chart-error {
+  border-color: rgba(217, 184, 111, .65);
+  background: rgba(255, 253, 247, .9);
+  color: #6f5a20;
+  box-shadow: none;
+}
+
+.panel-source-warning {
+  color: #6f5a20;
+}
+
+@media (min-width: 1181px) {
+  .terminal-grid {
+    grid-template-columns: minmax(580px, 1fr) 286px 344px;
+  }
+
+  .book-side div,
+  .trades > div {
+    padding-inline: 13px;
+  }
+
+  .trades > div {
+    min-height: 33px;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1180px) {
+  .ticket::after {
+    min-height: 52px;
+  }
+
+  .market-heading {
+    padding-right: 20px;
+  }
+}
+
+@media (min-width: 721px) and (max-width: 900px) {
+  .market-heading > .source-badge {
+    min-height: 27px;
+    padding-inline: 8px;
+  }
+
+  .mobile-task-switch {
+    top: 61px;
+    min-height: 46px;
+  }
+
+  .terminal-grid.mobile-chart .market-stage,
+  .terminal-grid.mobile-book .book,
+  .terminal-grid.mobile-order .ticket,
+  .terminal-grid.mobile-trades .trades {
+    min-height: calc(100vh - 163px);
+  }
+}
+
+@media (max-width: 720px) {
+  .market-runtime-banner {
+    min-height: 46px;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+  }
+
+  .market-runtime-primary {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .market-runtime-label {
+    min-height: 22px;
+    padding: 2px 7px;
+    font-size: 10px;
+  }
+
+  .market-runtime-primary strong {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .market-runtime-change {
+    font-size: 10px;
+  }
+
+  .market-runtime-detail {
+    display: flex;
+    max-width: 43%;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .market-runtime-detail span {
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 50px;
+    padding-inline: 12px;
+  }
+
+  .topbar nav {
+    display: none;
+  }
+
+  .brand {
+    min-width: 0;
+  }
+
+  .brand span {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+
+  .brand b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-more {
+    width: auto;
+    min-width: 66px;
+    min-height: 34px;
+    padding-inline: 12px;
+    border-radius: 9px;
+  }
+
+  .mobile-task-switch {
+    min-height: 44px;
+  }
+
+  .mobile-task-switch button {
+    font-size: 11px;
+  }
+
+  .market-heading {
+    min-height: 104px;
+    padding: 15px 15px 9px;
+  }
+
+  .market-heading h1 {
+    font-size: 29px;
+  }
+
+  .market-heading strong {
+    margin-top: 7px;
+  }
+
+  .market-heading > .source-badge {
+    min-height: 25px;
+    padding: 3px 7px;
+    font-size: 10px;
+  }
+
+  .intervals {
+    min-height: 40px;
+    gap: 3px;
+    padding: 4px 12px 6px;
+  }
+
+  .intervals button {
+    min-width: 36px;
+    min-height: 28px;
+    padding: 4px 7px;
+  }
+
+  .chart-source-note {
+    min-height: 25px;
+    padding-inline: 8px;
+  }
+
+  .chart-error {
+    max-width: calc(100% - 20px);
+    padding: 5px 8px;
+    line-height: 1.35;
+  }
+
+  .mobile-nav {
+    min-height: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-nav button {
+    min-height: 56px;
+  }
+
+  body {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+}

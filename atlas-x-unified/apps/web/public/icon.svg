@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">ATLAS X</title>
+  <rect width="512" height="512" rx="112" fill="#171817"/>
+  <path d="M122 370 231 116h50l109 254h-68l-21-53h-91l-21 53h-67Zm109-109h49l-24-64-25 64Z" fill="#f7f7f5"/>
+  <path d="m300 137 51 77 51-77h70l-84 119 88 126h-72l-54-82-55 82h-70l89-126-84-119h70Z" fill="#7fe0bd" opacity=".92"/>
+</svg>

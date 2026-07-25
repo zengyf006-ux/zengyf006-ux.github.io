@@ -1,0 +1,21 @@
+{
+  "name": "@atlas-x/web",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@atlas-x/contracts": "*",
+    "@atlas-x/domain": "*",
+    "@atlas-x/market-data": "*",
+    "@atlas-x/paper-trading": "*",
+    "@atlas-x/ui": "*",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  }
+}

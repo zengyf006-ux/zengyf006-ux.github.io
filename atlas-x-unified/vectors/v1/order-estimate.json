@@ -1,0 +1,262 @@
+{
+  "schemaVersion": "atlas.unified.v1",
+  "vectorVersion": "1.0.0",
+  "domain": "orderEstimate",
+  "cases": [
+    {
+      "id": "market-buy-full-depth",
+      "category": "normal",
+      "operation": "estimate",
+      "input": {
+        "side": "buy",
+        "orderType": "market",
+        "quantity": "2",
+        "feeRate": "0.001",
+        "availableBase": "0",
+        "availableQuote": "1000",
+        "orderBook": {
+          "bids": [
+            {
+              "price": "99",
+              "quantity": "2"
+            },
+            {
+              "price": "98",
+              "quantity": "3"
+            }
+          ],
+          "asks": [
+            {
+              "price": "100",
+              "quantity": "1"
+            },
+            {
+              "price": "101",
+              "quantity": "2"
+            },
+            {
+              "price": "102",
+              "quantity": "3"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "requestedQuantity": "2",
+        "filledQuantity": "2",
+        "unfilledQuantity": "0",
+        "grossAmount": "201",
+        "vwap": "100.5",
+        "referencePrice": "100",
+        "slippageRate": "0.005",
+        "fee": "0.201",
+        "coverageRate": "1",
+        "requiredBalance": "201.201",
+        "availableBalance": "1000",
+        "insufficientBalance": false,
+        "depthInsufficient": false
+      }
+    },
+    {
+      "id": "market-sell-full-depth",
+      "category": "normal",
+      "operation": "estimate",
+      "input": {
+        "side": "sell",
+        "orderType": "market",
+        "quantity": "4",
+        "feeRate": "0.002",
+        "availableBase": "3.5",
+        "availableQuote": "0",
+        "orderBook": {
+          "bids": [
+            {
+              "price": "99",
+              "quantity": "2"
+            },
+            {
+              "price": "98",
+              "quantity": "3"
+            }
+          ],
+          "asks": [
+            {
+              "price": "100",
+              "quantity": "1"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "requestedQuantity": "4",
+        "filledQuantity": "4",
+        "unfilledQuantity": "0",
+        "grossAmount": "394",
+        "vwap": "98.5",
+        "referencePrice": "99",
+        "slippageRate": "0.005050505050505050505050505050505051",
+        "fee": "0.788",
+        "coverageRate": "1",
+        "requiredBalance": "4",
+        "availableBalance": "3.5",
+        "insufficientBalance": true,
+        "depthInsufficient": false
+      }
+    },
+    {
+      "id": "limit-buy-partial-depth",
+      "category": "normal",
+      "operation": "estimate",
+      "input": {
+        "side": "buy",
+        "orderType": "limit",
+        "quantity": "4",
+        "limitPrice": "101",
+        "feeRate": "0.001",
+        "availableBase": "0",
+        "availableQuote": "500",
+        "orderBook": {
+          "bids": [],
+          "asks": [
+            {
+              "price": "100",
+              "quantity": "1"
+            },
+            {
+              "price": "101",
+              "quantity": "2"
+            },
+            {
+              "price": "102",
+              "quantity": "3"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "requestedQuantity": "4",
+        "filledQuantity": "3",
+        "unfilledQuantity": "1",
+        "grossAmount": "302",
+        "vwap": "100.6666666666666666666666666666667",
+        "referencePrice": "100",
+        "slippageRate": "0.006666666666666666666666666666666667",
+        "fee": "0.302",
+        "coverageRate": "0.75",
+        "requiredBalance": "404.404",
+        "availableBalance": "500",
+        "insufficientBalance": false,
+        "depthInsufficient": true
+      }
+    },
+    {
+      "id": "empty-market-book",
+      "category": "boundary",
+      "operation": "estimate",
+      "input": {
+        "side": "buy",
+        "orderType": "market",
+        "quantity": "1",
+        "feeRate": "0.001",
+        "availableBase": "0",
+        "availableQuote": "10",
+        "orderBook": {
+          "bids": [],
+          "asks": []
+        }
+      },
+      "expected": {
+        "requestedQuantity": "1",
+        "filledQuantity": "0",
+        "unfilledQuantity": "1",
+        "grossAmount": "0",
+        "vwap": null,
+        "referencePrice": null,
+        "slippageRate": null,
+        "fee": "0",
+        "coverageRate": "0",
+        "requiredBalance": "0",
+        "availableBalance": "10",
+        "insufficientBalance": false,
+        "depthInsufficient": true
+      }
+    },
+    {
+      "id": "quote-balance-short-by-fee",
+      "category": "boundary",
+      "operation": "estimate",
+      "input": {
+        "side": "buy",
+        "orderType": "market",
+        "quantity": "2",
+        "feeRate": "0.001",
+        "availableBase": "0",
+        "availableQuote": "201.2",
+        "orderBook": {
+          "bids": [],
+          "asks": [
+            {
+              "price": "100",
+              "quantity": "1"
+            },
+            {
+              "price": "101",
+              "quantity": "2"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "requestedQuantity": "2",
+        "filledQuantity": "2",
+        "unfilledQuantity": "0",
+        "grossAmount": "201",
+        "vwap": "100.5",
+        "referencePrice": "100",
+        "slippageRate": "0.005",
+        "fee": "0.201",
+        "coverageRate": "1",
+        "requiredBalance": "201.201",
+        "availableBalance": "201.2",
+        "insufficientBalance": true,
+        "depthInsufficient": false
+      }
+    },
+    {
+      "id": "reject-zero-quantity",
+      "category": "error",
+      "operation": "estimate",
+      "input": {
+        "side": "buy",
+        "orderType": "market",
+        "quantity": "0",
+        "feeRate": "0",
+        "availableBase": "0",
+        "availableQuote": "10",
+        "orderBook": {
+          "bids": [],
+          "asks": []
+        }
+      },
+      "errorPattern": "invalid quantity"
+    },
+    {
+      "id": "reject-missing-limit-price",
+      "category": "error",
+      "operation": "estimate",
+      "input": {
+        "side": "buy",
+        "orderType": "limit",
+        "quantity": "1",
+        "feeRate": "0",
+        "availableBase": "0",
+        "availableQuote": "10",
+        "orderBook": {
+          "bids": [],
+          "asks": []
+        }
+      },
+      "errorPattern": "limit price"
+    }
+  ]
+}
