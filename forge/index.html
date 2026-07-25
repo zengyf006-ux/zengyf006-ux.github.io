@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#05060a" />
+<title>脉冲锻炉</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <canvas id="game" aria-label="脉冲锻炉游戏区域"></canvas>
+  <div id="hud">
+    <div>
+      <div class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.8 20.2 7.5v9L12 21.2 3.8 16.5v-9L12 2.8Z" stroke="currentColor" stroke-width="1.4"/><path d="m7.3 13.4 3-3 2.2 2.2 4.2-4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="brandText"><div class="brandTitle">脉冲锻炉</div><div class="brandSub">PULSE FORGE / SESSION 01</div></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><b id="score">0</b><span>ENERGY</span></div>
+          <div class="metric"><b id="combo">×1</b><span>CHAIN</span></div>
+          <div class="metric"><b id="stage">01</b><span>STAGE</span></div>
+        </div>
+      </div>
+      <div class="phasebar"><span id="phaseName" class="phaseName">裂解阶段</span><div class="phaseTrack"><div id="phaseFill" class="phaseFill"></div></div></div>
+    </div>
+    <div class="bottomWrap">
+      <div class="guidance"><div id="guideTitle" class="guidanceTitle">点击目标，拖动可连续切开。</div><div id="guideText" class="guidanceText">每个阶段的玩法不同。先别追求分数，把节奏交给手指。</div></div>
+      <div class="controls">
+        <button id="voiceBtn" class="control" aria-label="切换语音">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4.5 10v4h3l4 3V7l-4 3h-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M15 9.5a4 4 0 0 1 0 5M17.5 7a7.4 7.4 0 0 1 0 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="label">语音开</span>
+        </button>
+        <button id="focusBtn" class="control primary" aria-label="释放聚焦">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="label">聚焦</span>
+        </button>
+        <button id="overloadBtn" class="control locked" aria-label="释放超载">
+          <svg viewBox="0 0 24 24" fill="none"><path d="m13 2.8-7 11h5l-1 7.4 7.5-12H13l0-6.4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="label">超载</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="toast"></div>
+  <div id="voiceBubble"><div class="voiceLabel">SYSTEM VOICE</div><div id="voiceText" class="voiceText"></div></div>
+  <section id="overlay">
+    <div class="intro">
+      <div class="introEyebrow">TACTILE DECOMPRESSION EXPERIENCE</div>
+      <h1>把烦躁，<br>锻造成能量。</h1>
+      <p>这不是重复点气泡。三种阶段会轮换：击碎目标、抓住共振节奏、击穿高压核心。音效、震动和语音只在关键节点出现，让反馈更重，但不吵。</p>
+      <div class="modeList">
+        <div class="mode"><b>裂解</b><span>点击与拖动，连锁破坏</span></div>
+        <div class="mode"><b>共振</b><span>跟随脉冲，追求精准时机</span></div>
+        <div class="mode"><b>高压核心</b><span>识别弱点，分阶段击穿 Boss</span></div>
+      </div>
+      <div class="startRow"><button id="startBtn" class="startBtn main">进入锻炉</button><button id="quietBtn" class="startBtn">静音进入</button></div>
+      <div class="meta"><span>免登录</span><span>iPhone 优化</span><span>中文成就语音</span><span>本地运行，不收集数据</span></div>
+    </div>
+  </section>
+</main>
+<script>Promise.all(['game.1.txt','game.2.txt','game.3.txt'].map(u=>fetch(u,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(u);return r.text()}))).then(p=>(0,Function)(p.join(''))()).catch(e=>{document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;background:#05060a;color:white;font-family:-apple-system;padding:24px;text-align:center"><div><h1>加载失败</h1><p>请刷新页面后重试。</p></div></main>';console.error(e)})</script>
+</body>
+</html>
