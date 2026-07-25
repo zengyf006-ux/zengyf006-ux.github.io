@@ -1,0 +1,37 @@
+,.024,1000)}
+ if(kind==='boss'){tone(78,.24,'square',.043,-25);tone(42,.31,'sine',.05,-8);noise(.16,.023,720)}
+ if(kind==='miss'){tone(135,.08,'square',.01,-45)}
+}
+function vibrate(p){if(navigator.vibrate)navigator.vibrate(p)}
+
+async function loadHumanPack(){try{const r=await fetch('voice/manifest.json',{cache:'no-store'});if(r.ok)humanPack=await r.json();}catch(_){} }
+function selectVoice(){if(!('speechSynthesis'in window))return;const list=speechSynthesis.getVoices().filter(v=>/^zh/i.test(v.lang));if(!list.length)return;const score=v=>{let s=0,n=v.name.toLowerCase();if(/premium|enhanced|natural|siri/.test(n))s+=10;if(/ting|tian|yu|mei|sin|li|xia/.test(n))s+=5;if(/zh-cn/.test(v.lang.toLowerCase()))s+=3;return s};speechVoice=[...list].sort((a,b)=>score(b)-score(a))[0];}
+if('speechSynthesis'in window){speechSynthesis.onvoiceschanged=selectVoice;selectVoice();}
+function speakExact(text,force=false,category='generic'){showVoice(text);if(!state.voice||speechCooldown>0&&!force)return;if(humanPack&&humanPack[category]?.length){const src=humanPack[category][(Math.random()*humanPack[category].length)|0];const a=new Audio(src);a.volume=.92;a.play().catch(()=>{});speechCooldown=3.5;return;}if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';u.voice=speechVoice;u.rate=.9+Math.random()*.06;u.pitch=.9+Math.random()*.05;u.volume=.94;speechSynthesis.speak(u);speechCooldown=4.2;}
+function voice(category,force=false){const arr=voiceLines[category]||voiceLines.wave;let choices=arr.filter(x=>!recentVoice.includes(x));if(!choices.length)choices=arr;const text=choices[(Math.random()*choices.length)|0];recentVoice.push(text);if(recentVoice.length>5)recentVoice.shift();speakExact(text,force,category);}
+function announceType(type){const text=monsterTips[type];if(!text||seenTypes.has(type)||state.wave<=1)return;seenTypes.add(type);speakExact(text,false,'monster');}
+function showVoice(text){ui.voiceText.textContent=text;ui.voiceBubble.classList.add('show');clearTimeout(showVoice.t);showVoice.t=setTimeout(()=>ui.voiceBubble.classList.remove('show'),2600);}
+function message(text,ms=900){ui.message.textContent=text;ui.message.classList.add('show');clearTimeout(message.t);message.t=setTimeout(()=>ui.message.classList.remove('show'),ms);}
+
+class Monster{
+ constructor(type,elite=false,parent=null){
+  const base=monsterInfo[type];this.type=type;this.elite=elite;this.r=elite?30:24;this.maxHp=Math.ceil(base.hp*(1+(state.wave-1)*.16)*(elite?2.15:1)*currentModifier.hp);this.hp=this.maxHp;this.speed=base.speed*(1+(state.wave-1)*.055)*(elite?1.08:1)*currentModifier.speed;this.score=base.score*(elite?2:1);if(parent){this.x=parent.x+rand(-25,25);this.y=parent.y+rand(-22,22);}else{const edge=Math.random();if(edge<.58){this.x=rand(38,W-38);this.y=rand(108,138);}else if(edge<.79){this.x=-this.r-8;this.y=rand(155,Math.max(190,H-220));}else{this.x=W+this.r+8;this.y=rand(155,Math.max(190,H-220));}}this.vx=rand(-10,10);this.phase=rand(0,TAU);this.rot=rand(0,TAU);this.flash=0;this.dead=false;this.hitCd=0;this.age=0;this.submerge=false;this.subTimer=rand(.8,2.1);this.shield=type==='beetle'?(elite?4:2):0;this.healTimer=rand(1.4,2.4);this.mimicState='sleep';this.mimicTimer=rand(.7,1.5);this.dash=0;this.splitDepth=parent?(parent.splitDepth||0)+1:0;this.gateX=W*.5+rand(-80,80);this.gateY=H-158;this.color=type==='slime'?colors.green:type==='bat'?colors.violet:type==='burrow'?colors.mud:type==='beetle'?colors.cyan:type==='healer'?colors.blue:type==='mimic'?colors.amber:colors.red;
+  if(type==='bat')this.r=20;if(type==='healer')this.r=22;if(type==='mimic')this.r=27;if(type==='leech')this.r=18;if(elite)this.r*=1.18;
+ }
+ update(dt){
+  this.age+=dt;this.flash=Math.max(0,this.flash-dt*6);this.hitCd=Math.max(0,this.hitCd-dt);
+  const dx=this.gateX-this.x,dy=this.gateY-this.y,d=Math.max(1,Math.hypot(dx,dy));
+  let speed=this.speed;
+  if(this.type==='slime'){const hop=.48+.52*Math.max(0,Math.sin(this.age*5+this.phase));speed*=.45+hop*.8;this.x+=dx/d*speed*dt+Math.sin(this.age*4+this.phase)*8*dt;this.y+=dy/d*speed*dt;}
+  else if(this.type==='bat'){this.x+=dx/d*speed*dt+Math.sin(this.age*7+this.phase)*34*dt;this.y+=dy/d*speed*dt+Math.cos(this.age*5)*7*dt;}
+  else if(this.type==='burrow'){this.subTimer-=dt;if(this.subTimer<=0){this.submerge=!this.submerge;this.subTimer=this.submerge?rand(.85,1.35):rand(1.2,1.8);}speed*=this.submerge?1.8:.72;this.x+=dx/d*speed*dt;this.y+=dy/d*speed*dt;}
+  else if(this.type==='beetle'){this.rot=Math.atan2(dy,dx);this.x+=dx/d*speed*dt;this.y+=dy/d*speed*dt;}
+  else if(this.type==='healer'){this.phase+=dt*2.2;this.x+=dx/d*speed*.7*dt+Math.sin(this.phase)*15*dt;this.y+=dy/d*speed*.7*dt;this.healTimer-=dt;if(this.healTimer<=0){this.healTimer=2.5;const nearby=monsters.filter(m=>m!==this&&!m.dead&&dist(m.x,m.y,this.x,this.y)<125&&m.hp<m.maxHp);nearby.slice(0,3).forEach(m=>{m.hp=Math.min(m.maxHp,m.hp+1);addRing(m.x,m.y,colors.green,8,2);});}}
+  else if(this.type==='mimic'){this.mimicTimer-=dt;if(this.mimicState==='sleep'&&this.mimicTimer<=0){this.mimicState='awake';this.mimicTimer=.65;}else if(this.mimicState==='awake'&&this.mimicTimer<=0){this.mimicState='dash';this.dash=1.1;}if(this.mimicState==='dash'){speed*=3.2;this.dash-=dt;if(this.dash<=0){this.mimicState='sleep';this.mimicTimer=rand(.7,1.3)}}else speed*=.18;this.x+=dx/d*speed*dt;this.y+=dy/d*speed*dt;}
+  else {this.phase+=dt*6;this.x+=dx/d*speed*dt+Math.sin(this.phase)*7*dt;this.y+=dy/d*speed*dt;}
+  if(dist(this.x,this.y,this.gateX,this.gateY)<24){this.escape();}
+ }
+ escape(){this.dead=true;state.misses++;state.chain=0;state.combo=1;state.comboTimer=0;state.skill=Math.max(0,state.skill-8);message(this.type==='leech'?'噬能虫偷走了能量':'一只怪物溜过去了');sfx('miss');if(state.misses===4)voice('danger');}
+ hit(dmg,attackAngle=0){
+  if(this.dead||this.hitCd>0)return false;if(this.type==='burrow'&&this.submerge){message('它还在地下');return false;}
+  this.hitC
