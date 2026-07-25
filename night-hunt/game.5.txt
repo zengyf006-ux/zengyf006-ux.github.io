@@ -1,0 +1,31 @@
+tate.xpNeed){state.xp-=state.xpNeed;state.level++;state.xpNeed=Math.round(state.xpNeed*1.28+8);openUpgrade();break;}}
+function applyOnKill(m){if(player.pulse>0&&Math.random()<.14*player.pulse){const near=monsters.filter(o=>!o.dead&&dist(o.x,o.y,m.x,m.y)<90).slice(0,2+player.pulse);near.forEach(o=>o.hit(Math.max(1,Math.round(player.damage*.7))));addRing(m.x,m.y,colors.violet,18,3);} }
+function attackMonster(m,angle=0){const crit=Math.random()<player.crit;const dmg=Math.max(1,Math.round(player.damage*(crit?2:1)));const hit=m.hit(dmg,angle);if(!hit)return;if(crit){sfx('crit');addParticles(m.x,m.y,colors.amber,18,1.5);message('暴击');}if(player.chain>0&&Math.random()<.22){const candidates=monsters.filter(o=>o!==m&&!o.dead&&dist(o.x,o.y,m.x,m.y)<150).sort((a,b)=>dist(a.x,a.y,m.x,m.y)-dist(b.x,b.y,m.x,m.y)).slice(0,player.chain);candidates.forEach((o,i)=>setTimeout(()=>{if(!o.dead){o.hit(Math.max(1,Math.round(player.damage*.65)));addLightning(m.x,m.y,o.x,o.y)}},i*45));sfx('chain');}}
+
+const upgrades=[
+ {id:'damage',tag:'裂影系',glyph:'╱',title:'锋刃加压',desc:'基础伤害 +1。对甲壳和 Boss 的击穿能力明显提高。',max:6,color:'#f5b45f',apply:()=>player.damage++},
+ {id:'width',tag:'裂影系',glyph:'⟋',title:'宽幅斩击',desc:'拖动攻击的判定范围扩大，连切怪群更顺手。',max:5,color:'#e28f72',apply:()=>player.slashWidth+=5},
+ {id:'crit',tag:'猎杀系',glyph:'✦',title:'致命直觉',desc:'暴击率 +8%，暴击会产生更重的声音和震动。',max:6,color:'#ff6f86',apply:()=>player.crit=Math.min(.55,player.crit+.08)},
+ {id:'chain',tag:'雷弧系',glyph:'ϟ',title:'弧光跳跃',desc:'命中时有概率连锁附近怪物，每级增加一个连锁目标。',max:4,color:'#6eddec',apply:()=>player.chain++},
+ {id:'pulse',tag:'震荡系',glyph:'◎',title:'余震核心',desc:'击杀时有概率产生范围冲击，自动伤害周围怪物。',max:4,color:'#9178e8',apply:()=>player.pulse++},
+ {id:'skill',tag:'能量系',glyph:'◈',title:'快速蓄能',desc:'攻击与击杀获得更多技能能量，更频繁释放震荡脉冲。',max:5,color:'#65d69b',apply:()=>player.skillGain+=.22},
+ {id:'xp',tag:'成长系',glyph:'△',title:'猎场领悟',desc:'经验获取 +20%，更快进入下一次三选一进化。',max:4,color:'#d7c58f',apply:()=>player.xpGain+=.2},
+ {id:'combo',tag:'节奏系',glyph:'∞',title:'延长猎杀窗口',desc:'连击中断时间延长 0.35 秒，更容易维持高倍率。',max:4,color:'#9fa8ff',apply:()=>player.comboGrace+=.35}
+];
+const upLevel={};
+function openUpgrade(){if(state.choosing)return;state.choosing=true;state.paused=true;sfx('level');const available=upgrades.filter(u=>(upLevel[u.id]||0)<u.max);const picks=[];while(available.length&&picks.length<3){const i=(Math.random()*available.length)|0;picks.push(available.splice(i,1)[0]);}ui.upgradeCards.innerHTML='';picks.forEach(u=>{const level=upLevel[u.id]||0;const b=document.createElement('button');b.className='upgradeCard';b.style.setProperty('--cardColor',u.color);b.style.setProperty('--cardGlow',u.color);b.innerHTML=`<span class="tag">${u.tag}</span><div class="glyph">${u.glyph}</div><h3>${u.title}</h3><p>${u.desc}</p><small>当前 ${level} / ${u.max}</small>`;b.addEventListener('click',()=>{upLevel[u.id]=level+1;u.apply();ui.upgrade.classList.add('hidden');state.choosing=false;state.paused=false;updateHUD();voice('level',true);last=performance.now();});ui.upgradeCards.appendChild(b);});ui.upgrade.classList.remove('hidden');}
+
+function useSkill(){if(!state.running||state.paused)return;if(state.skill<100){message('震荡脉冲还没充满');return;}state.skill=0;state.flash=.65;state.shake=13;sfx('skill');vibrate([18,26,18]);voice('skill');for(const m of monsters){if(!m.dead){m.hp-=Math.max(2,player.damage*2);m.y-=70;addParticles(m.x,m.y,m.color,16,1.7);addRing(m.x,m.y,colors.amber,22,3);if(m.hp<=0)m.kill();}}if(boss){boss.hp-=Math.max(8,player.damage*4);if(boss.hp<=0)hitBoss(boss.x+boss.r,boss.y,1);} }
+
+function startWave(){state.waveTime=0;state.waveCleared=false;state.misses=0;monsters.length=0;boss=null;ui.bossHud.classList.add('hidden');const idx=(state.wave-1)%4;currentModifier=idx===3?modifiers[0]:modifiers[(Math.random()*modifiers.length)|0];ui.waveName.textContent=waveNames[idx]+' · '+currentModifier.name+' · WAVE '+String(state.wave).padStart(2,'0');ui.mission.textContent=idx===0?'清理跳跃与飞行怪物':idx===1?'地穴兽会钻地，露头时再攻击':idx===2?'优先击杀治愈灵与甲壳兽': '观察空洞王的发光弱点';state.waveDuration=idx===3?70:38;if(idx===3)spawnBoss();else{for(let i=0;i<6;i++)spawnMonster();if(state.wave>1)voice('wave');}}
+function endWave(){if(state.waveCleared&&state.choosing)return;state.wave++;state.waveCleared=true;state.score+=100+state.wave*15;message('波次完成',1100);setTimeout(()=>{startWave();if(state.level%2===0&&!state.choosing)openUpgrade();},900);}
+function resetAll(){state.wave=1;state.score=0;state.combo=1;state.chain=0;state.level=1;state.xp=0;state.xpNeed=40;state.skill=100;state.kills=0;state.paused=false;state.choosing=false;seenTypes.clear();player.damage=1;player.slashWidth=13;player.crit=.05;player.chain=0;player.pulse=0;player.xpGain=1;player.skillGain=1;player.comboGrace=1.45;Object.keys(upLevel).forEach(k=>delete upLevel[k]);monsters.length=particles.length=rings.length=trails.length=texts.length=0;startWave();updateHUD();}
+
+function addParticles(x,y,color,count=12,speed=1){const room=MAX_PARTICLES-particles.length;count=Math.max(0,Math.min(count,room));for(let i=0;i<count;i++){const a=rand(0,TAU),s=rand(1.6,6.2)*speed;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,size:rand(1.5,4.6),color});}}
+function addRing(x,y,color,r=8,w=2){if(rings.length>30)rings.shift();rings.push({x,y,r,life:1,color,w});}
+function addTrail(ax,ay,bx,by){if(trails.length>16)trails.shift();trails.push({ax,ay,bx,by,life:1});}
+function addLightning(ax,ay,bx,by){trails.push({ax,ay,bx,by,life:1,lightning:true});}
+
+function pointerPos(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+function onDown(e){if(!state.running||state.paused)return;e.preventDefault();initAudio();const p=pointerPos(e);input.down=true;input.x=input.px=p.x;input.y=input.py=p.y;doAttack(p.x,p.y,p.x,p.y,true);}
+function onMove(e){if(!state.running||state.paused||!input.down)return;e.preventDefault();const p=pointerPos(e);addTrail(input.x,input.y,p.x,p.y);doAttack(input.x,input.y,p.x,p.y,false);input.p
