@@ -1,0 +1,47 @@
+ba(245,180,95,.11)';ctx.beginPath();ctx.arc(W*.5,H-105,52,Math.PI,TAU);ctx.stroke();}
+function updateEffects(dt){for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vx*=.984;p.vy=p.vy*.984+.035;p.life-=dt*1.7;if(p.life<=0){particles.splice(i,1);continue;}ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size*p.life,0,TAU);ctx.fill();}ctx.globalAlpha=1;for(let i=rings.length-1;i>=0;i--){const r=rings[i];r.life-=dt*1.6;r.r+=dt*82;if(r.life<=0){rings.splice(i,1);continue;}ctx.globalAlpha=r.life;ctx.strokeStyle=r.color;ctx.lineWidth=r.w;ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,TAU);ctx.stroke();}ctx.globalAlpha=1;for(let i=trails.length-1;i>=0;i--){const t=trails[i];t.life-=dt*(t.lightning?4.2:3.8);if(t.life<=0){trails.splice(i,1);continue;}ctx.globalAlpha=t.life;ctx.strokeStyle=t.lightning?colors.cyan:colors.amber;ctx.lineWidth=t.lightning?2:2+6*t.life;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(t.ax,t.ay);if(t.lightning){const mx=(t.ax+t.bx)/2+rand(-8,8),my=(t.ay+t.by)/2+rand(-8,8);ctx.lineTo(mx,my);ctx.lineTo(t.bx,t.by);}else ctx.lineTo(t.bx,t.by);ctx.stroke();}ctx.globalAlpha=1;for(let i=texts.length-1;i>=0;i--){const t=texts[i];t.y+=t.vy*dt;t.life-=dt*1.35;if(t.life<=0){texts.splice(i,1);continue;}ctx.globalAlpha=t.life;ctx.fillStyle=t.color;ctx.font='900 '+t.size+'px -apple-system,BlinkMacSystemFont,"PingFang SC"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.text,t.x,t.y);}ctx.globalAlpha=1;}
+function updateGame(dt){
+ if(state.paused)return;
+ state.waveTime+=dt;if(speechCooldown>0)speechCooldown-=dt;
+ if(state.comboTimer>0){state.comboTimer-=dt;if(state.comboTimer<=0){state.chain=0;state.combo=1;}}
+ if(state.skillCooldown>0)state.skillCooldown-=dt;
+ if(state.feverUntil>0&&clock>=state.feverUntil){state.feverUntil=0;state.fever=0;document.getElementById('app').classList.remove('fever');message('狂热结束');}
+ for(const m of monsters)if(!m.dead)m.update(dt);
+ for(let i=monsters.length-1;i>=0;i--)if(monsters[i].dead)monsters.splice(i,1);
+ if(boss)updateBoss(dt);
+ const idx=(state.wave-1)%4;
+ if(idx!==3&&!state.transitionPending){
+  const alive=monsters.length;
+  const desired=Math.min(20,Math.round((6+Math.floor(state.wave*.7))*currentModifier.spawn));
+  if(!state.waveEnding){
+   state.spawnClock-=dt;
+   if(state.spawnClock<=0&&alive<desired){spawnMonster(null,state.wave>2&&Math.random()<.08);state.spawnClock=Math.max(.2,(.72-state.wave*.018)/currentModifier.spawn);}
+   if(state.waveTime>=state.waveDuration){state.waveEnding=true;ui.mission.textContent='最后清理：击杀场内残余怪物';message('最后清理',900);}
+  }else if(alive===0||state.waveTime>=state.waveDuration+7){endWave();}
+ }
+}
+function drawGame(){monsters.forEach(m=>m.draw());if(boss)drawBoss();}
+function updateHUD(){ui.score.textContent=state.score;ui.combo.textContent='×'+state.combo;ui.level.textContent=state.level;ui.gateValue.textContent=state.gate;ui.gateLabel.textContent='夜门 '+state.gate+'/'+state.maxGate+' · 狂热';ui.xpLabel.textContent=state.xp+' / '+state.xpNeed+' XP';ui.xpFill.style.width=clamp(state.xp/state.xpNeed*100,0,100)+'%';const feverPct=state.feverUntil>clock?clamp((state.feverUntil-clock)/8*100,0,100):clamp(state.chain/30*100,0,100);ui.feverFill.style.width=feverPct+'%';ui.feverLabel.textContent=state.feverUntil>clock?'狂热 '+Math.ceil(state.feverUntil-clock)+'s':Math.round(feverPct)+'%';ui.weaponName.textContent=player.weapon;ui.damageValue.textContent=player.damage;ui.critValue.textContent=Math.round(player.crit*100)+'%';ui.chainValue.textContent=player.chain;ui.skillBtn.classList.toggle('locked',state.skill<100);ui.skillText.textContent=state.skill>=100?'可以使用':Math.round(state.skill)+'%';ui.voiceState.textContent=state.voice?(humanPack?'真人语音包':'系统语音'):'语音关闭';document.getElementById('app').classList.toggle('danger',state.gate<=2&&!state.gameOver);ui.bestLine.textContent='最佳记录：'+profile.bestScore+' 分 · WAVE '+String(profile.bestWave).padStart(2,'0');}
+function frame(ts){if(!state.running)return;if(!last)last=ts;let dt=Math.min(.033,(ts-last)/1000);last=ts;if(state.hitStop>0){state.hitStop=Math.max(0,state.hitStop-dt);dt=0;}clock+=dt;updateGame(dt);const sx=state.shake>0?rand(-state.shake,state.shake):0,sy=state.shake>0?rand(-state.shake,state.shake):0;state.shake=Math.max(0,state.shake-dt*24);ctx.save();ctx.translate(sx,sy);drawBackground();drawGame();updateEffects(dt);ctx.restore();if(state.flash>0){state.flash=Math.max(0,state.flash-dt*2.8);ctx.fillStyle='rgba(255,245,230,'+(state.flash*.42)+')';ctx.fillRect(0,0,W,H);}hudClock+=dt;if(hudClock>=.08||state.paused){hudClock=0;updateHUD();}requestAnimationFrame(frame);}
+
+function start(quiet=false){state.sound=quiet?false:profile.sound;state.voice=quiet?false:profile.voice;initAudio();ui.intro.classList.add('hidden');ui.gameOver.classList.add('hidden');state.running=true;resetAll();last=0;if(!quiet){sfx('level');setTimeout(()=>voice('start',true),280);}requestAnimationFrame(frame);}
+ui.loadoutButtons.forEach(btn=>btn.addEventListener('click',()=>{selectedLoadout=btn.dataset.loadout;ui.loadoutButtons.forEach(b=>b.classList.toggle('active',b===btn));sfx('hit',1);message(btn.querySelector('b').textContent+'流派已选择');}));
+ui.startBtn.addEventListener('click',()=>start(false));
+ui.quietBtn.addEventListener('click',()=>start(true));
+ui.skillBtn.addEventListener('click',useSkill);
+ui.rerollBtn.addEventListener('click',()=>{if(!state.choosing||state.rerolls<=0)return;state.rerolls--;renderUpgradeChoices();sfx('chain');message('进化选项已重铸');});
+ui.voiceBtn.addEventListener('click',()=>{state.voice=!state.voice;if(!state.voice&&'speechSynthesis'in window)speechSynthesis.cancel();if(activeHumanAudio){activeHumanAudio.pause();activeHumanAudio=null;}message(state.voice?'语音已开启':'语音已关闭');saveSettings();updateHUD();});
+ui.pauseBtn.addEventListener('click',()=>{if(!state.running||state.gameOver)return;state.paused=true;ui.pause.classList.remove('hidden');if('speechSynthesis'in window)speechSynthesis.cancel();if(activeHumanAudio)activeHumanAudio.pause();});
+ui.resumeBtn.addEventListener('click',()=>{ui.pause.classList.add('hidden');state.paused=false;last=performance.now();if(activeHumanAudio&&state.voice)activeHumanAudio.play().catch(()=>{});});
+ui.restartBtn.addEventListener('click',()=>{ui.pause.classList.add('hidden');resetAll();last=performance.now();});
+ui.againBtn.addEventListener('click',()=>{state.running=true;resetAll();last=0;requestAnimationFrame(frame);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){last=0;persistBest();if(initAudio.ctx?.state==='running')initAudio.ctx.suspend();}else if(state.running){last=0;if(state.sound)initAudio.ctx?.resume();}});
+if(location.protocol==='about:'||new URLSearchParams(location.search).has('debug'))window.__NIGHT_HUNT_DEBUG__={
+ state,player,upLevel,get monsters(){return monsters},get boss(){return boss},
+ endWave,finishRun,openUpgrade,useSkill,startWave,spawnBoss,
+ setWaveTime(v){state.waveTime=v},setGate(v){state.gate=v;updateHUD()},setSkill(v){state.skill=v;updateHUD()},
+ forceBossHp(v){if(boss)boss.hp=v},fillUpgrades(){for(const u of upgrades)upLevel[u.id]=u.max;},
+ evolve(){maybeEvolve();},snapshot(){return {wave:state.wave,score:state.score,gate:state.gate,level:state.level,monsters:monsters.length,boss:boss?boss.hp:null,transitionPending:state.transitionPending,gameOver:state.gameOver,weapon:player.weapon,particles:particles.length,trails:trails.length,texts:texts.length};}
+};
+loadHumanPack();updateHUD();
+})();
